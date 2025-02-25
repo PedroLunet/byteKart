@@ -1,0 +1,7 @@
+read_back_command: e2
+status: 36
+control_word: 36
+initial_value: 9b5c
+lsb: 5c
+msb: 9b
+Done
