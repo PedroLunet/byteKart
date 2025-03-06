@@ -1,7 +1,0 @@
-read_back_command: e2
-status: 36
-control_word: 36
-initial_value: 4dae
-lsb: ae
-msb: 4d
-Done

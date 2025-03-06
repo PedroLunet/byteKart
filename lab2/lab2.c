@@ -46,8 +46,9 @@ int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
 int(timer_test_int)(uint8_t time) {
   int ipc_status;
   message msg;
-  unit8_t hook_id;
+  uint8_t hook_id;
   int r;
+  extern int counter;
 
   if (timer_subscribe_int(&hook_id) != 0) {
     printf("Error in timer_subscribe_int\n");
@@ -76,6 +77,11 @@ int(timer_test_int)(uint8_t time) {
           break;
       }
     }
+  }
+
+  if (timer_unsubscribe_int() != 0) {
+    printf("Error in timer_unsubscribe_int\n");
+    return 1;
   }
 
   return 0;
