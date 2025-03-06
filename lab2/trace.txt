@@ -1,9 +1,9 @@
 @lcflib.a:2019, lcf_start
   timer_test_time_base(timer, freq)
-> timer_test_time_base(0, 30)
+> timer_test_time_base(0, 60)
   @lab2.c:41, timer_test_time_base
     timer_set_frequency(timer, freq)
-  > timer_set_frequency(0, 30)
+  > timer_set_frequency(0, 60)
     @timer.c:10, timer_set_frequency
       timer_get_conf(timer, &st)
     > timer_get_conf(0, addr: 0xeffff65b)
@@ -26,32 +26,32 @@
       "control_word: 36"
     @timer.c:36, timer_set_frequency
       printf("initial_value: %x\n", initial_value)
-      "initial_value: 9b5c"
+      "initial_value: 4dae"
     @timer.c:39, timer_set_frequency
       util_get_LSB(initial_value, &lsb)
-    > util_get_LSB(0x9b5c, addr: 0xeffff65a)
-    < util_get_LSB(0x9b5c, addr: 0xeffff65a [0x5c]) -> (ret: 0)
+    > util_get_LSB(0x4dae, addr: 0xeffff65a)
+    < util_get_LSB(0x4dae, addr: 0xeffff65a [0xae]) -> (ret: 0)
     @timer.c:40, timer_set_frequency
       util_get_MSB(initial_value, &msb)
-    > util_get_MSB(0x9b5c, addr: 0xeffff659)
-    < util_get_MSB(0x9b5c, addr: 0xeffff659 [0x9b]) -> (ret: 0)
+    > util_get_MSB(0x4dae, addr: 0xeffff659)
+    < util_get_MSB(0x4dae, addr: 0xeffff659 [0x4d]) -> (ret: 0)
     @timer.c:41, timer_set_frequency
       printf("lsb: %x\n", lsb)
-      "lsb: 5c"
+      "lsb: ae"
     @timer.c:42, timer_set_frequency
       printf("msb: %x\n", msb)
-      "msb: 9b"
+      "msb: 4d"
     @timer.c:44, timer_set_frequency
       sys_outb(TIMER_CTRL, control_word)
     > sys_outb(0x43, 0x36 = 0b00110110)
     @timer.c:49, timer_set_frequency
       sys_outb(TIMER_0 + timer, lsb)
-    > sys_outb(0x40, 0x5c = 0b01011100)
+    > sys_outb(0x40, 0xae = 0b10101110)
     @timer.c:54, timer_set_frequency
       sys_outb(TIMER_0 + timer, msb)
-    > sys_outb(0x40, 0x9b = 0b10011011)
-  < timer_set_frequency(0, 30) -> (ret: 0)
+    > sys_outb(0x40, 0x4d = 0b01001101)
+  < timer_set_frequency(0, 60) -> (ret: 0)
   @lab2.c:42, timer_test_time_base
     printf("Done\n")
     "Done"
-< timer_test_time_base(0, 30) -> (ret: 0)
+< timer_test_time_base(0, 60) -> (ret: 0)

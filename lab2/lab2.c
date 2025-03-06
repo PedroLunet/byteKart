@@ -44,8 +44,39 @@ int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
 }
 
 int(timer_test_int)(uint8_t time) {
-  /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  int ipc_status;
+  message msg;
+  unit8_t hook_id;
+  int r;
 
-  return 1;
+  if (timer_subscribe_int(&hook_id) != 0) {
+    printf("Error in timer_subscribe_int\n");
+    return 1;
+  }
+
+  int irq_set = BIT(hook_id);
+
+  while (counter < time * 60) {
+    if ((r = driver_receive(ANY, &msg, &ipc_status)) != 0) {
+      printf("driver_receive failed with: %d", r);
+      continue;
+    }
+    if (is_ipc_notify(ipc_status)) {
+      switch (_ENDPOINT_P(msg.m_source)) {
+        case HARDWARE:
+          if (msg.m_notify.interrupts & irq_set) {
+            timer_int_handler();
+            if (counter % 60 == 0) {
+              timer_print_elapsed_time();
+            }
+          }
+          break;
+
+        default:
+          break;
+      }
+    }
+  }
+
+  return 0;
 }

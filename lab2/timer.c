@@ -55,23 +55,30 @@ int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
   return 0;
 }
 
-int (timer_subscribe_int)(uint8_t *bit_no) {
-    /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
+static int hook_id = 0;
+static int counter = 0;
 
-  return 1;
+int (timer_subscribe_int)(uint8_t *bit_no) {
+  *bit_no = hook_id;
+  if(sys_irqsetpolicy(TIMER0_IRQ, IRQ_REENABLE, &hook_id) != OK) {
+    printf("Error in sys_irqsetpolicy\n");
+    return 1;
+  }
+
+  return 0;
 }
 
 int (timer_unsubscribe_int)() {
-  /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
+    if(sys_irqrmpolicy(&hook_id) != OK) {
+        printf("Error in sys_irqrmpolicy\n");
+        return 1;
+    }
 
-  return 1;
+  return 0;
 }
 
 void (timer_int_handler)() {
-  /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  counter++;
 }
 
 int (timer_get_conf)(uint8_t timer, uint8_t *st) {
