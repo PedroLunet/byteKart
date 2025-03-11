@@ -61,10 +61,22 @@
  * Constants for programming the i8254 Keyboard.
  */
 
-#define KBD_IRQ 1 /**< @brief Keyboard IRQ line */
+#define KBC_IRQ 1 /**< @brief Keyboard IRQ line */
+#define KBC_OUT_BUF 0x60 /**< @brief Output buffer */
+#define KBC_CMD_REG 0x64 /**< @brief Command register */
+#define KBC_ST_REG 0x64 /**< @brief Status register */
+#define KBC_ST_IBF BIT(1) /**< @brief Input buffer full */
+#define KBC_ST_OBF BIT(0) /**< @brief Output buffer full */
+#define KBC_READ_CMD 0x20 /**< @brief Read command byte */
 
-#define KBD_OUT_BUF 0x60 /**< @brief Output buffer */
-#define KBD_IN_BUF 0x60 /**< @brief Input buffer */
+#define KBC_PAR_ERR BIT(7) /**< @brief Parity error */
+#define KBC_TO_ERR BIT(6) /**< @brief Timeout error */
+
+#define BREAK_BIT BIT(7) /**< @brief Make bit */
+
+#define ESC_BREAKCODE 0x81 /**< @brief Breakcode for ESC key */
+
+#define DELAY_US    20000 /** @brief Delay for input/output buffer read */
 
 /**@}*/
 

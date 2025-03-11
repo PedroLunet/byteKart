@@ -1,6 +1,8 @@
 #include <lcom/lcf.h>
-
 #include <lcom/lab3.h>
+#include "keyboard.h"
+
+#include "i8254.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -30,10 +32,65 @@ int main(int argc, char *argv[]) {
 }
 
 int(kbd_test_scan)() {
-    /* To be completed by the students */
-    printf("%s is not yet implemented!\n", __func__);
+    int ipc_status;
+    message msg;
+    uint8_t bitno = 1;
+    extern uint8_t scancode;
 
-    return 1;
+    uint8_t bytes[2];
+    uint8_t size = 0;
+    bool make = true;
+
+    int irq_set = BIT(bitno);
+
+    if (kbc_subscribe_int(&bitno) != 0) {
+        printf("Error in kbd_subscribe_int\n");
+        return 1;
+    }
+
+
+    while (scancode != ESC_BREAKCODE) {
+      if (driver_receive(ANY, &msg, &ipc_status) != 0) {
+        printf("Error in driver_receive\n");
+        return 1;
+      }
+
+      if (is_ipc_notify(ipc_status)) {
+        switch (_ENDPOINT_P(msg.m_source)) {
+          case HARDWARE:
+            if (msg.m_notify.interrupts & irq_set) {
+              kbc_ih();
+              if (bytes[0] != 0xE0) {
+                bytes[0] = scancode;
+                size = 1;
+                if (scancode != 0xE0) {
+                  if (scancode & BREAK_BIT) {
+                    make = false;
+                  }
+                  kbd_print_scancode(make, size, bytes);
+                  make = true;
+                }
+              } else {
+                bytes[1] = scancode;
+                size = 2;
+                if (scancode & BREAK_BIT) {
+                  make = false;
+                }
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
+    if (kbc_unsubscribe_int() != 0) {
+        printf("Error in kbd_unsubscribe_int\n");
+        return 1;
+    }
+
+    return 0;
 }
 
 int(kbd_test_poll)() {
