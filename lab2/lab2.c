@@ -30,26 +30,28 @@ int main(int argc, char *argv[]) {
 }
 
 int(timer_test_read_config)(uint8_t timer, enum timer_status_field field) {
-  
   uint8_t config; 
-  int ret; // return instruction
-
-  ret = timer_get_conf(timer, &config);
-  if (ret != 0)
+  int ret = timer_get_conf(timer, &config);
+  if (ret != 0) {
+    printf("Error in timer_get_conf() in main");
     return 1;
+  }
 
   ret = timer_display_conf(timer, config, field);
-  if (ret != 0)
+  if (ret != 0) {
+    printf("Error in timer_display_conf() in main");
     return 1;
-
+  }
   return 0;
 }
 
 int(timer_test_time_base)(uint8_t timer, uint32_t freq) {
-  /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
-
-  return 1;
+  int ret = timer_set_frequency(timer, freq);
+  if (ret != 0) {
+    printf("Error in timer_set_frequency()");
+    return 1;
+  }
+  return 0;
 }
 
 int(timer_test_int)(uint8_t time) {
