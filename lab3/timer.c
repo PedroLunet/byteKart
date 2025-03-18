@@ -102,27 +102,21 @@ int (timer_get_conf)(uint8_t timer, uint8_t *st) {
   return 0;
 }
 
-int (timer_display_conf)(uint8_t timer, uint8_t st,
-                        enum timer_status_field field) {
+int (timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field field) {
+
   union timer_status_field_val conf;
 
   switch (field) {
     case tsf_all:
-      printf("Status byte: 0x%02x\n", st);
       conf.byte = st;
     break;
     case tsf_initial:
-      printf("Initialization mode: %s\n", (st & (BIT(4) | BIT(5))) == TIMER_LSB ? "LSB" :
-      (st & (BIT(4) | BIT(5))) == TIMER_MSB ? "MSB" :
-      (st & (BIT(4) | BIT(5))) == TIMER_LSB_MSB ? "LSB followed by MSB" : "Unknown");
       conf.in_mode = (st & (BIT(4) | BIT(5)));
     break;
     case tsf_mode:
-      printf("Operating mode: %d\n", (st & (BIT(1) | BIT(2) | BIT(3))) >> 1);
       conf.count_mode = (st & (BIT(1) | BIT(2) | BIT(3)) >> 1);
     break;
     case tsf_base:
-      printf("Counting mode: %s\n", (st & TIMER_BCD) ? "BCD" : "Binary");
       conf.bcd = (st & TIMER_BCD);
     break;
     default:
