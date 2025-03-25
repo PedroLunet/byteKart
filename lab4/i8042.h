@@ -29,4 +29,20 @@
 
 #define DELAY_US 2000
 
+
+/* MOUSE DEFINITIONS */
+
+#define IRQ_MOUSE 12
+
+#define MOUSE_Y_OVFL BIT(7)
+#define MOUSE_X_OVFL BIT(6)
+#define MSB_Y_DELTA BIT(5)
+#define MSB_X_DELTA BIT(4)
+#define MOUSE_MIDDLE_BUTTON BIT(2)
+#define MOUSE_RIGHT_BUTTON BIT(1)
+#define MOUSE_LEFT_BUTTON BIT(0)
+
+#define BUTTON_PRESSED 1
+
+
 #endif
