@@ -50,6 +50,7 @@ int (kbc_write)(uint8_t input, uint8_t free_buffer_mask, uint8_t port) {
 int (kbc_read_output_buffer)() {
     uint8_t data;
     uint8_t stat;
+
     while (true) {
         util_sys_inb(KBC_ST_REG, &stat);
         #ifdef LAB3
@@ -60,8 +61,12 @@ int (kbc_read_output_buffer)() {
             #ifdef LAB3
                 count++;
             #endif
-            if ( (stat & (KBC_PAR_ERR | KBC_TO_ERR)) == 0 ) {
-                return data;
+            if ((stat & (KBC_PAR_ERR | KBC_TO_ERR)) == 0) {
+                if (stat & KBC_ST_AUX) {
+                    return (data | 0x100);
+                } else {
+                    return data;
+                }
             }
             else {
                 return 1;
@@ -92,7 +97,13 @@ void (kbd_process_scancode)() {
 }
 
 void (kbc_ih)() {
-    scancode = kbc_read_output_buffer();
-	kbd_process_scancode();
+
+    uint8_t data = kbc_read_output_buffer();
+
+    if ((data & 0x100) == 0) {
+        // Data is from the keyboard
+        scancode = data;
+        kbd_process_scancode();
+    }
 }
 

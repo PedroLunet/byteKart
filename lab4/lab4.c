@@ -1,6 +1,10 @@
 // IMPORTANT: you must include the following line in all your C files
 #include <lcom/lcf.h>
 
+#include "mouse.h"
+#include "../lab3/keyboard.h"
+#include "i8254.h"
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -32,9 +36,62 @@ int main(int argc, char *argv[]) {
 
 
 int (mouse_test_packet)(uint32_t cnt) {
-    /* To be completed */
-    printf("%s(%u): under construction\n", __func__, cnt);
-    return 1;
+
+    int ipc_status;
+    message msg;
+    extern uint32_t count_mouse_packets;
+
+    uint8_t bitno_mouse = 0;
+
+    int irq_set_mouse = BIT(bitno_mouse);
+
+    // Enable stream mode using LCF function
+    // mouse_enable_data_reporting();
+    // Enable data reporting
+    if (send_mouse_command(MOUSE_ENABLE_CMD) != 0) {
+        printf("Error in send_mouse_command\n");
+        return 1;
+    }
+
+
+    // Subscribe mouse interrupts
+    if (mouse_subscribe_int(&bitno_mouse) != 0) {
+        printf("Error in mouse_subscribe_int\n");
+        return 1;
+    }
+
+    while (count_mouse_packets / 3 < cnt) {
+        if (driver_receive(ANY, &msg, &ipc_status) != 0) {
+            printf("Error in driver_receive\n");
+            return 1;
+        }
+
+        if (is_ipc_notify(ipc_status)) {
+            switch (_ENDPOINT_P(msg.m_source)) {
+                case HARDWARE:
+                    if (msg.m_notify.interrupts & irq_set_mouse) {
+                        mouse_ih();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    // Unsubscribe mouse interrupts
+    if (mouse_unsubscribe_int() != 0) {
+        printf("Error in mouse_unsubscribe_int\n");
+        return 1;
+    }
+
+    // Disable data reporting
+    if (send_mouse_command(MOUSE_DISABLE_CMD) != 0) {
+        printf("Error in send_mouse_command\n");
+        return 1;
+    }
+
+    return 0;
 }
 
 int (mouse_test_async)(uint8_t idle_time) {
@@ -43,7 +100,7 @@ int (mouse_test_async)(uint8_t idle_time) {
     return 1;
 }
 
-int (mouse_test_gesture)() {
+int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
     /* To be completed */
     printf("%s: under construction\n", __func__);
     return 1;
