@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "mouse.h"
+
 // Any header files included below this line should have been created by you
 
 int main(int argc, char *argv[]) {
@@ -32,9 +34,26 @@ int main(int argc, char *argv[]) {
 
 
 int (mouse_test_packet)(uint32_t cnt) {
-    /* To be completed */
-    printf("%s(%u): under construction\n", __func__, cnt);
-    return 1;
+
+    //int ipc_status, r;
+    //message msg;
+    uint8_t mouse_mask;
+
+    int ret = mouse_subscribe_int(&mouse_mask);
+    if (ret != 0) {
+        printf("Error subscribing mouse in main.");
+        return 1;
+    }
+
+    ////
+
+    ret = mouse_unsubscribe_int();
+    if (ret != 0) {
+        printf("Error unsubscribing mouse in main.");
+        return 1;
+    }
+
+    return 0;
 }
 
 int (mouse_test_async)(uint8_t idle_time) {

@@ -5,7 +5,8 @@
 
 #include "mouse.h"
 
-int hook_id_mouse = 14;
+uint8_t current_byte;
+int hook_id_mouse = 3;
 
 int (mouse_subscribe_int)(uint8_t *bit_no) {
   if (bit_no == NULL) {
@@ -32,5 +33,7 @@ int (mouse_unsubscribe_int)() {
 }
 
 void (mouse_ih)() {
-  
+  if (read_output_KBC(WRITE_COMMAND_BYTE, &current_byte, 1)) {
+    printf("Error reading byte from mouse.");
+  }
 }

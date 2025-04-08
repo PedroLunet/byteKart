@@ -24,6 +24,7 @@
 #define OUT_BUFFER 0x60
 #define IN_BUFFER 0x64
 #define READ_COMMAND_BYTE 0x20
+#define WRITE_COMMAND_BYTE 0x60
 #define KBC_ST_REG 0x64
 #define KBC_CMD_REG 0x64
 
