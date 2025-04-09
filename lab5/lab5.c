@@ -8,6 +8,7 @@
 
 #include "video_card.h"
 #include "video_card_macros.h"
+#include "kbc.h"
 
 // Any header files included below this line should have been created by you
 
@@ -35,12 +36,14 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+extern uint8_t scancode;
+
 int(video_test_init)(uint16_t mode, uint8_t delay) {
 
   // mudar para o modo gráfico
   int ret = set_VBE_mode(mode);
   if (ret != 0) {
-    printf("Error changing to specified mode.");
+    printf("Error changing to specified mode.\n");
     return 1;
   }
 
@@ -49,19 +52,62 @@ int(video_test_init)(uint16_t mode, uint8_t delay) {
   // voltar para o modo de texto
   ret = vg_exit();
   if (ret != 0) {
-    printf("Error returning to text mode.");
+    printf("Error returning to text mode.\n");
     return 1;
   }
   return 1;
 }
 
-int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y,
-                          uint16_t width, uint16_t height, uint32_t color) {
-  /* To be completed */
-  printf("%s(0x%03X, %u, %u, %u, %u, 0x%08x): under construction\n",
-         __func__, mode, x, y, width, height, color);
+int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+  
+  uint8_t keyboard_mask;
+  int ret = kbc_subscribe_int(&keyboard_mask);
+  if (ret != 0) {
+    printf("Error subscribing keyboard.\n");
+    return 1;
+  }
 
-  return 1;
+  // start in specified mode
+
+  // draw rectangle -> draw pixel, draw line 
+
+  int r, ipc_status;
+  message msg;
+
+  while ( scancode != ESC_BREAKCODE ) { /* You may want to use a different condition */
+    /* Get a request message. */
+    if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
+      printf("driver_receive failed with: %d", r);
+        continue;
+    }
+      if (is_ipc_notify(ipc_status)) { /* received notification */
+        switch (_ENDPOINT_P(msg.m_source)) {
+          case HARDWARE: /* hardware interrupt notification */				
+            if (msg.m_notify.interrupts & keyboard_mask) { /* subscribed interrupt */
+              kbc_ih();
+            }
+            break;
+          default:
+            break; /* no other notifications expected: do nothing */	
+        }
+      } else { /* received a standard message, not a notification */
+          /* no standard messages expected: do nothing */
+      }
+  }
+  
+  ret = vg_exit();
+  if (ret != 0) {
+    printf("Error returning to text mode.\n");
+    return 1;
+  }
+
+  ret = kbc_unsubscribe_int();
+  if (ret != 0) {
+    printf("Error unsubscribing keyboard.\n");
+    return 1;
+  }
+                            
+  return 0;
 }
 
 int(video_test_pattern)(uint16_t mode, uint8_t no_rectangles, uint32_t first, uint8_t step) {
