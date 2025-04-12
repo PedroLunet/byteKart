@@ -37,11 +37,13 @@ int main(int argc, char *argv[]) {
 }
 
 extern uint8_t scancode;
+extern void* video_memory;
+extern unsigned int vram_size;
 
 int(video_test_init)(uint16_t mode, uint8_t delay) {
 
   // mudar para o modo gráfico
-  int ret = set_VBE_mode(mode);
+  int ret = change_VBE_mode(mode);
   if (ret != 0) {
     printf("Error changing to specified mode.\n");
     return 1;
@@ -60,16 +62,27 @@ int(video_test_init)(uint16_t mode, uint8_t delay) {
 
 int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
   
-  uint8_t keyboard_mask;
-  int ret = kbc_subscribe_int(&keyboard_mask);
+  uint8_t kbc_mask;
+  int ret = kbc_subscribe_int(&kbc_mask);
+  
   if (ret != 0) {
     printf("Error subscribing keyboard.\n");
     return 1;
   }
 
-  // start in specified mode
+  int irq_set = BIT(kbc_mask);
 
-  // draw rectangle -> draw pixel, draw line 
+  ret = start_VBE_mode(mode);
+  if (ret != 0) {
+    printf("Error changing mode.\n");
+    return 1;
+  }
+
+  ret = vg_draw_rectangle(x, y, width, height, color);
+  if (ret != 0) {
+    printf("Error drawing rectangle in video_test_rectangle().\n");
+    return 1;
+  }
 
   int r, ipc_status;
   message msg;
@@ -83,7 +96,7 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width,
       if (is_ipc_notify(ipc_status)) { /* received notification */
         switch (_ENDPOINT_P(msg.m_source)) {
           case HARDWARE: /* hardware interrupt notification */				
-            if (msg.m_notify.interrupts & keyboard_mask) { /* subscribed interrupt */
+            if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
               kbc_ih();
             }
             break;
@@ -94,9 +107,12 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width,
           /* no standard messages expected: do nothing */
       }
   }
+
+  if (video_memory != NULL) {
+    memset(video_memory, 0, vram_size);
+  }
   
-  ret = vg_exit();
-  if (ret != 0) {
+  if (vg_exit() != 0) {
     printf("Error returning to text mode.\n");
     return 1;
   }
