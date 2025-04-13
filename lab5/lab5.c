@@ -18,11 +18,11 @@ int main(int argc, char *argv[]) {
 
   // enables to log function invocations that are being "wrapped" by LCF
   // [comment this out if you don't want/need it]
-  lcf_trace_calls("/home/lcom/labs/lab5/trace.txt");
+  //lcf_trace_calls("/home/lcom/labs/lab5/trace.txt");
 
   // enables to save the output of printf function calls on a file
   // [comment this out if you don't want/need it]
-  lcf_log_output("/home/lcom/labs/lab5/output.txt");
+  //lcf_log_output("/home/lcom/labs/lab5/output.txt");
 
   // handles control over to LCF
   // [LCF handles command line arguments and invokes the right function]
@@ -61,7 +61,7 @@ int(video_test_init)(uint16_t mode, uint8_t delay) {
 }
 
 int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
-  
+
   uint8_t kbc_mask;
   int ret = kbc_subscribe_int(&kbc_mask);
   
@@ -75,6 +75,13 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width,
   ret = start_VBE_mode(mode);
   if (ret != 0) {
     printf("Error changing mode.\n");
+    return 1;
+  }
+
+  printf("Screen resolution: %ux%u\n", get_hres(), get_vres());
+
+  if (x + width > get_hres() || y + height > get_vres()) {
+    printf("Rectangle dimensions exceed screen boundaries.\n");
     return 1;
   }
 

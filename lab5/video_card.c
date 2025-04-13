@@ -6,7 +6,11 @@ void *video_memory;
 struct minix_mem_range mmr;
 unsigned int vram_size;
 unsigned int vram_base;
+
 uint8_t pixelBytes;
+static uint16_t hres; /* XResolution */
+static uint16_t vres; /* YResolution */
+static uint8_t bits_per_pixel;
 
 int (change_VBE_mode)(uint16_t mode) {
   reg86_t reg;
@@ -53,25 +57,34 @@ int (change_VBE_mode)(uint16_t mode) {
 
 
 int (start_VBE_mode)(uint16_t mode) {
+  static int call_vbe_once = 0;
 
-  memset(&vbe_mode_info, 0, sizeof(vbe_mode_info));
-  int ret = vbe_get_mode_info(mode, &vbe_mode_info);
-  if (ret != 0) {
-    printf("Error in VBE mode info.\n");
-    return 1;
+  if (!call_vbe_once) {
+    memset(&vbe_mode_info, 0, sizeof(vbe_mode_info));
+    int ret = vbe_get_mode_info(mode, &vbe_mode_info);
+    if (ret != 0) {
+      printf("Error in VBE mode info.\n");
+      return 1;
+    }
+
+    hres = vbe_mode_info.XResolution;
+    vres = vbe_mode_info.YResolution;
+    bits_per_pixel = vbe_mode_info.BitsPerPixel;
+
+    vram_base = vbe_mode_info.PhysBasePtr;
+    pixelBytes = bits_per_pixel / 8;  
+    if (bits_per_pixel % 8 != 0)
+      pixelBytes++;
+    vram_size = hres * vres * pixelBytes;
+
+    call_vbe_once = 1;
   }
-
-  vram_base = vbe_mode_info.PhysBasePtr;
-  pixelBytes = vbe_mode_info.BitsPerPixel / 8;  
-  if (vbe_mode_info.BitsPerPixel % 8 != 0)
-    pixelBytes++;
-  vram_size = vbe_mode_info.XResolution * vbe_mode_info.YResolution * pixelBytes;
 
   mmr.mr_base = (phys_bytes) vram_base;
   mmr.mr_limit = mmr.mr_base + vram_size;
 
-  ret = sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mmr);
-  if (ret != 0) {
+  int ret = sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mmr);
+  if (sys_privctl(SELF, SYS_PRIV_ADD_MEM, &mmr) != 0) {
     printf("sys_privctl failed: %d\n", ret);
     panic("sys_privctl failed: %d\n", ret);
     return 1;
@@ -98,23 +111,23 @@ int (start_VBE_mode)(uint16_t mode) {
 
 // Drawing functions
 int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
-  if (x >= vbe_mode_info.XResolution || y >= vbe_mode_info.YResolution || x < 0 || y < 0) {
+  if (x >= get_hres() || y >= get_vres() || x < 0 || y < 0) {
     printf("Size error.\n");
     return 1;
   }
 
-  pixelBytes = (vbe_mode_info.BitsPerPixel + 7) / 8;
+  uint8_t bytes_per_pixel = (get_bits_per_pixel() + 7) / 8;
   uint8_t* pos = (uint8_t*) video_memory; 
-  pos += (vbe_mode_info.XResolution * y * pixelBytes + x * pixelBytes);
-  memcpy((void*)(pos), (const void*) &color, pixelBytes);
+  pos += (get_hres() * y + x) * bytes_per_pixel;
+  memcpy(pos, &color, bytes_per_pixel);
 
   return 0;
 }
 
-int (vg_draw_line)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
-  for (uint8_t i = 0; i < len; i++) {
+int (vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
+  for (uint16_t i = 0; i < len; i++) {
     if (vg_draw_pixel(x + i, y, color) != 0) {
-      printf("Error drawing line.\n");
+      printf("Error drawing pixel at (%u, %u).\n", x + i, y);
       return 1;
     }
   }
@@ -123,10 +136,23 @@ int (vg_draw_line)(uint16_t x, uint16_t y, uint16_t len, uint32_t color) {
 
 int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
   for (uint16_t i = 0; i < height; i++) {
-    if (vg_draw_line(x, y + i, width, color) != 0) {
-      printf("Error drawing rectangle.\n");
+    if (vg_draw_hline(x, y + i, width, color) != 0) {
+      printf("Error drawing line at y = %u.\n", y + i);
       return 1;
     }
   }
   return 0;
+}
+
+// Get Methods
+uint16_t get_hres() {
+  return hres;
+}
+
+uint16_t get_vres() {
+  return vres;
+}
+
+uint8_t get_bits_per_pixel() {
+  return bits_per_pixel;
 }
