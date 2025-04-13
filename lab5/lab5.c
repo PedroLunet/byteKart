@@ -64,12 +64,10 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width,
 
   uint8_t kbc_mask;
   int ret = kbc_subscribe_int(&kbc_mask);
-  
   if (ret != 0) {
     printf("Error subscribing keyboard.\n");
     return 1;
   }
-
   int irq_set = BIT(kbc_mask);
 
   ret = start_VBE_mode(mode);
@@ -79,7 +77,6 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width,
   }
 
   printf("Screen resolution: %ux%u\n", get_hres(), get_vres());
-
   if (x + width > get_hres() || y + height > get_vres()) {
     printf("Rectangle dimensions exceed screen boundaries.\n");
     return 1;
@@ -134,11 +131,68 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y, uint16_t width,
 }
 
 int(video_test_pattern)(uint16_t mode, uint8_t no_rectangles, uint32_t first, uint8_t step) {
-  /* To be completed */
-  printf("%s(0x%03x, %u, 0x%08x, %d): under construction\n", __func__,
-         mode, no_rectangles, first, step);
 
-  return 1;
+  uint8_t kbc_mask;
+  int ret = kbc_subscribe_int(&kbc_mask);
+  if (ret != 0) {
+    printf("Error subscribing keyboard.\n");
+    return 1;
+  }
+  int irq_set = BIT(kbc_mask);
+
+  ret = start_VBE_mode(mode);
+  if (ret != 0) {
+    printf("Error changing mode.\n");
+    return 1;
+  }
+
+  printf("Screen resolution: %ux%u\n", get_hres(), get_vres());
+
+  if (vg_draw_matrix(no_rectangles, first, step) != 0) {
+    printf("Error drawing matrix.\n");
+    return 1;
+  }
+
+  int r, ipc_status;
+  message msg;
+
+  while ( scancode != ESC_BREAKCODE ) { /* You may want to use a different condition */
+    /* Get a request message. */
+    if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
+      printf("driver_receive failed with: %d", r);
+        continue;
+    }
+      if (is_ipc_notify(ipc_status)) { /* received notification */
+        switch (_ENDPOINT_P(msg.m_source)) {
+          case HARDWARE: /* hardware interrupt notification */				
+            if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
+              kbc_ih();
+            }
+            break;
+          default:
+            break; /* no other notifications expected: do nothing */	
+        }
+      } else { /* received a standard message, not a notification */
+          /* no standard messages expected: do nothing */
+      }
+  }
+
+  if (video_memory != NULL) {
+    memset(video_memory, 0, vram_size);
+  }
+  
+  if (vg_exit() != 0) {
+    printf("Error returning to text mode.\n");
+    return 1;
+  }
+
+  ret = kbc_unsubscribe_int();
+  if (ret != 0) {
+    printf("Error unsubscribing keyboard.\n");
+    return 1;
+  }
+
+  return 0;
 }
 
 int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {

@@ -156,3 +156,56 @@ uint16_t get_vres() {
 uint8_t get_bits_per_pixel() {
   return bits_per_pixel;
 }
+
+// Draw Matrix
+int (vg_draw_matrix)(uint8_t no_rectangles, uint32_t first, uint8_t step) {
+
+  uint16_t rect_width = get_hres() / no_rectangles;
+  uint16_t rect_height = get_vres() / no_rectangles;
+
+  for (uint8_t row = 0; row < no_rectangles; row++) {
+    for (uint8_t col = 0; col < no_rectangles; col++) {
+      uint32_t color;
+
+      if (get_bits_per_pixel() == 8) {
+        color = (first + (row * no_rectangles + col) * step) % (1 << get_bits_per_pixel());
+      } else {
+        uint8_t red_mask_size = vbe_mode_info.RedMaskSize;
+        uint8_t green_mask_size = vbe_mode_info.GreenMaskSize;
+        uint8_t blue_mask_size = vbe_mode_info.BlueMaskSize;
+
+        uint32_t red = ((first >> vbe_mode_info.RedFieldPosition) & 0xFF) + col * step;
+        uint32_t green = ((first >> vbe_mode_info.GreenFieldPosition) & 0xFF) + row * step;
+        uint32_t blue = ((first >> vbe_mode_info.BlueFieldPosition) & 0xFF) + (col + row) * step;
+
+        red = (red % (1 << red_mask_size)) << vbe_mode_info.RedFieldPosition;
+        green = (green % (1 << green_mask_size)) << vbe_mode_info.GreenFieldPosition;
+        blue = (blue % (1 << blue_mask_size)) << vbe_mode_info.BlueFieldPosition;
+
+        color = red | green | blue;
+      }
+
+      int ret = vg_draw_rectangle(col * rect_width, row * rect_height, rect_width, rect_height, color);
+      if (ret != 0) {
+        printf("Error drawing rectange at row %u and col %u.\n", row, col);
+        return 1;
+      }
+    }
+  }
+
+  uint16_t y = no_rectangles * rect_height;
+  uint16_t x = 0;
+  if (vg_draw_rectangle(x, y, get_hres(), get_vres() - y, 0x000000) != 0) {
+    printf("Error drawing black bottom stripe.\n");
+    return 1;
+  }
+
+  x = no_rectangles * rect_width;
+  y = 0;
+  if (vg_draw_rectangle(x, y, get_hres() - x, get_vres(), 0x000000) != 0) {
+    printf("Error drawing black right stripe.\n");
+    return 1;
+  }
+
+  return 0;
+}
