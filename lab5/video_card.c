@@ -55,7 +55,6 @@ int (change_VBE_mode)(uint16_t mode) {
   return 1;
 }
 
-
 int (start_VBE_mode)(uint16_t mode) {
   static int call_vbe_once = 0;
 
@@ -107,7 +106,6 @@ int (start_VBE_mode)(uint16_t mode) {
 
   return 0;
 }
-
 
 // Drawing functions
 int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
@@ -207,5 +205,25 @@ int (vg_draw_matrix)(uint8_t no_rectangles, uint32_t first, uint8_t step) {
     return 1;
   }
 
+  return 0;
+}
+
+// Show XPM
+int (vg_draw_xpm)(uint8_t *map, xpm_image_t *img, uint16_t x, uint16_t y) {
+  if (map == NULL || img == NULL) {
+    printf("Invalid map or image.\n");
+    return 1;
+  }
+
+  for (uint16_t yi = 0; yi < img->height; yi++) {
+    for (uint16_t xi = 0; xi < img->width; xi++) {
+      uint32_t color = map[yi * img->width + x];
+      // Draw pixel
+      if (vg_draw_pixel(x + xi, y + yi, color) != 0) {
+        printf("Error drawing pixel at (%u, %u).\n", x+xi, y+yi);
+        return 1;
+      }
+    }
+  }
   return 0;
 }

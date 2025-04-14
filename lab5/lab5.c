@@ -196,10 +196,75 @@ int(video_test_pattern)(uint16_t mode, uint8_t no_rectangles, uint32_t first, ui
 }
 
 int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
-  /* To be completed */
-  printf("%s(%8p, %u, %u): under construction\n", __func__, xpm, x, y);
 
-  return 1;
+  uint8_t kbc_mask;
+  int ret = kbc_subscribe_int(&kbc_mask);
+  if (ret != 0) {
+    printf("Error subscribing keyboard.\n");
+    return 1;
+  }
+  int irq_set = BIT(kbc_mask);
+
+  // Mode has to be 0x105
+  if (start_VBE_mode(0x105) != 0) {
+    printf("Error starting in VBE mode 0x105.\n");
+    return 1;
+  }
+
+  // map -> pixmap in XPM format; image -> image pixmap
+  xpm_image_t image;
+  uint8_t* map = xpm_load(xpm, XPM_INDEXED, &image);
+  if (map == NULL) {
+    printf("Null map.\n");
+    return 1;
+  }
+
+  ret = vg_draw_xpm(map, &image, x, y);
+  if (ret != 0) {
+    printf("Error drawing XPM.\n");
+    return 1;
+  }
+  
+  int r, ipc_status;
+  message msg;
+
+  while ( scancode != ESC_BREAKCODE ) { /* You may want to use a different condition */
+    /* Get a request message. */
+    if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
+      printf("driver_receive failed with: %d", r);
+        continue;
+    }
+      if (is_ipc_notify(ipc_status)) { /* received notification */
+        switch (_ENDPOINT_P(msg.m_source)) {
+          case HARDWARE: /* hardware interrupt notification */				
+            if (msg.m_notify.interrupts & irq_set) { /* subscribed interrupt */
+              kbc_ih();
+            }
+            break;
+          default:
+            break; /* no other notifications expected: do nothing */	
+        }
+      } else { /* received a standard message, not a notification */
+          /* no standard messages expected: do nothing */
+      }
+  }
+
+  if (video_memory != NULL) {
+    memset(video_memory, 0, vram_size);
+  }
+  
+  if (vg_exit() != 0) {
+    printf("Error returning to text mode.\n");
+    return 1;
+  }
+
+  ret = kbc_unsubscribe_int();
+  if (ret != 0) {
+    printf("Error unsubscribing keyboard.\n");
+    return 1;
+  }
+
+  return 0;
 }
 
 int(video_test_move)(xpm_map_t xpm, uint16_t xi, uint16_t yi, uint16_t xf, uint16_t yf,
