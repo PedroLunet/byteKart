@@ -267,14 +267,23 @@ int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
   return 0;
 }
 
-int(video_test_move)(xpm_map_t xpm, uint16_t xi, uint16_t yi, uint16_t xf, uint16_t yf,
-                     int16_t speed, uint8_t fr_rate) {
-  /* To be completed */
-  printf("%s(%8p, %u, %u, %u, %u, %d, %u): under construction\n",
-         __func__, xpm, xi, yi, xf, yf, speed, fr_rate);
+int(video_test_move)(xpm_map_t xpm, uint16_t xi, uint16_t yi, uint16_t xf, uint16_t yf, int16_t speed, uint8_t fr_rate) {
+
+  // Subscribe kbd
+  // Subscribe timer and set timer frequency
+
+  // Start in mode 0x105
+  // Load XPM
+
+  // Loop : draw xpm and clear previous 
+
+  // Leave mode
+  // Unsubscribe kbd
+  // Unsubscribe timer
 
   return 1;
 }
+
 
 int(video_test_controller)() {
   /* To be completed */
