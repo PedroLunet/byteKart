@@ -40,51 +40,19 @@
 
 #define TIMER_SQR_WAVE (BIT(2) | BIT(1)) /**< @brief Mode 3: square wave generator */
 #define TIMER_RATE_GEN BIT(2)            /**< @brief Mode 2: rate generator */
+#define TIMER_GET_MODE (BIT(1) | BIT(2) | BIT(3))
 
 /* Counting mode: bit 0 */
 
 #define TIMER_BCD 0x01 /**< @brief Count in BCD */
 #define TIMER_BIN 0x00 /**< @brief Count in binary */
+#define TIMER_GET_BASE BIT(0)
 
 /* READ-BACK COMMAND FORMAT */
 
 #define TIMER_RB_COUNT_  BIT(5)
 #define TIMER_RB_STATUS_ BIT(4)
 #define TIMER_RB_SEL(n)  BIT((n) + 1)
-
-/**@}*/
-
-
-/** @defgroup i8254 i8254
- * @{
- *
- * Constants for programming the i8254 Keyboard.
- */
-
-#define KBC_IRQ 1 /**< @brief Keyboard IRQ line */
-
-#define KBC_OUT_BUF 0x60 /**< @brief Output buffer */
-#define KBC_IN_BUF 0x60 /**< @brief Input buffer */
-#define KBC_CMD_REG 0x64 /**< @brief Command register */
-#define KBC_ST_REG 0x64 /**< @brief Status register */
-
-#define KBC_ST_IBF BIT(1) /**< @brief Input buffer full */
-#define KBC_ST_OBF BIT(0) /**< @brief Output buffer full */
-#define KBC_ST_AUX BIT(5) /**< @brief Mouse data */
-
-#define KBC_READ_CMD 0x20 /**< @brief Read command byte */
-#define KBC_WRITE_CMD 0x60 /**< @brief Write command byte */
-
-#define KBC_PAR_ERR BIT(7) /**< @brief Parity error */
-#define KBC_TO_ERR BIT(6) /**< @brief Timeout error */
-
-#define BREAK_BIT BIT(7) /**< @brief Make bit */
-
-#define KBC_ST_CBYTE BIT(0) /**< @brief Command byte */
-
-#define ESC_BREAKCODE 0x81 /**< @brief Breakcode for ESC key */
-
-#define DELAY_US 20000 /** @brief Delay for input/output buffer read */
 
 /**@}*/
 

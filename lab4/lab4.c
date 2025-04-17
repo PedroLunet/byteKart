@@ -1,15 +1,33 @@
 // IMPORTANT: you must include the following line in all your C files
 #include <lcom/lcf.h>
 
-#include "mouse.h"
-#include "../lab3/keyboard.h"
-#include "lcom/timer.h"
-#include "i8254.h"
-
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-// Any header files included below this line should have been created by you
+#include "i8042.h"
+#include "../lab3/kbc.c"
+#include "../lab2/timer.c"
+#include "../lab3/i8254.h"
+#include "mouse.h"
+
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+extern struct packet pp;
+extern uint8_t byte_index;
+extern uint32_t count_mouse_packets;
+extern int timer_counter;
+
+typedef enum {
+    START,
+    UP,
+    VERTEX,
+    DOWN,
+    END
+} State;
+
+State state = START;
+uint16_t x_len_total = 0;
 
 int main(int argc, char *argv[]) {
     // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -40,31 +58,25 @@ int (mouse_test_packet)(uint32_t cnt) {
 
     int ipc_status;
     message msg;
-    extern uint32_t count_mouse_packets;
-
-    uint8_t bitno_mouse = 0;
-
-    int irq_set_mouse = BIT(bitno_mouse);
+    uint8_t irq_set_mouse;
 
     // Enable stream mode using LCF function
     // mouse_enable_data_reporting();
 
     // Enable data reporting
-    if (send_mouse_command(MOUSE_ENABLE_CMD) != 0) {
-        printf("Error in send_mouse_command\n");
+    if (mouse_write_command(MOUSE_ENABLE_CMD) != 0) {
         return 1;
     }
 
     // Subscribe mouse interrupts
-    if (mouse_subscribe_int(&bitno_mouse) != 0) {
-        printf("Error in mouse_subscribe_int\n");
+    if (mouse_subscribe_int(&irq_set_mouse) != 0) {
         return 1;
     }
 
     while (count_mouse_packets / 3 < cnt) {
         if (driver_receive(ANY, &msg, &ipc_status) != 0) {
             printf("Error in driver_receive\n");
-            return 1;
+            continue;
         }
 
         if (is_ipc_notify(ipc_status)) {
@@ -72,6 +84,7 @@ int (mouse_test_packet)(uint32_t cnt) {
                 case HARDWARE:
                     if (msg.m_notify.interrupts & irq_set_mouse) {
                         mouse_ih();
+                        mouse_process_scanbyte();
                     }
                     break;
                 default:
@@ -80,15 +93,13 @@ int (mouse_test_packet)(uint32_t cnt) {
         }
     }
 
-    // Unsubscribe mouse interrupts
-    if (mouse_unsubscribe_int() != 0) {
-        printf("Error in mouse_unsubscribe_int\n");
+    // Disable data reporting
+    if (mouse_write_command(MOUSE_DISABLE_CMD) != 0) {
         return 1;
     }
 
-    // Disable data reporting
-    if (send_mouse_command(MOUSE_DISABLE_CMD) != 0) {
-        printf("Error in send_mouse_command\n");
+    // Unsubscribe mouse interrupts
+    if (mouse_unsubscribe_int() != 0) {
         return 1;
     }
 
@@ -99,37 +110,32 @@ int (mouse_test_async)(uint8_t idle_time) {
 
     int ipc_status;
     message msg;
-    extern uint32_t count_mouse_packets;
-    extern int counter;
+    uint8_t seconds = 0;
 
-    uint8_t bitno_mouse = 1;
-    uint8_t bitno_timer = 0;
+    uint8_t irq_set_mouse = 0;
+    uint8_t irq_set_timer = 0;
 
-    int irq_set_mouse = BIT(bitno_mouse);
-    int irq_set_timer = BIT(bitno_timer);
+    uint16_t timer_frequency = sys_hz();
 
     // Enable data reporting
-    if (send_mouse_command(MOUSE_ENABLE_CMD) != 0) {
-        printf("Error in send_mouse_command\n");
+    if (mouse_write_command(MOUSE_ENABLE_CMD) != 0) {
         return 1;
     }
 
     // Subscribe timer interrupts
-    if (timer_subscribe_int(&bitno_timer) != 0) {
-        printf("Error in timer_subscribe_int\n");
+    if (timer_subscribe_int(&irq_set_timer) != 0) {
         return 1;
     }
 
     // Subscribe mouse interrupts
-    if (mouse_subscribe_int(&bitno_mouse) != 0) {
-        printf("Error in mouse_subscribe_int\n");
+    if (mouse_subscribe_int(&irq_set_mouse) != 0) {
         return 1;
     }
 
-    while (counter / 60 < idle_time) {
+    while (seconds < idle_time) {
         if (driver_receive(ANY, &msg, &ipc_status) != 0) {
             printf("Error in driver_receive\n");
-            return 1;
+            continue;
         }
 
         if (is_ipc_notify(ipc_status)) {
@@ -137,10 +143,15 @@ int (mouse_test_async)(uint8_t idle_time) {
                 case HARDWARE:
                     if (msg.m_notify.interrupts & irq_set_mouse) {
                         mouse_ih();
-                        counter = 0;
+                        mouse_process_scanbyte();
+                        seconds = 0;
+                        timer_counter = 0;
                     }
                     if (msg.m_notify.interrupts & irq_set_timer) {
                         timer_int_handler();
+                        if (timer_counter % timer_frequency == 0) {
+                            seconds++;
+                        }
                     }
                 break;
                 default:
@@ -151,19 +162,16 @@ int (mouse_test_async)(uint8_t idle_time) {
 
     // Unsubscribe mouse interrupts
     if (mouse_unsubscribe_int() != 0) {
-        printf("Error in mouse_unsubscribe_int\n");
         return 1;
     }
 
     // Unsubscribe timer interrupts
     if (timer_unsubscribe_int() != 0) {
-        printf("Error in timer_unsubscribe_int\n");
         return 1;
     }
 
     // Disable data reporting
-    if (send_mouse_command(MOUSE_DISABLE_CMD) != 0) {
-        printf("Error in send_mouse_command\n");
+    if (mouse_write_command(MOUSE_DISABLE_CMD) != 0) {
         return 1;
     }
 
@@ -171,79 +179,87 @@ int (mouse_test_async)(uint8_t idle_time) {
 
 }
 
-typedef enum mouse_states {
-  	IDLE,
-  	DRAWING_FIRST_LINE,
-  	WAITING_FOR_SECOND_LINE,
-    DRAWING_SECOND_LINE,
-	GESTURE_COMPLETE
-};
+void (update_state_machine)(uint8_t x_len, uint8_t tolerance) {
+    switch (state) {
+        case START:
+            if (pp.lb && !pp.mb && !pp.rb) {
+                state = UP;
+                x_len_total = 0;
+            }
+            break;
 
-typedef enum mouse_events {
-  	LEFT_BUTTON,
-  	RIGHT_BUTTON,
-  	MOVE_UP,
-  	MOVE_DOWN,
-  	MOVE_LEFT,
-  	MOVE_RIGHT
-};
+        case UP:
+            if (!pp.lb && !pp.mb && !pp.rb) {
+                state = VERTEX;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+            break;
+
+        case VERTEX:
+            if (pp.rb && !pp.lb && !pp.mb) {
+                state = DOWN;
+            } else if (abs(pp.delta_x) > tolerance || abs(pp.delta_y) > tolerance) {
+                state = START;
+            }
+        break;
+
+        case DOWN:
+            if (!pp.rb && !pp.mb && !pp.lb && x_len_total >= x_len) {
+                state = END;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+        break;
+
+        case END:
+            break;
+
+        default:
+            break;
+    }
+
+
+    x_len_total = max(0, x_len_total + pp.delta_x);
+}
 
 int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
 
    	int ipc_status;
     message msg;
-    uint8_t bitno_mouse = 1;
-    extern uint8_t packet[3];
+    uint8_t irq_set_mouse;
 
   	// Enable data reporting
-    if (send_mouse_command(MOUSE_ENABLE_CMD) != 0) {
-        printf("Error in send_mouse_command\n");
+    if (mouse_write_command(MOUSE_ENABLE_CMD) != 0) {
         return 1;
     }
 
     // Subscribe mouse interrupts
-    if (mouse_subscribe_int(&bitno_mouse) != 0) {
-        printf("Error in mouse_subscribe_int\n");
+    if (mouse_subscribe_int(&irq_set_mouse) != 0) {
         return 1;
     }
 
-    // Set up state machine
-    enum mouse_states state = IDLE;
 
-    while (state != GESTURE_COMPLETE) {
+    while (state != END) {
     	if (driver_receive(ANY, &msg, &ipc_status) != 0) {
             printf("Error in driver_receive\n");
-            return 1;
+            continue;
         }
 
         if (is_ipc_notify(ipc_status)) {
             switch (_ENDPOINT_P(msg.m_source)) {
                 case HARDWARE:
-                    if (msg.m_notify.interrupts & bitno_mouse) {
+                    if (msg.m_notify.interrupts & irq_set_mouse) {
                         mouse_ih();
-                        switch() {
-                            case IDLE:
-                                if (packet[0] & BIT(3)) {
-                                    state = DRAWING_FIRST_LINE;
-                                }
-                                break;
-                            case DRAWING_FIRST_LINE:
-                                if (abs(packet[1]) > x_len) {
-                                    state = WAITING_FOR_SECOND_LINE;
-                                }
-                                break;
-                            case WAITING_FOR_SECOND_LINE:
-                                if (abs(packet[2]) > tolerance) {
-                                    state = DRAWING_SECOND_LINE;
-                                }
-                                break;
-                            case DRAWING_SECOND_LINE:
-                                if (abs(packet[1]) > x_len) {
-                                    state = GESTURE_COMPLETE;
-                                }
-                                break;
-                            default:
-                                break;
+                        mouse_process_scanbyte();
+                        if (count_mouse_packets % 3 == 0) {
+                            update_state_machine(x_len, tolerance);
                         }
                     }
                     break;
@@ -255,13 +271,11 @@ int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
 
     // Unsubscribe mouse interrupts
     if (mouse_unsubscribe_int() != 0) {
-        printf("Error in mouse_unsubscribe_int\n");
         return 1;
     }
 
     // Disable data reporting
-    if (send_mouse_command(MOUSE_DISABLE_CMD) != 0) {
-        printf("Error in send_mouse_command\n");
+    if (mouse_write_command(MOUSE_DISABLE_CMD) != 0) {
         return 1;
     }
 
@@ -274,3 +288,4 @@ int (mouse_test_remote)(uint16_t period, uint8_t cnt) {
     printf("%s(%u, %u): under construction\n", __func__, period, cnt);
     return 1;
 }
+

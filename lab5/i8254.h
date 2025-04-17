@@ -106,15 +106,6 @@
 
 /**@}*/
 
-/** @defgroup i8254 i8254
- * @{
- *
- * Constants for programming the video graphics.
- */
-
-#define VBE_GET_MODE_INFO 0x01 /**< @brief VBE get mode info */
-#define VBE_SET_MODE 0x02 /**< @brief VBE set mode */
-
 #endif /* _LCOM_I8254_H */
 
 

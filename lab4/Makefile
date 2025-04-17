@@ -2,7 +2,7 @@
 PROG=lab4
 
 # source code files to be compiled
-SRCS = lab4.c mouse.c ../lab3/keyboard.c ../lab2/utils.c ../lab2/timer.c
+SRCS = lab4.c mouse.c ../lab2/utils.c
 
 # additional compilation flags
 # "-Wall -Wextra -Werror -I . -std=c11 -Wno-unused-parameter" are already set
