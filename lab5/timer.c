@@ -10,19 +10,19 @@ int hook_id_timer;
 int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
 
   if (timer < 0 || timer > 2) {
-    printf("Invalid timer");
+    printf("Invalid timer.\n");
     return 1;
   }
   
   if (freq < 19 || freq > TIMER_FREQ) {
-    printf("Invalid frequency");
+    printf("Invalid frequency.\n");
     return 1;
   } 
 
   uint8_t controlWord;
   int ret = timer_get_conf(timer, &controlWord);
   if (ret != 0) {
-    printf("Error in timer_get_conf()");
+    printf("Error in timer_get_conf().\n");
     return 1;
   }
 
@@ -49,32 +49,32 @@ int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
 
   ret = util_get_MSB(value, &msb);
   if (ret != 0) {
-    printf("Error getting MSB");
+    printf("Error getting MSB.\n");
     return 1;
   }
 
   ret = util_get_LSB(value, &lsb);
   if (ret != 0) {
-    printf("Error getting LSB");
+    printf("Error getting LSB.\n");
     return 1;
   }
 
   ret = sys_outb(TIMER_CTRL, controlWord);
   if (ret != 0) {
-    printf("Error writing control word.");
+    printf("Error writing control word.\n");
     return 1;
   }
 
   // write MSB after LSB
   ret = sys_outb(timer_sel, lsb);
   if (ret != 0) {
-    printf("Error writing LSB");
+    printf("Error writing LSB.\n");
     return 1;
   }
 
   ret = sys_outb(timer_sel, msb);
   if (ret != 0) {
-    printf("Error writing MSB");
+    printf("Error writing MSB.\n");
     return 1;
   }
 
@@ -85,14 +85,14 @@ uint32_t counter = 0;
 
 int (timer_subscribe_int)(uint8_t *bit_no) {
   if (bit_no == NULL) {
-    printf("Null pointer");
+    printf("Null pointer.\n");
     return 1;
   }
   *bit_no = (uint8_t) hook_id_timer;
   
   int ret = sys_irqsetpolicy(TIMER0_IRQ, IRQ_REENABLE, &hook_id_timer);
   if (ret != 0) {
-    printf("Error subscribing timer");
+    printf("Error subscribing timer.\n");
     return 1;
   }
   return 0;
@@ -101,7 +101,7 @@ int (timer_subscribe_int)(uint8_t *bit_no) {
 int (timer_unsubscribe_int)() {
   int ret = sys_irqrmpolicy(&hook_id_timer);
   if (ret != 0) {
-    printf("Error unsubscribing timer");
+    printf("Error unsubscribing timer.\n");
     return 1;
   }
   return 0;
@@ -114,12 +114,12 @@ void (timer_int_handler)() {
 int (timer_get_conf)(uint8_t timer, uint8_t *st) {
 
   if (timer < 0 || timer > 2) {
-    printf("Invalid timer");
+    printf("Invalid timer.\n");
     return 1;
   }
 
   if (st == NULL) { 
-    printf("Null pointer");
+    printf("Null pointer.\n");
     return -1;
   }
 
@@ -127,13 +127,13 @@ int (timer_get_conf)(uint8_t timer, uint8_t *st) {
 
   int ret = sys_outb(TIMER_CTRL, readBackCommand);
   if (ret != 0) {
-    printf("Error on sys_outb()");
+    printf("Error on sys_outb().\n");
     return 1;
   }
   
   ret = util_sys_inb(TIMER_0 + timer, st);
   if (ret != 0) {
-    printf("Error on util_sys_inb()");
+    printf("Error on util_sys_inb().\n");
     return 1;
   }
 
@@ -143,7 +143,7 @@ int (timer_get_conf)(uint8_t timer, uint8_t *st) {
 int (timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field field) {
 
   if (timer < 0 || timer > 2) {
-    printf("Invalid timer");
+    printf("Invalid timer.\n");
     return 1;
   }
 
@@ -183,7 +183,7 @@ int (timer_display_conf)(uint8_t timer, uint8_t st, enum timer_status_field fiel
 
   int ret = timer_print_config(timer, field, config);
   if (ret != 0) {
-    printf("Error in timer_display_conf()");
+    printf("Error in timer_display_conf().\n");
     return 1;
   }
 
