@@ -227,6 +227,10 @@ int (vg_draw_xpm)(uint8_t *map, xpm_image_t *img, uint16_t x, uint16_t y) {
       uint8_t color = map[yi * img->width + xi];
       // Draw pixel
       if (color != transparent_color) {
+        if ((x + xi) >= get_hres() || (y + yi) >= get_vres()) { // Boundary check
+          continue;
+        }
+        
         if (vg_draw_pixel(x + xi, y + yi, color) != 0) {
           printf("Error drawing pixel at (%u, %u).\n", x+xi, y+yi);
           return 1;
