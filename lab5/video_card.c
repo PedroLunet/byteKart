@@ -215,13 +215,17 @@ int (vg_draw_xpm)(uint8_t *map, xpm_image_t *img, uint16_t x, uint16_t y) {
     return 1;
   }
 
+  uint8_t transparent_color = xpm_transparency_color(img->type); // To clear previous image
+
   for (uint16_t yi = 0; yi < img->height; yi++) {
     for (uint16_t xi = 0; xi < img->width; xi++) {
-      uint32_t color = map[yi * img->width + x];
+      uint8_t color = map[yi * img->width + xi];
       // Draw pixel
-      if (vg_draw_pixel(x + xi, y + yi, color) != 0) {
-        printf("Error drawing pixel at (%u, %u).\n", x+xi, y+yi);
-        return 1;
+      if (color != transparent_color) {
+        if (vg_draw_pixel(x + xi, y + yi, color) != 0) {
+          printf("Error drawing pixel at (%u, %u).\n", x+xi, y+yi);
+          return 1;
+        }
       }
     }
   }
