@@ -117,8 +117,13 @@ int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
   uint8_t bytes_per_pixel = (get_bits_per_pixel() + 7) / 8;
   uint8_t* pos = (uint8_t*) video_memory; 
   pos += (get_hres() * y + x) * bytes_per_pixel;
-  memcpy(pos, &color, bytes_per_pixel);
 
+  if (get_bits_per_pixel() == 8) { // Indexed mode
+    *pos = (uint8_t) color;
+  } else { // Direct color mode
+    memcpy(pos, &color, bytes_per_pixel);
+  }
+  
   return 0;
 }
 
