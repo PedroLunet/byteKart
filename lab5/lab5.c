@@ -98,6 +98,8 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y,
     return 1;
   }
 
+  swap_buffers();
+
   if (ESC_key_wait() != 0) {
     return 1;
   }
@@ -132,6 +134,8 @@ int(video_test_pattern)(uint16_t mode, uint8_t no_rectangles, uint32_t first, ui
       }
     }
   }
+
+  swap_buffers();
 
   if (ESC_key_wait() != 0) {
     return 1;

@@ -7,6 +7,7 @@
 vbe_mode_info_t mode_info;
 uint8_t* frame_buffer;
 uint8_t* back_buffer;
+uint32_t frame_buffer_size;
 
 int (vg_set_mode)(uint16_t mode);
 int (vg_set_frame_buffer)(uint16_t mode);

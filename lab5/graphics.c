@@ -43,7 +43,8 @@ int (vg_set_frame_buffer)(uint16_t mode){
   back_buffer = malloc(frame_size);
   if (back_buffer == NULL) {
     return 1;
-}
+  }
+  frame_buffer_size = frame_size;
 
   return 0;
 }
@@ -117,5 +118,5 @@ int (print_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
 }
 
 void swap_buffers() {
-  memcpy(frame_buffer, back_buffer, mode_info.XResolution * mode_info.YResolution * ((mode_info.BitsPerPixel + 7) / 8));
+  memcpy(frame_buffer, back_buffer, frame_buffer_size);
 }
