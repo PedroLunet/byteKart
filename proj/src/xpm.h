@@ -1,7 +1,7 @@
 #ifndef XPM_H
 #define XPM_H
 
-#include "../../lab5/graphics.h"
+#include "video_card.h"
 
 typedef struct {
     uint32_t *colors;

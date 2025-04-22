@@ -2,8 +2,7 @@ PROG=proj
 
 .PATH: ${.CURDIR}/src/
 
-SRCS = 	main.c src/xpm.c src/timer.c src/utils.c ../lab5/graphics.c ../lab3/kbc.c ../lab3/keyboard.c
-
+SRCS = 	main.c xpm.c timer.c utils.c video_card.c kbc.c
 CFLAGS += -pedantic -D_LCOM_OPTIMIZED_ -O2
 
 DPADD += ${LIBLCF}

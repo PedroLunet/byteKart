@@ -1,11 +1,10 @@
 #include <lcom/lcf.h>
 #include "xpm.h"
-#include "../../lab5/graphics.h"
 #include "../xpm/tiles.h"
 
 #define TRANSPARENTE 0xFFFFFE
 
-extern vbe_mode_info_t mode_info;
+extern vbe_mode_info_t vbe_mode_info;
 
 Sprite *struct_left_line_tile;
 Sprite *struct_right_line_tile;
@@ -67,13 +66,13 @@ int load_tiles() {
     if (struct_track_line_tile == NULL) return 1;
 
     uint32_t tile_width = struct_track_tile->width;
-    track_tiles = (mode_info.XResolution / tile_width) - 4; // 4 non-track tiles
+    track_tiles = (vbe_mode_info.XResolution / tile_width) - 4; // 4 non-track tiles
 
     if (track_tiles < 1) track_tiles = 1;
     if (track_tiles % 2 == 0) track_tiles--;
 
     uint32_t row_width = (track_tiles + 4) * tile_width;
-    x_offset = (mode_info.XResolution - row_width) / 2;
+    x_offset = (vbe_mode_info.XResolution - row_width) / 2;
 
     return 0;
 }
