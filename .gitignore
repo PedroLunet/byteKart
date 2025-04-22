@@ -1,2 +1,4 @@
 lab0/
 .idea/
+*.o
+*.gdbinit
