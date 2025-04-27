@@ -15,6 +15,11 @@ extern Sprite *struct_outspace_tile;
 extern Sprite *struct_track_tile;
 extern Sprite *struct_track_line_tile;
 
+extern char *pixil_frame_0[];
+
+Sprite *create_sprite_xpm(xpm_map_t sprite);
+
+
 int load_tiles();
 int draw_horizontal_track(uint32_t y);
 int load_tiles();

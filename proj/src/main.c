@@ -8,6 +8,7 @@
 #include "i8254.h"
 #include "kbc.h"
 #include "xpm.h"
+#include "menu.h"
 
 
 extern vbe_mode_info_t vbe_mode_info;
@@ -108,7 +109,18 @@ int (proj_main_loop)(int argc, char *argv[]) {
     if (initial_setup() != 0) {
         return 1;
     }
+    printf("Screen resolution: %dx%d\n", vbe_mode_info.XResolution, vbe_mode_info.YResolution);
 
+    if (draw_main_screen() != 0) {
+        printf("Error drawing main screen.\n");
+        return 1;
+    }
+
+    if (ESC_key_wait() != 0) {
+        return 1;
+    }
+
+    /*
     if (load_tiles() != 0) {
         restore_system();
         return 1;
@@ -126,12 +138,11 @@ int (proj_main_loop)(int argc, char *argv[]) {
         height_drawn += 64;
     }
 
-    // cycle through the game loop
     if (ESC_key_wait() != 0) {
         return 1;
     }
+    */
 
-    // restore system
     if (restore_system() != 0) {
         return 1;
     }

@@ -1,6 +1,6 @@
 #include <lcom/lcf.h>
 #include "xpm.h"
-#include "../xpm/tiles.h"
+#include "xpm/tiles.h"
 
 #define TRANSPARENTE 0xFFFFFE
 
