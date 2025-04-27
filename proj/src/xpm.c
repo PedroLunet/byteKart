@@ -2,7 +2,7 @@
 #include "xpm.h"
 #include "xpm/tiles.h"
 
-#define TRANSPARENTE 0xFFFFFE
+#define TRANSPARENT 0xFFFFFE
 
 extern vbe_mode_info_t vbe_mode_info;
 
@@ -28,7 +28,7 @@ Sprite *create_sprite_xpm(xpm_map_t sprite) {
         free(sp);
         return NULL;
     }
-
+    
     return sp;
 }
 
@@ -40,7 +40,7 @@ int draw_sprite_xpm(Sprite *sprite, int x, int y) {
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             current_color = sprite->colors[w + h * width];
-            if (current_color == TRANSPARENTE) continue;
+            if (current_color == TRANSPARENT) continue;
             if (vg_draw_pixel(x + w, y + h, current_color) != 0) return 1;
         }
     }
