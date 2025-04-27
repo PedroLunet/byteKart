@@ -32,6 +32,8 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+extern struct packet pp;
+extern uint8_t index_packet;
 
 int (mouse_test_packet)(uint32_t cnt) {
 
@@ -45,7 +47,38 @@ int (mouse_test_packet)(uint32_t cnt) {
         return 1;
     }
 
-    ////
+    // enable data report 
+
+    int ipc_status;
+    message msg;
+
+    while (cnt) {
+        if (driver_receive(ANY, &msg, &ipc_status) != 0) {
+          printf("Error in driver_receive\n");
+          return 1;
+        }
+  
+        if (is_ipc_notify(ipc_status)) {
+          switch (_ENDPOINT_P(msg.m_source)) {
+            case HARDWARE:
+              if (msg.m_notify.interrupts & mouse_mask) {
+                mouse_ih();
+                mouse_bytes();
+                if (index_packet == 3) {
+                  mouse_struct_packet(&pp);
+                  mouse_print_packet(&pp);
+                  index_packet = 0;
+                  cnt--;
+                }
+              }
+              break;
+            default:
+              break;
+          }
+        }
+    }
+
+    // disable data report 
 
     ret = mouse_unsubscribe_int();
     if (ret != 0) {

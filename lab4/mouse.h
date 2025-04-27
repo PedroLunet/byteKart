@@ -8,5 +8,8 @@
 int (mouse_subscribe_int)(uint8_t *bit_no);
 int (mouse_unsubscribe_int)();
 void (mouse_ih)();
+int (mouse_data_reporting)(uint8_t command);
+void (mouse_bytes)();
+void (mouse_struct_packet)(struct packet* pp);
 
 #endif

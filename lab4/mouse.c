@@ -7,6 +7,8 @@
 
 uint8_t current_byte;
 int hook_id_mouse = 3;
+struct packet pp;
+uint8_t index_packet = 0;
 
 int (mouse_subscribe_int)(uint8_t *bit_no) {
   if (bit_no == NULL) {
@@ -37,3 +39,31 @@ void (mouse_ih)() {
     printf("Error reading byte from mouse.");
   }
 }
+
+int (mouse_data_reporting)(uint8_t command) {
+  // uint8_t attemps = 10;
+  // uint8_t response;
+
+  return 1;
+}
+
+void (mouse_bytes)() {
+  if (index_packet == 0 && (current_byte & BIT(3))) {
+    pp.bytes[index_packet] = current_byte;
+    index_packet++;
+  } else if (index_packet > 0) {
+    pp.bytes[index_packet] = current_byte;
+    index_packet++;
+  }
+}
+
+void (mouse_struct_packet)(struct packet* pp) {
+  pp->y_ov = (pp->bytes[0] & MOUSE_Y_OVFL);
+  pp->x_ov = (pp->bytes[0] & MOUSE_X_OVFL);
+  pp->rb = (pp->bytes[0] & MOUSE_RIGHT_BUTTON);
+  pp->lb = (pp->bytes[0] & MOUSE_LEFT_BUTTON);
+  pp->mb = (pp->bytes[0] & MOUSE_MIDDLE_BUTTON);
+  pp->delta_x = (pp->bytes[0] & MSB_X_DELTA) ? (0xFF00 | ((uint16_t) pp->bytes[1])) : ((uint16_t) pp->bytes[1]);
+  pp->delta_y = (pp->bytes[0] & MSB_Y_DELTA) ? (0xFF00 | ((uint16_t) pp->bytes[2])) : ((uint16_t) pp->bytes[2]);
+}
+
