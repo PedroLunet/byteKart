@@ -9,6 +9,7 @@
 #include "kbc.h"
 #include "xpm.h"
 #include "menu.h"
+#include "macros.h"
 
 
 extern vbe_mode_info_t vbe_mode_info;
@@ -96,8 +97,17 @@ int (initial_setup)() {
 }
 
 int (restore_system)() {
-
     if (vg_exit() != 0) {
+        return 1;
+    }
+    return 0;
+}
+
+int (exit_program)() {
+    printf("Exiting the program...\n");
+
+    if (restore_system() != 0) {
+        printf("Error restoring system state.\n");
         return 1;
     }
 
@@ -111,14 +121,22 @@ int (proj_main_loop)(int argc, char *argv[]) {
     }
     printf("Screen resolution: %dx%d\n", vbe_mode_info.XResolution, vbe_mode_info.YResolution);
 
-    if (draw_main_screen() != 0) {
+    if (draw_main_screen(0) != 0) {
         printf("Error drawing main screen.\n");
         return 1;
     }
 
-    if (ESC_key_wait() != 0) {
-        return 1;
+    int selected_option = navigate_main_menu();
+    if (selected_option == -1) {
+        printf("Menu exited without selection.\n");
+    } else if (selected_option == 0) {
+        printf("Play selected.\n");
+        // start the game - por implementar
+    } else if (selected_option == 1) {
+        printf("Quit selected.\n");
+        exit_program();
     }
+
 
     /*
     if (load_tiles() != 0) {
@@ -144,9 +162,12 @@ int (proj_main_loop)(int argc, char *argv[]) {
     */
 
     if (restore_system() != 0) {
+        printf("Error restoring system state.\n");
         return 1;
     }
 
     return 0;
 }
+
+
 

@@ -1,35 +1,114 @@
 #include <lcom/lcf.h>
 
 #include "menu.h"
-#include "xpm/xpm_files.h" 
-#include "xpm.h"
 
 extern vbe_mode_info_t vbe_mode_info;
+extern uint8_t scancode;
 
-int (draw_main_screen)() {
+// MAIN SCREEN
 
-    //Sprite *title_sprite = create_sprite_xpm((xpm_map_t) title);
-    //if (title_sprite == NULL) return 1; 
+void (draw_static_menu)(Sprite *title_sprite, Sprite *play_sprite, Sprite *quit_sprite, uint32_t y_center) {
+    draw_sprite_xpm(title_sprite, (vbe_mode_info.XResolution - title_sprite->width) / 2, y_center - 120);
+    draw_sprite_xpm(play_sprite, (vbe_mode_info.XResolution - play_sprite->width) / 2, y_center);
+    draw_sprite_xpm(quit_sprite, (vbe_mode_info.XResolution - quit_sprite->width) / 2, y_center + 80);
+}
 
-    Sprite *frame_sprite = create_sprite_xpm((xpm_map_t) play);
-    if (frame_sprite == NULL) return 1;
+void (select_main_menu_option)(int option, Sprite *title_sprite, Sprite *play_sprite, Sprite *quit_sprite, uint32_t x_center, uint32_t y_center) {
+    vg_draw_rectangle(x_center - 10, y_center - 10, play_sprite->width + 20, play_sprite->height + 20, 0x000000); 
+    vg_draw_rectangle(x_center - 10, y_center + 70, quit_sprite->width + 20, quit_sprite->height + 20, 0x000000); 
+
+    if (option == 0) { 
+        vg_draw_rectangle(x_center - 10, y_center - 10, play_sprite->width + 20, play_sprite->height + 20, 0xFFFFFF); 
+    } else if (option == 1) { 
+        vg_draw_rectangle(x_center - 10, y_center + 70, quit_sprite->width + 20, quit_sprite->height + 20, 0xFFFFFF); 
+    }
+
+    draw_sprite_xpm(play_sprite, x_center, y_center);
+    draw_sprite_xpm(quit_sprite, x_center, y_center + 80);
+}
+
+int (draw_main_screen)(int option) {
+    Sprite *title_sprite = create_sprite_xpm((xpm_map_t) title);
+    if (title_sprite == NULL) return 1; 
+
+    Sprite *play_sprite = create_sprite_xpm((xpm_map_t) play);
+    if (play_sprite == NULL) return 1;
 
     Sprite *quit_sprite = create_sprite_xpm((xpm_map_t) quit);
     if (quit_sprite == NULL) return 1;
 
-    uint32_t x_center = (vbe_mode_info.XResolution - frame_sprite->width) / 2;
-    uint32_t y_center = (vbe_mode_info.YResolution - frame_sprite->height) / 2;
+    uint32_t x_center = (vbe_mode_info.XResolution - play_sprite->width) / 2;
+    uint32_t y_center = (vbe_mode_info.YResolution - play_sprite->height) / 2;
 
-    //if (draw_sprite_xpm(title_sprite, x_center, y_center - 10) != 0) return 1;
-    if (draw_sprite_xpm(frame_sprite, x_center, y_center) != 0) return 1; 
-    if (draw_sprite_xpm(quit_sprite, x_center - 7, y_center + 80) != 0) return 1;
-
+    draw_static_menu(title_sprite, play_sprite, quit_sprite, y_center);
+    select_main_menu_option(option, title_sprite, play_sprite, quit_sprite, x_center, y_center);
 
     return 0;
 }
 
+int (navigate_main_menu)() {
+    int ipc_status, r;
+    message msg;
+    uint8_t irq_set_keyboard;
+
+    if (kbc_subscribe_int(&irq_set_keyboard) != 0) {
+        return 1;
+    }
+
+    int selected_option = 0; 
+    bool exit_menu = false;
+
+    while ( !exit_menu ) {
+        /* Get a request message. */
+        if ( (r = driver_receive(ANY, &msg, &ipc_status)) != 0 ) { 
+          printf("driver_receive failed with: %d", r);
+            continue;
+        }
+        if (is_ipc_notify(ipc_status)) { /* received notification */
+          switch (_ENDPOINT_P(msg.m_source)) {
+            case HARDWARE: /* hardware interrupt notification */
+              if (msg.m_notify.interrupts & BIT(irq_set_keyboard)) { /* subscribed interrupt */
+                kbc_ih();
+                switch (scancode) {
+                    case UP_ARROW: 
+                        selected_option = 0; 
+                        draw_main_screen(selected_option);
+                        break;
+                    case DOWN_ARROW: 
+                        selected_option = 1; 
+                        draw_main_screen(selected_option);
+                        break;
+                    case ENTER_KEY: 
+                        exit_menu = true;
+                        break;
+                    case ESC_BREAKCODE: 
+                        exit_menu = true;
+                        selected_option = -1; 
+                        break;
+                }
+              }
+              break;
+            default:
+              break; /* no other notifications expected: do nothing */
+          }
+        } else { /* received a standard message, not a notification */
+            /* no standard messages expected: do nothing */
+        }
+    }
+    
+    if (kbc_unsubscribe_int() != 0) {
+        return 1;
+    }
+
+    return selected_option; 
+}
+
+
+// GAME OVER SCREEN
 
 int (draw_game_over_screen)() {
 
     return 0;
 }
+
+

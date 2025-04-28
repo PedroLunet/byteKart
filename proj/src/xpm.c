@@ -1,8 +1,7 @@
 #include <lcom/lcf.h>
 #include "xpm.h"
 #include "xpm/tiles.h"
-
-#define TRANSPARENT 0xFFFFFE
+#include "macros.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 
