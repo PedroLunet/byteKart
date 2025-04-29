@@ -2,6 +2,7 @@
 #define MOUSE_MACROS_H
 
 #define IRQ_MOUSE 12
+#define POINTER_SIZE 10
 
 #define MOUSE_Y_OVFL BIT(7)
 #define MOUSE_X_OVFL BIT(6)

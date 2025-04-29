@@ -5,11 +5,17 @@
 #include "sprite.h"
 #include "macros.h"
 #include "kbc.h"
+#include "mouse.h"
 
-void (draw_static_menu)(Sprite *title_sprite, Sprite *play_sprite, Sprite *leaderboard_sprite, Sprite *quit_sprite, uint32_t y_center);
-void (select_main_menu_option)(int option, Sprite *title_sprite, Sprite *play_sprite, Sprite *leaderboard_sprite, Sprite *quit_sprite, uint32_t x_center, uint32_t y_center);
-int (draw_main_screen)();
+void (draw_mouse_pointer)(int x, int y, bool is_hovering);
+void (clear_mouse_pointer)(int x, int y);
+
+void (draw_static_menu)();
 int (navigate_main_menu)();
+
+bool (is_mouse_over_option)(int mouse_x, int mouse_y, int *selected);
+void (update_mouse_position)(int *x, int *y);
+
 int (draw_game_over_screen)();
 
 #endif

@@ -121,23 +121,24 @@ int (proj_main_loop)(int argc, char *argv[]) {
     }
     printf("Screen resolution: %dx%d\n", vbe_mode_info.XResolution, vbe_mode_info.YResolution);
 
-    if (draw_main_screen(0) != 0) {
-        printf("Error drawing main screen.\n");
-        return 1;
-    }
 
     int selected_option = navigate_main_menu();
-    if (selected_option == -1) {
-        printf("Menu exited without selection.\n");
-    } else if (selected_option == 0) {
-        printf("Play selected.\n");
-        // start the game - por implementar
-    } else if (selected_option == 1) {
-        printf("Quit selected.\n");
-        exit_program();
+    switch (selected_option) {
+        case 0:
+            printf("Play selected.\n");
+            // start game
+            break;
+        case 1:
+            printf("Leaderboard selected.\n");
+            // leaderboard
+            break;
+        case 2:
+            printf("Quit selected.\n");
+            exit_program();
+            break;
+        default:
+            printf("Menu exited without selection.\n");
     }
-
-    // game loop
 
     if (restore_system() != 0) {
         printf("Error restoring system state.\n");
