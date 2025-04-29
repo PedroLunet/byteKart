@@ -28,13 +28,14 @@ void (select_main_menu_option)(int option, Sprite *title_sprite, Sprite *play_sp
 }
 
 int (draw_main_screen)(int option) {
-    Sprite *title_sprite = create_sprite_xpm((xpm_map_t) title);
+
+    Sprite *title_sprite = create_sprite_xpm((xpm_map_t) title, 0, 0, 0, 0);
     if (title_sprite == NULL) return 1; 
 
-    Sprite *play_sprite = create_sprite_xpm((xpm_map_t) play);
+    Sprite *play_sprite = create_sprite_xpm((xpm_map_t) play, 0, 0, 0, 0);
     if (play_sprite == NULL) return 1;
 
-    Sprite *quit_sprite = create_sprite_xpm((xpm_map_t) quit);
+    Sprite *quit_sprite = create_sprite_xpm((xpm_map_t) quit, 0, 0, 0, 0);
     if (quit_sprite == NULL) return 1;
 
     uint32_t x_center = (vbe_mode_info.XResolution - play_sprite->width) / 2;

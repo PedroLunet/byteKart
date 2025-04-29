@@ -7,12 +7,12 @@ typedef struct {
     int x, y;
     int width, height;
     int xspeed, yspeed;
-    char *map;
+    uint32_t *map;
 } Sprite;
 
 extern char *pixil_frame_0[];
 
-Sprite *create_sprite_xpm(xpm_map_t sprite);
+Sprite *create_sprite_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed);
 int draw_sprite_xpm(Sprite *sprite, int x, int y);
 
 #endif /* XPM_H */

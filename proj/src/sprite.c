@@ -3,12 +3,12 @@
 #include "xpm/tiles.h"
 #include "macros.h"
 
-Sprite *create_sprite_xpm(const char *pic[], int x, int y, int xspeed, int yspeed) {
+Sprite *create_sprite_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed) {
     Sprite *sp = (Sprite *) malloc(sizeof(Sprite));
     if (sp == NULL) return NULL;
 
     xpm_image_t img;
-    sp->map = xpm_load(pic, XPM_INDEXED, &img);
+    sp->map = (uint32_t *) xpm_load(pic, XPM_8_8_8_8, &img);
     if (sp->map == NULL) {
         free(sp);
         return NULL;
