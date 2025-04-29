@@ -87,3 +87,56 @@ void (mouse_struct_packet)(struct packet* pp) {
   pp->delta_x = (pp->bytes[0] & MSB_X_DELTA) ? (0xFF00 | ((uint16_t) pp->bytes[1])) : ((uint16_t) pp->bytes[1]);
   pp->delta_y = (pp->bytes[0] & MSB_Y_DELTA) ? (0xFF00 | ((uint16_t) pp->bytes[2])) : ((uint16_t) pp->bytes[2]);
 }
+
+
+void (state_machine)(uint8_t x_len, uint8_t tolerance) {
+     /*
+    switch (state) {
+        case START:
+            if (pp.lb && !pp.mb && !pp.rb) {
+                state = UP;
+                x_len_total = 0;
+            }
+            break;
+
+        case UP:
+            if (!pp.lb && !pp.mb && !pp.rb) {
+                state = VERTEX;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+            break;
+
+        case VERTEX:
+            if (pp.rb && !pp.lb && !pp.mb) {
+                state = DOWN;
+            } else if (abs(pp.delta_x) > tolerance || abs(pp.delta_y) > tolerance) {
+                state = START;
+            }
+        break;
+
+        case DOWN:
+            if (!pp.rb && !pp.mb && !pp.lb && x_len_total >= x_len) {
+                state = END;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+        break;
+
+        case END:
+            break;
+
+        default:
+            break;
+    }
+
+
+    x_len_total = max(0, x_len_total + pp.delta_x);
+    */
+}

@@ -12,5 +12,6 @@ int (mouse_data_reporting)(uint8_t command);
 void (mouse_bytes)();
 int (mouse_write_command)(uint8_t mouse_command);
 void (mouse_struct_packet)(struct packet* pp);
+void (state_machine)(uint8_t x_len, uint8_t tolerance);
 
 #endif
