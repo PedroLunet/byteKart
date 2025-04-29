@@ -5,6 +5,7 @@
 #include "kbc.h"
 
 #include "initial_screen/play.xpm"
+#include "initial_screen/leaderboard.xpm"
 #include "initial_screen/quit.xpm"
 #include "initial_screen/title.xpm"
 

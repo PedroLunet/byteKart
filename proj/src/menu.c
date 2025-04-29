@@ -7,24 +7,29 @@ extern uint8_t scancode;
 
 // MAIN SCREEN
 
-void (draw_static_menu)(Sprite *title_sprite, Sprite *play_sprite, Sprite *quit_sprite, uint32_t y_center) {
+void (draw_static_menu)(Sprite *title_sprite, Sprite *play_sprite, Sprite *leaderboard_sprite, Sprite *quit_sprite, uint32_t y_center) {
     draw_sprite_xpm(title_sprite, (vbe_mode_info.XResolution - title_sprite->width) / 2, y_center - 120);
     draw_sprite_xpm(play_sprite, (vbe_mode_info.XResolution - play_sprite->width) / 2, y_center);
-    draw_sprite_xpm(quit_sprite, (vbe_mode_info.XResolution - quit_sprite->width) / 2, y_center + 80);
+    draw_sprite_xpm(leaderboard_sprite, (vbe_mode_info.XResolution - leaderboard_sprite->width) / 2, y_center + 80);
+    draw_sprite_xpm(quit_sprite, (vbe_mode_info.XResolution - quit_sprite->width) / 2, y_center + 170);
 }
 
-void (select_main_menu_option)(int option, Sprite *title_sprite, Sprite *play_sprite, Sprite *quit_sprite, uint32_t x_center, uint32_t y_center) {
+void (select_main_menu_option)(int option, Sprite *title_sprite, Sprite *play_sprite, Sprite *leaderboard_sprite, Sprite *quit_sprite, uint32_t x_center, uint32_t y_center) {
     vg_draw_rectangle(x_center - 10, y_center - 10, play_sprite->width + 20, play_sprite->height + 20, 0x000000); 
-    vg_draw_rectangle(x_center - 10, y_center + 70, quit_sprite->width + 20, quit_sprite->height + 20, 0x000000); 
+    vg_draw_rectangle(((vbe_mode_info.XResolution - leaderboard_sprite->width) / 2) - 10, y_center + 70, leaderboard_sprite->width + 20, leaderboard_sprite->height + 20, 0x000000); 
+    vg_draw_rectangle(x_center - 10, y_center + 170, quit_sprite->width + 20, quit_sprite->height + 20, 0x000000); 
 
-    if (option == 0) { 
-        vg_draw_rectangle(x_center - 10, y_center - 10, play_sprite->width + 20, play_sprite->height + 20, 0xFFFFFF); 
+    if (option == 0) {
+        vg_draw_rectangle(x_center - 10, y_center - 10, play_sprite->width + 20, play_sprite->height + 20, 0xFFFFFF);
     } else if (option == 1) { 
-        vg_draw_rectangle(x_center - 10, y_center + 70, quit_sprite->width + 20, quit_sprite->height + 20, 0xFFFFFF); 
+        vg_draw_rectangle(((vbe_mode_info.XResolution - leaderboard_sprite->width) / 2) - 10, y_center + 70, leaderboard_sprite->width + 20, leaderboard_sprite->height + 20, 0xFFFFFF);
+    } else if (option == 2) { 
+        vg_draw_rectangle(x_center - 10, y_center + 170, quit_sprite->width + 20, quit_sprite->height + 20, 0xFFFFFF);
     }
 
     draw_sprite_xpm(play_sprite, x_center, y_center);
-    draw_sprite_xpm(quit_sprite, x_center, y_center + 80);
+    draw_sprite_xpm(leaderboard_sprite, (vbe_mode_info.XResolution - leaderboard_sprite->width) / 2, y_center + 80);
+    draw_sprite_xpm(quit_sprite, x_center, y_center + 170);
 }
 
 int (draw_main_screen)(int option) {
@@ -35,14 +40,16 @@ int (draw_main_screen)(int option) {
     Sprite *play_sprite = create_sprite_xpm((xpm_map_t) play, 0, 0, 0, 0);
     if (play_sprite == NULL) return 1;
 
+    Sprite *leaderboard_sprite = create_sprite_xpm((xpm_map_t) leaderboard, 0, 0, 0, 0);
+
     Sprite *quit_sprite = create_sprite_xpm((xpm_map_t) quit, 0, 0, 0, 0);
     if (quit_sprite == NULL) return 1;
 
     uint32_t x_center = (vbe_mode_info.XResolution - play_sprite->width) / 2;
     uint32_t y_center = (vbe_mode_info.YResolution - play_sprite->height) / 2;
 
-    draw_static_menu(title_sprite, play_sprite, quit_sprite, y_center);
-    select_main_menu_option(option, title_sprite, play_sprite, quit_sprite, x_center, y_center);
+    draw_static_menu(title_sprite, play_sprite, leaderboard_sprite, quit_sprite, y_center);
+    select_main_menu_option(option, title_sprite, play_sprite, leaderboard_sprite, quit_sprite, x_center, y_center);
 
     return 0;
 }
@@ -72,11 +79,11 @@ int (navigate_main_menu)() {
                 kbc_ih();
                 switch (scancode) {
                     case UP_ARROW: 
-                        selected_option = 0; 
+                        if (selected_option > 0) selected_option--;
                         draw_main_screen(selected_option);
                         break;
                     case DOWN_ARROW: 
-                        selected_option = 1; 
+                        if (selected_option < 2) selected_option++;
                         draw_main_screen(selected_option);
                         break;
                     case ENTER_KEY: 
@@ -84,7 +91,7 @@ int (navigate_main_menu)() {
                         break;
                     case ESC_BREAKCODE: 
                         exit_menu = true;
-                        selected_option = -1; 
+                        selected_option = -1; // Exit without selecting
                         break;
                 }
               }
