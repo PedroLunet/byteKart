@@ -36,15 +36,8 @@ int (mouse_unsubscribe_int)() {
 
 void (mouse_ih)() {
   if (read_output_KBC(WRITE_COMMAND_BYTE, &current_byte, 1)) {
-    printf("Error reading byte from mouse.");
+    printf("Error reading byte from mouse.\n");
   }
-}
-
-int (mouse_data_reporting)(uint8_t command) {
-  // uint8_t attemps = 10;
-  // uint8_t response;
-
-  return 1;
 }
 
 void (mouse_bytes)() {
@@ -57,6 +50,34 @@ void (mouse_bytes)() {
   }
 }
 
+int (mouse_write_command)(uint8_t mouse_command) {
+
+  int ret = write_command_KBC(KBC_CMD_REG, MOUSE_COMMAND); // request command 0xD4 to 0x64
+  if (ret != 0) {
+    printf("Error requesting command 0xD4.\n");
+    return 1;
+  }
+
+  ret = write_command_KBC(OUT_BUFFER, mouse_command); // write command to 0x60
+  if (ret != 0) {
+    printf("Error writing mouse_command to 0x60.\n");
+    return 1;
+  }
+
+  uint8_t ackowledgement_byte;
+  ret = read_output_KBC(OUT_BUFFER, &ackowledgement_byte, 1);
+  if (ret != 0) {
+    printf("Ackowledgement byte not successful.\n");
+    return 1;
+  }
+
+  if (ackowledgement_byte != 0xFA) {
+    return mouse_write_command(mouse_command);
+  }
+
+  return 0;
+}
+
 void (mouse_struct_packet)(struct packet* pp) {
   pp->y_ov = (pp->bytes[0] & MOUSE_Y_OVFL);
   pp->x_ov = (pp->bytes[0] & MOUSE_X_OVFL);
@@ -67,3 +88,55 @@ void (mouse_struct_packet)(struct packet* pp) {
   pp->delta_y = (pp->bytes[0] & MSB_Y_DELTA) ? (0xFF00 | ((uint16_t) pp->bytes[2])) : ((uint16_t) pp->bytes[2]);
 }
 
+
+void (state_machine)(uint8_t x_len, uint8_t tolerance) {
+     /*
+    switch (state) {
+        case START:
+            if (pp.lb && !pp.mb && !pp.rb) {
+                state = UP;
+                x_len_total = 0;
+            }
+            break;
+
+        case UP:
+            if (!pp.lb && !pp.mb && !pp.rb) {
+                state = VERTEX;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+            break;
+
+        case VERTEX:
+            if (pp.rb && !pp.lb && !pp.mb) {
+                state = DOWN;
+            } else if (abs(pp.delta_x) > tolerance || abs(pp.delta_y) > tolerance) {
+                state = START;
+            }
+        break;
+
+        case DOWN:
+            if (!pp.rb && !pp.mb && !pp.lb && x_len_total >= x_len) {
+                state = END;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+        break;
+
+        case END:
+            break;
+
+        default:
+            break;
+    }
+
+
+    x_len_total = max(0, x_len_total + pp.delta_x);
+    */
+}
