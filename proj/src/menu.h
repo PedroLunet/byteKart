@@ -2,7 +2,7 @@
 #define _MENU_H_
 
 #include "xpm/xpm_files.h" 
-#include "xpm.h"
+#include "sprite.h"
 #include "macros.h"
 #include "kbc.h"
 

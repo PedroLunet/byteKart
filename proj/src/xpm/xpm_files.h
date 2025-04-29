@@ -1,8 +1,7 @@
 #ifndef XPM_FILES_H
 #define XPM_FILES_H
 
-#include "xpm/xpm_files.h" 
-#include "xpm.h"
+#include "sprite.h"
 #include "macros.h"
 #include "kbc.h"
 
