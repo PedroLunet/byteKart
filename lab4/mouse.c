@@ -36,7 +36,7 @@ int (mouse_unsubscribe_int)() {
 
 void (mouse_ih)() {
   if (read_output_KBC(WRITE_COMMAND_BYTE, &current_byte, 1)) {
-    printf("Error reading byte from mouse.");
+    printf("Error reading byte from mouse.\n");
   }
 }
 
