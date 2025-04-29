@@ -1,8 +1,34 @@
 #include <lcom/lcf.h>
 #include <anim_sprite.h>
 
-AnimSprite *create_animSprite(uint8_t no_pic, xpm_map_t pic1[], ...) {
+struct AnimSprite {
+    Sprite *sp;
+    int aspeed;
+    int cur_aspeed;
+    int num_fig;
+    int cur_fig;
+    uint32_t **map;
 
+    // Method-like function pointers
+    int (*animate)(AnimSprite *self);
+};
+
+// Method Implementation
+static int animate_impl(AnimSprite *self) {
+    if (self == NULL || self->num_fig <= 1) return 1;
+
+    if (self->cur_aspeed == 0) {
+        self->cur_fig = (self->cur_fig + 1) % self->num_fig;
+        self->sp->map = self->map[self->cur_fig];
+        self->cur_aspeed = self->aspeed;
+    } else {
+        self->cur_aspeed--;
+    }
+
+    return 0;
+}
+
+AnimSprite *create_animSprite(uint8_t no_pic, xpm_map_t pic1[], ...) {
     AnimSprite *asp = malloc(sizeof(AnimSprite));
     if (asp == NULL) return NULL;
 
@@ -44,25 +70,9 @@ AnimSprite *create_animSprite(uint8_t no_pic, xpm_map_t pic1[], ...) {
     asp->num_fig = no_pic;
     asp->cur_fig = 0;
 
+    asp->animate = animate_impl;
+
     return asp;
-}
-
-int animate_animSprite(AnimSprite *sp,) {
-
-    if (sp == NULL || sp->num_fig <= 1) return 1;
-
-    if (sp->cur_aspeed == 0) {
-
-        sp->cur_fig = (sp->cur_fig + 1) % sp->num_fig;
-        sp->sp->map = sp->map[sp->cur_fig];
-        sp->cur_aspeed = sp->aspeed;
-
-    } else {
-        sp->cur_aspeed--;
-    }
-
-    return 0;
-
 }
 
 void destroy_animSprite(AnimSprite *sp) {
