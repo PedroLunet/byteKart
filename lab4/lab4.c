@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
 extern struct packet pp;
 extern uint8_t index_packet;
 extern uint32_t counter;
+extern State state;
 
 int (mouse_test_packet)(uint32_t cnt) {
 
@@ -186,11 +187,10 @@ int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
 
    	int ipc_status;
     message msg;
-    uint8_t irq_set_mouse;
+
+    bool gesture_done = true;
 
     uint8_t mouse_mask = 0;
-    uint8_t timer_mask = 0;
-
   	// Subscribe mouse interrupts
       int ret = mouse_subscribe_int(&mouse_mask);
       if (ret != 0) {
@@ -203,7 +203,7 @@ int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
           return 1;
       }
 
-    while (true ) { // MODIFY CONDITION 
+    while (gesture_done) { 
     	if (driver_receive(ANY, &msg, &ipc_status) != 0) {
             printf("Error in driver_receive\n");
             continue;
@@ -219,6 +219,10 @@ int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
                             mouse_struct_packet(&pp);
                             mouse_print_packet(&pp);
                             state_machine(x_len, tolerance);
+
+                            if (state == END) {
+                                gesture_done = false;
+                            }
                             index_packet = 0;
                         }
                     }
@@ -227,6 +231,13 @@ int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
                     break;
             }
         }
+    }
+
+    // Disable data reporting
+    ret = mouse_write_command(MOUSE_DISABLE);
+    if (ret != 0) {
+        printf("Error disabling mouse.\n");
+        return 1;
     }
 
     // Unsubscribe mouse interrupts

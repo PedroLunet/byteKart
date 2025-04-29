@@ -9,6 +9,7 @@ uint8_t current_byte;
 int hook_id_mouse = 3;
 struct packet pp;
 uint8_t index_packet = 0;
+State state = START;
 
 int (mouse_subscribe_int)(uint8_t *bit_no) {
   if (bit_no == NULL) {
@@ -90,53 +91,65 @@ void (mouse_struct_packet)(struct packet* pp) {
 
 
 void (state_machine)(uint8_t x_len, uint8_t tolerance) {
-     /*
-    switch (state) {
-        case START:
-            if (pp.lb && !pp.mb && !pp.rb) {
-                state = UP;
-                x_len_total = 0;
-            }
-            break;
+    
+  static int16_t x_len_total = 0;
 
-        case UP:
-            if (!pp.lb && !pp.mb && !pp.rb) {
-                state = VERTEX;
-            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
-                       (abs(pp.delta_y) <= tolerance)) {
-                x_len_total += pp.delta_x;
-            } else {
-               state = START;
-            }
-            break;
-
-        case VERTEX:
-            if (pp.rb && !pp.lb && !pp.mb) {
-                state = DOWN;
-            } else if (abs(pp.delta_x) > tolerance || abs(pp.delta_y) > tolerance) {
-                state = START;
-            }
+  switch (state) {
+      case START:
+        if (pp.lb && !pp.mb && !pp.rb) { // left button pressed
+            state = UP;
+            x_len_total = 0;
+        }
         break;
 
-        case DOWN:
-            if (!pp.rb && !pp.mb && !pp.lb && x_len_total >= x_len) {
-                state = END;
-            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
-                       (abs(pp.delta_y) <= tolerance)) {
-                x_len_total += pp.delta_x;
-            } else {
-               state = START;
+      case UP:
+        if (!pp.lb && !pp.mb && !pp.rb) { // left button released
+          if (x_len_total >= x_len) {
+            state = VERTEX;
+          } else {
+            state = START;
+          }
+        } else if (pp.delta_x >= -tolerance && pp.delta_y >= -tolerance) {
+            x_len_total += pp.delta_x;
+            if (pp.delta_y < pp.delta_x - tolerance) {
+              state = START;
             }
+        } else {
+            state = START;
+        }
         break;
 
-        case END:
-            break;
+      case VERTEX:
+        if (pp.rb && !pp.lb && !pp.mb) { // right button pressed
+            state = DOWN;
+            x_len_total = 0;
+        } else if (abs(pp.delta_x) > tolerance || abs(pp.delta_y) > tolerance) {
+            state = START;
+        }
+        break;
 
-        default:
-            break;
-    }
+      case DOWN:
+        if (!pp.rb && !pp.mb && !pp.lb) {
+          if (x_len_total >= x_len) {
+            state = END;
+          } else {
+            state = START;
+          }
+        } else if (pp.delta_x >= -tolerance && pp.delta_y <= tolerance) {
+            x_len_total += pp.delta_x;
+            if (pp.delta_y > pp.delta_x + tolerance) {
+              state = START;
+            }
+        } else {
+            state = START;
+        }
+        break;
 
+      case END: // gesture done
+        break;
 
-    x_len_total = max(0, x_len_total + pp.delta_x);
-    */
+      default:
+        state = START;
+        break;
+  }  
 }

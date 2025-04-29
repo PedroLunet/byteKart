@@ -5,6 +5,8 @@
 #include "i8254.h"
 #include "kbc.h"
 
+typedef enum { START, UP, VERTEX, DOWN, END } State;
+
 int (mouse_subscribe_int)(uint8_t *bit_no);
 int (mouse_unsubscribe_int)();
 void (mouse_ih)();
