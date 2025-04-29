@@ -1,13 +1,15 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include <minix/sysutil.h>
 #include <lcom/lcf.h>
+#include "i8042.h"
+#include "kbc.h"
 
-int (kbc_subscribe_int)(uint8_t *bit_no);
-int (kbc_unsubscribe_int)();
+int (keyboard_subscribe_int)(uint8_t *bit_no);
+int (keyboard_unsubscribe_int)();
+void (keyboard_process_scancode)();
 void (kbc_ih)();
-int (kbc_write)(uint8_t status, uint8_t st_ibf, uint8_t port);
-int (kbc_read_output_buffer)();
-void (kbd_process_scancode)();
+int (keyboard_restore)();
 
 #endif //KEYBOARD_H

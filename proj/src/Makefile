@@ -1,0 +1,10 @@
+PROG=proj
+
+.PATH: ${.CURDIR}/src/
+
+SRCS = 	main.c xpm.c timer.c utils.c video_card.c kbc.c menu.c
+CFLAGS += -pedantic -D_LCOM_OPTIMIZED_ -O2
+
+DPADD += ${LIBLCF}
+LDADD += -Wall -llcf -lxpm -llm
+.include <minix.lcom.mk>

@@ -90,10 +90,172 @@ int (mouse_test_packet)(uint32_t cnt) {
 }
 
 int (mouse_test_async)(uint8_t idle_time) {
-    /* To be completed */
-    printf("%s(%u): under construction\n", __func__, idle_time);
-    return 1;
+
+    int ipc_status;
+    message msg;
+    uint8_t seconds = 0;
+
+    uint8_t irq_set_mouse = 0;
+    uint8_t irq_set_timer = 0;
+
+    uint16_t timer_frequency = sys_hz();
+
+    // Enable data reporting
+    if (mouse_write_command(MOUSE_ENABLE_CMD) != 0) {
+        return 1;
+    }
+
+    // Subscribe timer interrupts
+    if (timer_subscribe_int(&irq_set_timer) != 0) {
+        return 1;
+    }
+
+    // Subscribe mouse interrupts
+    if (mouse_subscribe_int(&irq_set_mouse) != 0) {
+        return 1;
+    }
+
+    while (seconds < idle_time) {
+        if (driver_receive(ANY, &msg, &ipc_status) != 0) {
+            printf("Error in driver_receive\n");
+            continue;
+        }
+
+        if (is_ipc_notify(ipc_status)) {
+            switch (_ENDPOINT_P(msg.m_source)) {
+                case HARDWARE:
+                    if (msg.m_notify.interrupts & irq_set_mouse) {
+                        mouse_ih();
+                        mouse_process_scanbyte();
+                        seconds = 0;
+                        timer_counter = 0;
+                    }
+                    if (msg.m_notify.interrupts & irq_set_timer) {
+                        timer_int_handler();
+                        if (timer_counter % timer_frequency == 0) {
+                            seconds++;
+                        }
+                    }
+                break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    // Unsubscribe mouse interrupts
+    if (mouse_unsubscribe_int() != 0) {
+        return 1;
+    }
+
+    // Unsubscribe timer interrupts
+    if (timer_unsubscribe_int() != 0) {
+        return 1;
+    }
+
+    // Disable data reporting
+    if (mouse_write_command(MOUSE_DISABLE_CMD) != 0) {
+        return 1;
+    }
+
+    return 0;
+
 }
+
+void (update_state_machine)(uint8_t x_len, uint8_t tolerance) {
+    switch (state) {
+        case START:
+            if (pp.lb && !pp.mb && !pp.rb) {
+                state = UP;
+                x_len_total = 0;
+            }
+            break;
+
+        case UP:
+            if (!pp.lb && !pp.mb && !pp.rb) {
+                state = VERTEX;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+            break;
+
+        case VERTEX:
+            if (pp.rb && !pp.lb && !pp.mb) {
+                state = DOWN;
+            } else if (abs(pp.delta_x) > tolerance || abs(pp.delta_y) > tolerance) {
+                state = START;
+            }
+        break;
+
+        case DOWN:
+            if (!pp.rb && !pp.mb && !pp.lb && x_len_total >= x_len) {
+                state = END;
+            } else if ((pp.delta_x >= -tolerance && abs(pp.delta_y) > abs(pp.delta_x) - tolerance) ||
+                       (abs(pp.delta_y) <= tolerance)) {
+                x_len_total += pp.delta_x;
+            } else {
+               state = START;
+            }
+        break;
+
+        case END:
+            break;
+
+        default:
+            break;
+    }
+
+
+    x_len_total = max(0, x_len_total + pp.delta_x);
+}
+
+int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
+
+   	int ipc_status;
+    message msg;
+    uint8_t irq_set_mouse;
+
+  	// Enable data reporting
+    if (mouse_write_command(MOUSE_ENABLE_CMD) != 0) {
+        return 1;
+    }
+
+    // Subscribe mouse interrupts
+    if (mouse_subscribe_int(&irq_set_mouse) != 0) {
+        return 1;
+    }
+
+
+    while (state != END) {
+    	if (driver_receive(ANY, &msg, &ipc_status) != 0) {
+            printf("Error in driver_receive\n");
+            continue;
+        }
+
+        if (is_ipc_notify(ipc_status)) {
+            switch (_ENDPOINT_P(msg.m_source)) {
+                case HARDWARE:
+                    if (msg.m_notify.interrupts & irq_set_mouse) {
+                        mouse_ih();
+                        mouse_process_scanbyte();
+                        if (count_mouse_packets % 3 == 0) {
+                            update_state_machine(x_len, tolerance);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    // Unsubscribe mouse interrupts
+    if (mouse_unsubscribe_int() != 0) {
+        return 1;
+    }
 
 int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
     /* To be completed */
@@ -106,3 +268,4 @@ int (mouse_test_remote)(uint16_t period, uint8_t cnt) {
     printf("%s(%u, %u): under construction\n", __func__, period, cnt);
     return 1;
 }
+

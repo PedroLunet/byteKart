@@ -1,77 +1,29 @@
-#include <lcom/lcf.h>
 #include "keyboard.h"
 
-#include "i8254.h"
-
-int hook_id_keyboard = 0;
-uint8_t scancode;
+int hook_id_keyboard = 1;
+uint8_t scancode = 0;
 
 uint8_t bytes[2];
 uint8_t size = 0;
 bool make = true;
 
-int count = 0;
-
-int (kbc_subscribe_int)(uint8_t *bit_no) {
-    hook_id_keyboard = *bit_no;
-    if (sys_irqsetpolicy(KBC_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &hook_id_keyboard) != OK) {
-        printf("Error in sys_irqsetpolicy()\n");
+int (keyboard_subscribe_int)(uint8_t *bit_no) {
+    if (bit_no == NULL) return 1;
+    *bit_no = BIT(hook_id_keyboard);
+    if (sys_irqsetpolicy(KEYBOARD_IRQ, IRQ_REENABLE | IRQ_EXCLUSIVE, &hook_id_keyboard) != 0) {
         return 1;
     }
     return 0;
 }
 
-int (kbc_unsubscribe_int)() {
-    if (sys_irqrmpolicy(&hook_id_keyboard) != OK) {
-        printf("Error in sys_irqrmpolicy()\n");
+int (keyboard_unsubscribe_int)() {
+    if (sys_irqrmpolicy(&hook_id_keyboard) != 0) {
         return 1;
     }
     return 0;
 }
 
-// status: status byte to be written
-// free_buffer_mask: mask to check if the buffer is free
-// port: port to write the status byte
-int (kbc_write)(uint8_t input, uint8_t free_buffer_mask, uint8_t port) {
-    uint8_t stat;
-    while (true) {
-        util_sys_inb(KBC_ST_REG, &stat);
-        #ifdef LAB3
-            count++;
-        #endif
-        if ((stat & free_buffer_mask) == 0) {
-            sys_outb(port, input);
-            return 0;
-        }
-        tickdelay(micros_to_ticks(DELAY_US));
-    }
-}
-
-int (kbc_read_output_buffer)() {
-    uint8_t data;
-    uint8_t stat;
-    while (true) {
-        util_sys_inb(KBC_ST_REG, &stat);
-        #ifdef LAB3
-            count++;
-        #endif
-        if(stat & KBC_ST_OBF) {
-            util_sys_inb(KBC_OUT_BUF, &data);
-            #ifdef LAB3
-                count++;
-            #endif
-            if ( (stat & (KBC_PAR_ERR | KBC_TO_ERR)) == 0 ) {
-                return data;
-            }
-            else {
-                return 1;
-            }
-        }
-        tickdelay(micros_to_ticks(DELAY_US));
-    }
-}
-
-void (kbd_process_scancode)() {
+void (keyboard_process_scancode)() {
   if (bytes[0] != 0xE0) {
     bytes[0] = scancode;
     size = 1;
@@ -92,7 +44,33 @@ void (kbd_process_scancode)() {
 }
 
 void (kbc_ih)() {
-    scancode = kbc_read_output_buffer();
-	kbd_process_scancode();
+    if (kbc_read_output(KBC_OUT_CMD, &scancode, 0) != 0) {
+        printf("Error: Could not read scancode!\n");
+    }
+}
+
+int (keyboard_restore)() {
+
+    uint8_t command_byte;
+
+    if (kbc_write_command(KBC_IN_CMD, KBC_READ_CMD) != 0) {
+        return 1;
+    }
+
+    if (kbc_read_output(KBC_OUT_CMD, &command_byte, 0) != 0) {
+        return 1;
+    }
+
+    command_byte |= ENABLE_INT;
+
+    if (kbc_write_command(KBC_IN_CMD, KBC_WRITE_CMD) != 0) {
+        return 1;
+    }
+
+    if (kbc_write_command(KBC_WRITE_CMD, command_byte) != 0) {
+        return 1;
+    }
+
+    return 0;
 }
 
