@@ -28,7 +28,7 @@
 #define KBC_ST_REG 0x64
 #define KBC_CMD_REG 0x64
 
-#define DELAY_US 2000
+#define DELAY_US 20000
 
 
 /* MOUSE DEFINITIONS */
@@ -45,5 +45,8 @@
 
 #define BUTTON_PRESSED 1
 
+#define MOUSE_COMMAND 0xD4
+#define MOUSE_ENABLE 0xF4
+#define MOUSE_DISABLE 0xF5
 
 #endif

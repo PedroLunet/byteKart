@@ -37,20 +37,21 @@ extern uint8_t index_packet;
 
 int (mouse_test_packet)(uint32_t cnt) {
 
-    //int ipc_status, r;
-    //message msg;
+    int ipc_status;
+    message msg;
     uint8_t mouse_mask;
 
     int ret = mouse_subscribe_int(&mouse_mask);
     if (ret != 0) {
         printf("Error subscribing mouse in main.");
         return 1;
+    } 
+    
+    ret = mouse_write_command(MOUSE_ENABLE);
+    if (ret != 0) {
+        printf("Error enabling mouse.\n");
+        return 1;
     }
-
-    // enable data report 
-
-    int ipc_status;
-    message msg;
 
     while (cnt) {
         if (driver_receive(ANY, &msg, &ipc_status) != 0) {
@@ -61,7 +62,7 @@ int (mouse_test_packet)(uint32_t cnt) {
         if (is_ipc_notify(ipc_status)) {
           switch (_ENDPOINT_P(msg.m_source)) {
             case HARDWARE:
-              if (msg.m_notify.interrupts & mouse_mask) {
+              if (msg.m_notify.interrupts & BIT(mouse_mask)) {
                 mouse_ih();
                 mouse_bytes();
                 if (index_packet == 3) {
@@ -78,7 +79,11 @@ int (mouse_test_packet)(uint32_t cnt) {
         }
     }
 
-    // disable data report 
+    ret = mouse_write_command(MOUSE_DISABLE);
+    if (ret != 0) {
+        printf("Error disabling mouse.\n");
+        return 1;
+    }
 
     ret = mouse_unsubscribe_int();
     if (ret != 0) {
@@ -90,7 +95,7 @@ int (mouse_test_packet)(uint32_t cnt) {
 }
 
 int (mouse_test_async)(uint8_t idle_time) {
-
+    /*
     int ipc_status;
     message msg;
     uint8_t seconds = 0;
@@ -158,11 +163,13 @@ int (mouse_test_async)(uint8_t idle_time) {
         return 1;
     }
 
-    return 0;
+    */
+    return 1;
 
 }
 
 void (update_state_machine)(uint8_t x_len, uint8_t tolerance) {
+    /*
     switch (state) {
         case START:
             if (pp.lb && !pp.mb && !pp.rb) {
@@ -210,10 +217,11 @@ void (update_state_machine)(uint8_t x_len, uint8_t tolerance) {
 
 
     x_len_total = max(0, x_len_total + pp.delta_x);
+    */
 }
 
 int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
-
+/*
    	int ipc_status;
     message msg;
     uint8_t irq_set_mouse;
@@ -256,11 +264,8 @@ int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
     if (mouse_unsubscribe_int() != 0) {
         return 1;
     }
-
-int (mouse_test_gesture)(uint8_t x_len, uint8_t tolerance) {
-    /* To be completed */
-    printf("%s: under construction\n", __func__);
-    return 1;
+        */
+       return 1;
 }
 
 int (mouse_test_remote)(uint16_t period, uint8_t cnt) {

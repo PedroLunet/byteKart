@@ -40,13 +40,6 @@ void (mouse_ih)() {
   }
 }
 
-int (mouse_data_reporting)(uint8_t command) {
-  // uint8_t attemps = 10;
-  // uint8_t response;
-
-  return 1;
-}
-
 void (mouse_bytes)() {
   if (index_packet == 0 && (current_byte & BIT(3))) {
     pp.bytes[index_packet] = current_byte;
@@ -55,6 +48,34 @@ void (mouse_bytes)() {
     pp.bytes[index_packet] = current_byte;
     index_packet++;
   }
+}
+
+int (mouse_write_command)(uint8_t mouse_command) {
+
+  int ret = write_command_KBC(KBC_CMD_REG, MOUSE_COMMAND); // request command 0xD4 to 0x64
+  if (ret != 0) {
+    printf("Error requesting command 0xD4.\n");
+    return 1;
+  }
+
+  ret = write_command_KBC(OUT_BUFFER, mouse_command); // write command to 0x60
+  if (ret != 0) {
+    printf("Error writing mouse_command to 0x60.\n");
+    return 1;
+  }
+
+  uint8_t ackowledgement_byte;
+  ret = read_output_KBC(OUT_BUFFER, &ackowledgement_byte, 1);
+  if (ret != 0) {
+    printf("Ackowledgement byte not successful.\n");
+    return 1;
+  }
+
+  if (ackowledgement_byte != 0xFA) {
+    return mouse_write_command(mouse_command);
+  }
+
+  return 0;
 }
 
 void (mouse_struct_packet)(struct packet* pp) {
@@ -66,4 +87,3 @@ void (mouse_struct_packet)(struct packet* pp) {
   pp->delta_x = (pp->bytes[0] & MSB_X_DELTA) ? (0xFF00 | ((uint16_t) pp->bytes[1])) : ((uint16_t) pp->bytes[1]);
   pp->delta_y = (pp->bytes[0] & MSB_Y_DELTA) ? (0xFF00 | ((uint16_t) pp->bytes[2])) : ((uint16_t) pp->bytes[2]);
 }
-
