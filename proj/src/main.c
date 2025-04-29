@@ -7,7 +7,7 @@
 #include "i8042.h"
 #include "i8254.h"
 #include "kbc.h"
-#include "xpm.h"
+#include "sprite.h"
 #include "menu.h"
 #include "macros.h"
 
@@ -137,29 +137,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
         exit_program();
     }
 
-
-    /*
-    if (load_tiles() != 0) {
-        restore_system();
-        return 1;
-    }
-
-    uint32_t drawable_height = (vbe_mode_info.YResolution / 64) * 64;
-    uint32_t y_offset = (vbe_mode_info.YResolution - drawable_height) / 2;
-
-    uint32_t height_drawn = y_offset;
-    for (uint32_t i = 0; i < vbe_mode_info.YResolution / 64 ; i++) {
-        if (draw_horizontal_track(height_drawn) != 0) {
-            restore_system();
-            return 1;
-        }
-        height_drawn += 64;
-    }
-
-    if (ESC_key_wait() != 0) {
-        return 1;
-    }
-    */
+    // game loop
 
     if (restore_system() != 0) {
         printf("Error restoring system state.\n");
