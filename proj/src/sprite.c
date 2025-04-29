@@ -36,3 +36,9 @@ int draw_sprite_xpm(Sprite *sprite, int x, int y) {
 
     return 0;
 }
+
+void destroy_sprite(Sprite *sp) {
+    if (sp == NULL) return;
+    free(sp->map); 
+    free(sp);     
+}

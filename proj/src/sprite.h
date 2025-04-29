@@ -14,6 +14,7 @@ extern char *pixil_frame_0[];
 
 Sprite *create_sprite_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed);
 int draw_sprite_xpm(Sprite *sprite, int x, int y);
+void destroy_sprite(Sprite *sp);
 
 #endif /* XPM_H */
 
