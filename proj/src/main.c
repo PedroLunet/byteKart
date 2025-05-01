@@ -3,23 +3,45 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "video_card.h"
-#include "i8042.h"
-#include "i8254.h"
-#include "kbc.h"
+#include "controller/video_card.h"
+#include "controller/i8042.h"
+#include "controller/i8254.h"
+#include "controller/kbc.h"
+
+#include "main.h"
+#include "lcom/timer.h"
 #include "sprite.h"
 #include "menu.h"
 #include "macros.h"
 
-
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
+extern int timer_counter;
 
-Sprite *struct_left_line_tile;
-Sprite *struct_right_line_tile;
-Sprite *struct_outspace_tile;
-Sprite *struct_track_tile;
-Sprite *struct_track_line_tile;
+Menu *mainMenu = NULL;
+
+typedef enum {
+  MENU,
+  PLAY,
+  GAMEOVER,
+  QUIT
+} MainState;
+
+typedef void (*InterruptHandler)();
+
+InterruptHandler interruptHandlers[NUM_EVENTS] = {
+    NULL,
+    timer_int_handler,
+    kbc_ih,
+    // handleMouseInterrupt,
+    // handleSerialInterrupt,
+};
+
+static MainState current_stat;
+bool running;
+
+uint8_t irq_set_timer;
+uint8_t irq_set_keyboard;
 
 
 int (main)(int argc, char *argv[]) {
@@ -42,47 +64,6 @@ int (main)(int argc, char *argv[]) {
     return 0;
 }
 
-int (ESC_key_wait)() {
-    int ipc_status;
-    message msg;
-    uint8_t irq_set_keyboard;
-
-    if (kbc_subscribe_int(&irq_set_keyboard) != 0) {
-        return 1;
-    }
-    
-    while (scancode != ESC_BREAKCODE) {
-        if (driver_receive(ANY, &msg, &ipc_status) != 0) {
-            printf("error");
-            continue;
-        }
-        if (is_ipc_notify(ipc_status)) {
-            switch (_ENDPOINT_P(msg.m_source)) {
-                case HARDWARE:
-                    if (msg.m_notify.interrupts & BIT(irq_set_keyboard)) {
-                        kbc_ih();
-                        unsigned char size;
-                        if (scancode == 0xE0) { // check if key is pressed or released
-                            size = 2;
-                        } else {
-                            size = 1;
-                        }
-                        kbd_print_scancode(!(scancode & BIT(7)), size, &scancode);
-                    }
-                break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    if (kbc_unsubscribe_int() != 0) {
-        return 1;
-    }
-    
-    return 0;
-}
-
 int (initial_setup)() {
 
     if (start_VBE_mode(0x115) != 0) {
@@ -93,25 +74,97 @@ int (initial_setup)() {
         return 1;
     }
 
+    if (timer_subscribe_int(&irq_set_timer) != 0) {
+        return 1;
+    }
+
+    if (kbc_subscribe_int(&irq_set_keyboard) != 0) {
+        return 1;
+    }
+
+    // Initialize the menu
+    mainMenu = menu_create();
+    if (!mainMenu) {
+        return 1;
+    }
+    menu_draw(mainMenu);
+
+    current_stat = MENU;
+    running = true;
+
     return 0;
 }
 
 int (restore_system)() {
-    if (vg_exit() != 0) {
-        return 1;
+
+    // Destroy the menu object
+    if (mainMenu) {
+        menu_destroy(mainMenu);
+        mainMenu = NULL;
     }
+
+    // unsubscribe timer interrupts
+    if (timer_unsubscribe_int() != 0) {
+      return 1;
+    }
+
+    // unsubscribe keyboard interrupts
+    if (kbc_unsubscribe_int() != 0) {
+    return 1;
+    }
+
+    // restore the original video mode
+    if (vg_exit() != 0) {
+    return 1;
+    }
+
     return 0;
 }
 
-int (exit_program)() {
-    printf("Exiting the program...\n");
+MainState stateMachineUpdate(MainState currentState, EventType event) {
+    MainState nextState = currentState;
 
-    if (restore_system() != 0) {
-        printf("Error restoring system state.\n");
-        return 1;
+    switch (currentState) {
+        case MENU:
+            menu_process_event(mainMenu, event);
+            MenuSubstate currentMenuSubstate = menu_get_current_substate(mainMenu);
+            if (currentMenuSubstate == MENU_FINISHED_PLAY) {
+                nextState = PLAY;
+            } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
+                nextState = QUIT;
+            } else if (currentMenuSubstate == MENU_EXITED) {
+                nextState = QUIT;
+            }
+            break;
+
+        /*
+        case PLAY:
+            game.processEvent(event);
+            GameSubstate currentGameSubstate = game.getCurrentSubstate();
+            if (currentGameSubstate == GAME_FINISHED) {
+                nextState = GAMEOVER;
+            }
+            break;
+
+        case GAMEOVER:
+            gameover.processEvent(event);
+            GameOverSubstate currentGameOverSubstate = gameover.getCurrentSubstate();
+            if (currentGameOverSubstate == GAMEOVER_FINISHED_QUIT) {
+                nextState = QUIT;
+            }
+            break;
+
+         */
+
+        case QUIT:
+            running = false;
+            break;
+
+        default:
+            break;
     }
 
-    return 0;
+    return nextState;
 }
 
 int (proj_main_loop)(int argc, char *argv[]) {
@@ -121,23 +174,41 @@ int (proj_main_loop)(int argc, char *argv[]) {
     }
     printf("Screen resolution: %dx%d\n", vbe_mode_info.XResolution, vbe_mode_info.YResolution);
 
-    if (draw_main_screen(0) != 0) {
-        printf("Error drawing main screen.\n");
-        return 1;
-    }
+    int ipc_status;
+    message msg;
 
-    int selected_option = navigate_main_menu();
-    if (selected_option == -1) {
-        printf("Menu exited without selection.\n");
-    } else if (selected_option == 0) {
-        printf("Play selected.\n");
-        // start the game - por implementar
-    } else if (selected_option == 1) {
-        printf("Quit selected.\n");
-        exit_program();
-    }
+    EventType pendingEvent = EVENT_NONE;
 
-    // game loop
+    while (running) {
+        if (driver_receive(ANY, &msg, &ipc_status) != 0) {
+            printf("error");
+            continue;
+        }
+        if (is_ipc_notify(ipc_status)) {
+            switch (_ENDPOINT_P(msg.m_source)) {
+                case HARDWARE:
+
+                    if (msg.m_notify.interrupts & BIT(irq_set_timer)) {
+                        // pendingEvent = EVENT_TIMER;
+                    }
+
+                    if (msg.m_notify.interrupts & BIT(irq_set_keyboard)) {
+                        pendingEvent = EVENT_KEYBOARD;
+                    }
+
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (pendingEvent != EVENT_NONE) {
+            interruptHandlers[pendingEvent]();
+            current_stat = stateMachineUpdate(current_stat, pendingEvent);
+
+            pendingEvent = EVENT_NONE;
+        }
+    }
 
     if (restore_system() != 0) {
         printf("Error restoring system state.\n");
