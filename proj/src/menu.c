@@ -17,12 +17,11 @@ static void drawStaticMenu(Menu *this) {
 }
 
 static void selectMainMenuOption(Menu *this) {
-    // Clear previous selections
+
     vg_draw_rectangle(this->centerX - 10, this->centerY - 10, this->playSprite->width + 20, this->playSprite->height + 20, 0x000000);
     vg_draw_rectangle(((vbe_mode_info.YResolution - this->leaderboardSprite->width) / 2) - 10, this->centerY + 70, this->leaderboardSprite->width + 20, this->leaderboardSprite->height + 20, 0x000000);
     vg_draw_rectangle(this->centerX - 10, this->centerY + 170, this->quitSprite->width + 20, this->quitSprite->height + 20, 0x000000);
 
-    // Draw selection rectangle
     if (this->selectedOption == 0) {
         vg_draw_rectangle(this->centerX - 10, this->centerY - 10, this->playSprite->width + 20, this->playSprite->height + 20, 0xFFFFFF);
     } else if (this->selectedOption == 1) {
@@ -31,7 +30,6 @@ static void selectMainMenuOption(Menu *this) {
         vg_draw_rectangle(this->centerX - 10, this->centerY + 170, this->quitSprite->width + 20, this->quitSprite->height + 20, 0xFFFFFF);
     }
 
-    // Redraw sprites
     sprite_draw_xpm(this->playSprite, this->centerX, this->centerY);
     sprite_draw_xpm(this->leaderboardSprite, (vbe_mode_info.YResolution - this->leaderboardSprite->width) / 2, this->centerY + 80);
     sprite_draw_xpm(this->quitSprite, this->centerX, this->centerY + 170);
