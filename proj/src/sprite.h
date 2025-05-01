@@ -1,7 +1,7 @@
 #ifndef XPM_H
 #define XPM_H
 
-#include "video_card.h"
+#include "controller/video_card.h"
 
 typedef struct {
     int x, y;

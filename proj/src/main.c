@@ -3,23 +3,28 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "video_card.h"
-#include "i8042.h"
-#include "i8254.h"
-#include "kbc.h"
+#include "controller/video_card.h"
+#include "controller/i8042.h"
+#include "controller/i8254.h"
+#include "controller/kbc.h"
 #include "sprite.h"
 #include "menu.h"
 #include "macros.h"
 
-
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
+extern int timer_counter;
 
-Sprite *struct_left_line_tile;
-Sprite *struct_right_line_tile;
-Sprite *struct_outspace_tile;
-Sprite *struct_track_tile;
-Sprite *struct_track_line_tile;
+enum MainState {
+  MENU,
+  PLAY,
+  GAMEOVER,
+};
+static enum MainState current_stat;
+bool running;
+
+uint8_t irq_set_timer;
+uint8_t irq_set_keyboard;
 
 
 int (main)(int argc, char *argv[]) {
@@ -42,16 +47,63 @@ int (main)(int argc, char *argv[]) {
     return 0;
 }
 
-int (ESC_key_wait)() {
-    int ipc_status;
-    message msg;
-    uint8_t irq_set_keyboard;
+int (initial_setup)() {
+
+    if (start_VBE_mode(0x115) != 0) {
+        return 1;
+    }
+
+    if (change_VBE_mode(0x115) != 0) {
+        return 1;
+    }
+
+    if (timer_subscribe_int(&irq_set_timer) != 0) {
+        return 1;
+    }
 
     if (kbc_subscribe_int(&irq_set_keyboard) != 0) {
         return 1;
     }
-    
-    while (scancode != ESC_BREAKCODE) {
+
+
+
+    current_stat = MENU;
+    running = true;
+
+    return 0;
+}
+
+int (restore_system)() {
+
+  // unsubscribe timer interrupts
+  if (timer_unsubscribe_int)() != 0) {
+      return 1;
+  }
+
+  // unsubscribe keyboard interrupts
+  if (kbc_unsubscribe_int() != 0) {
+    return 1;
+  }
+
+  // restore the original video mode
+  if (vg_exit() != 0) {
+    return 1;
+  }
+
+  return 0;
+}
+
+int (proj_main_loop)(int argc, char *argv[]) {
+
+    if (initial_setup() != 0) {
+        return 1;
+    }
+    printf("Screen resolution: %dx%d\n", vbe_mode_info.XResolution, vbe_mode_info.YResolution);
+
+    int ipc_status;
+    message msg;
+
+    while (running) {
         if (driver_receive(ANY, &msg, &ipc_status) != 0) {
             printf("error");
             continue;
@@ -59,6 +111,11 @@ int (ESC_key_wait)() {
         if (is_ipc_notify(ipc_status)) {
             switch (_ENDPOINT_P(msg.m_source)) {
                 case HARDWARE:
+
+                    if (msg.m_notify.interrupts & BIT(irq_set_timer)) {
+                        timer_int_handler();
+                    }
+
                     if (msg.m_notify.interrupts & BIT(irq_set_keyboard)) {
                         kbc_ih();
                         unsigned char size;
@@ -76,51 +133,7 @@ int (ESC_key_wait)() {
         }
     }
 
-    if (kbc_unsubscribe_int() != 0) {
-        return 1;
-    }
-    
-    return 0;
-}
-
-int (initial_setup)() {
-
-    if (start_VBE_mode(0x115) != 0) {
-        return 1;
-    }
-
-    if (change_VBE_mode(0x115) != 0) {
-        return 1;
-    }
-
-    return 0;
-}
-
-int (restore_system)() {
-    if (vg_exit() != 0) {
-        return 1;
-    }
-    return 0;
-}
-
-int (exit_program)() {
-    printf("Exiting the program...\n");
-
-    if (restore_system() != 0) {
-        printf("Error restoring system state.\n");
-        return 1;
-    }
-
-    return 0;
-}
-
-int (proj_main_loop)(int argc, char *argv[]) {
-
-    if (initial_setup() != 0) {
-        return 1;
-    }
-    printf("Screen resolution: %dx%d\n", vbe_mode_info.XResolution, vbe_mode_info.YResolution);
-
+    /*
     if (draw_main_screen(0) != 0) {
         printf("Error drawing main screen.\n");
         return 1;
@@ -134,10 +147,9 @@ int (proj_main_loop)(int argc, char *argv[]) {
         // start the game - por implementar
     } else if (selected_option == 1) {
         printf("Quit selected.\n");
-        exit_program();
+        restore_system();
     }
-
-    // game loop
+    */
 
     if (restore_system() != 0) {
         printf("Error restoring system state.\n");

@@ -4,7 +4,7 @@
 #include "xpm/xpm_files.h" 
 #include "sprite.h"
 #include "macros.h"
-#include "kbc.h"
+#include "controller/kbc.h"
 
 void (draw_static_menu)(Sprite *title_sprite, Sprite *play_sprite, Sprite *leaderboard_sprite, Sprite *quit_sprite, uint32_t y_center);
 void (select_main_menu_option)(int option, Sprite *title_sprite, Sprite *play_sprite, Sprite *leaderboard_sprite, Sprite *quit_sprite, uint32_t x_center, uint32_t y_center);
