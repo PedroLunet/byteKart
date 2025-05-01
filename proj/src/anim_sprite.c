@@ -33,7 +33,7 @@ AnimSprite *create_animSprite(uint8_t no_pic, xpm_map_t pic1[], ...) {
     AnimSprite *asp = malloc(sizeof(AnimSprite));
     if (asp == NULL) return NULL;
 
-    asp->sp = create_sprite_xpm(pic1[0], 0, 0, 0, 0);
+    asp->sp = sprite_create_xpm(pic1[0], 0, 0, 0, 0);
     if (asp->sp == NULL) {
         free(asp);
         return NULL;
@@ -41,7 +41,7 @@ AnimSprite *create_animSprite(uint8_t no_pic, xpm_map_t pic1[], ...) {
 
     asp->map = malloc(no_pic * sizeof(uint32_t *));
     if (asp->map == NULL) {
-        destroy_sprite(asp->sp);
+        sprite_destroy(asp->sp);
         free(asp);
         return NULL;
     }
@@ -58,7 +58,7 @@ AnimSprite *create_animSprite(uint8_t no_pic, xpm_map_t pic1[], ...) {
             for (int j = 0; j < i; j++)
                 free(asp->map[j]);
             free(asp->map);
-            destroy_sprite(asp->sp);
+            sprite_destroy(asp->sp);
             free(asp);
             va_end(ap);
             return NULL;
@@ -82,7 +82,7 @@ void destroy_animSprite(AnimSprite *sp) {
     for (int i = 0; i < sp->num_fig; i++)
         free(sp->map[i]);
     free(sp->map);
-    destroy_sprite(sp->sp);
+    sprite_destroy(sp->sp);
     free(sp);
 }
 

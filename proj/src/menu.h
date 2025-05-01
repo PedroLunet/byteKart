@@ -1,11 +1,27 @@
-#ifndef _MENU_H_
-#define _MENU_H_
+#ifndef MENU_H_
+#define MENU_H_
 
-#include "xpm/xpm_files.h" 
+#include <stdint.h>
+#include "main.h"
 #include "sprite.h"
-#include "macros.h"
-#include "kbc.h"
-#include "mouse.h"
+
+typedef enum {
+    MENU_MAIN,
+    MENU_FINISHED_PLAY,
+    MENU_FINISHED_QUIT,
+    MENU_EXITED
+} MenuSubstate;
+
+typedef struct {
+    MenuSubstate currentSubstate;
+    Sprite *titleSprite;
+    Sprite *playSprite;
+    Sprite *leaderboardSprite;
+    Sprite *quitSprite;
+    uint32_t centerX;
+    uint32_t centerY;
+    int selectedOption;
+} Menu;
 
 void (draw_mouse_pointer)(int x, int y, bool is_hovering);
 void (clear_mouse_pointer)(int x, int y);
@@ -18,4 +34,12 @@ void (update_mouse_position)(int *x, int *y);
 
 int (draw_game_over_screen)();
 
-#endif
+// Public Menu Class Method
+Menu *menu_create();
+void menu_destroy(Menu *this);
+void menu_draw(Menu *this);
+void menu_process_event(Menu *this, EventType event);
+MenuSubstate menu_get_current_substate(Menu *this);
+void menu_reset_state(Menu *this);
+
+#endif /* MENU_H_ */
