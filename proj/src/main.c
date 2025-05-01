@@ -7,6 +7,9 @@
 #include "controller/i8042.h"
 #include "controller/i8254.h"
 #include "controller/kbc.h"
+
+#include "main.h"
+#include "lcom/timer.h"
 #include "sprite.h"
 #include "menu.h"
 #include "macros.h"
@@ -15,12 +18,26 @@ extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
 extern int timer_counter;
 
-enum MainState {
+Menu *mainMenu = NULL;
+
+typedef enum {
   MENU,
   PLAY,
   GAMEOVER,
+  QUIT
+} MainState;
+
+typedef void (*InterruptHandler)();
+
+InterruptHandler interruptHandlers[NUM_EVENTS] = {
+    NULL,
+    timer_int_handler,
+    kbc_ih,
+    // handleMouseInterrupt,
+    // handleSerialInterrupt,
 };
-static enum MainState current_stat;
+
+static MainState current_stat;
 bool running;
 
 uint8_t irq_set_timer;
@@ -65,7 +82,12 @@ int (initial_setup)() {
         return 1;
     }
 
-
+    // Initialize the menu
+    mainMenu = menu_create();
+    if (!mainMenu) {
+        return 1;
+    }
+    menu_draw(mainMenu);
 
     current_stat = MENU;
     running = true;
@@ -75,22 +97,75 @@ int (initial_setup)() {
 
 int (restore_system)() {
 
-  // unsubscribe timer interrupts
-  if (timer_unsubscribe_int)() != 0) {
+    // Destroy the menu object
+    if (mainMenu) {
+        menu_destroy(mainMenu);
+        mainMenu = NULL;
+    }
+
+    // unsubscribe timer interrupts
+    if (timer_unsubscribe_int() != 0) {
       return 1;
-  }
+    }
 
-  // unsubscribe keyboard interrupts
-  if (kbc_unsubscribe_int() != 0) {
+    // unsubscribe keyboard interrupts
+    if (kbc_unsubscribe_int() != 0) {
     return 1;
-  }
+    }
 
-  // restore the original video mode
-  if (vg_exit() != 0) {
+    // restore the original video mode
+    if (vg_exit() != 0) {
     return 1;
-  }
+    }
 
-  return 0;
+    return 0;
+}
+
+MainState stateMachineUpdate(MainState currentState, EventType event) {
+    MainState nextState = currentState;
+
+    switch (currentState) {
+        case MENU:
+            printf("Menu state\n");
+            menu_process_event(mainMenu, event);
+            MenuSubstate currentMenuSubstate = menu_get_current_substate(mainMenu);
+            if (currentMenuSubstate == MENU_FINISHED_PLAY) {
+                nextState = PLAY;
+            } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
+                nextState = QUIT;
+            } else if (currentMenuSubstate == MENU_EXITED) {
+                nextState = QUIT;
+            }
+            break;
+
+        /*
+        case PLAY:
+            game.processEvent(event);
+            GameSubstate currentGameSubstate = game.getCurrentSubstate();
+            if (currentGameSubstate == GAME_FINISHED) {
+                nextState = GAMEOVER;
+            }
+            break;
+
+        case GAMEOVER:
+            gameover.processEvent(event);
+            GameOverSubstate currentGameOverSubstate = gameover.getCurrentSubstate();
+            if (currentGameOverSubstate == GAMEOVER_FINISHED_QUIT) {
+                nextState = QUIT;
+            }
+            break;
+
+         */
+
+        case QUIT:
+            running = false;
+            break;
+
+        default:
+            break;
+    }
+    printf("Next state: %d\n", nextState);
+    return nextState;
 }
 
 int (proj_main_loop)(int argc, char *argv[]) {
@@ -103,6 +178,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
     int ipc_status;
     message msg;
 
+    EventType pendingEvent = EVENT_NONE;
+
     while (running) {
         if (driver_receive(ANY, &msg, &ipc_status) != 0) {
             printf("error");
@@ -113,23 +190,24 @@ int (proj_main_loop)(int argc, char *argv[]) {
                 case HARDWARE:
 
                     if (msg.m_notify.interrupts & BIT(irq_set_timer)) {
-                        timer_int_handler();
+                        // pendingEvent = EVENT_TIMER;
                     }
 
                     if (msg.m_notify.interrupts & BIT(irq_set_keyboard)) {
-                        kbc_ih();
-                        unsigned char size;
-                        if (scancode == 0xE0) { // check if key is pressed or released
-                            size = 2;
-                        } else {
-                            size = 1;
-                        }
-                        kbd_print_scancode(!(scancode & BIT(7)), size, &scancode);
+                        pendingEvent = EVENT_KEYBOARD;
                     }
-                break;
+
+                    break;
                 default:
                     break;
             }
+        }
+
+        if (pendingEvent != EVENT_NONE) {
+            interruptHandlers[pendingEvent]();
+            current_stat = stateMachineUpdate(current_stat, pendingEvent);
+
+            pendingEvent = EVENT_NONE;
         }
     }
 
