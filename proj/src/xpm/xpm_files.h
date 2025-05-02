@@ -2,7 +2,7 @@
 #define XPM_FILES_H
 
 #include "macros.h"
-#include "kbc.h"
+#include "controller/kbc.h"
 
 #include "initial_screen/play.xpm"
 #include "initial_screen/leaderboard.xpm"
