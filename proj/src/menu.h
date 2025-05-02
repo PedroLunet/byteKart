@@ -2,8 +2,8 @@
 #define MENU_H_
 
 #include <stdint.h>
-#include "main.h"
 #include "sprite.h"
+#include "macros.h"
 
 typedef enum {
     MENU_MAIN,

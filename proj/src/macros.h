@@ -1,6 +1,15 @@
 #ifndef MACROS_H
 #define MACROS_H
 
+typedef enum {
+  EVENT_NONE,
+  EVENT_TIMER,
+  EVENT_KEYBOARD,
+  EVENT_MOUSE,
+  // EVENT_SERIAL,
+  NUM_EVENTS
+} EventType;
+
 // ESC key
 #define ESC_MAKECODE 0x01
 #define ESC_BREAKCODE 0x81

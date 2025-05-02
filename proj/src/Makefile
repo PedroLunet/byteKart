@@ -1,10 +1,9 @@
 PROG=proj
 
-.PATH: ${.CURDIR}/src/
-.PATH: ${.CURDIR}/src/controller/
-.PATH: ${.CURDIR}/src/view/
+.PATH: ${.CURDIR}/controller/
+.PATH: ${.CURDIR}/view/
 
-SRCS = 	main.c sprite.c timer.c utils.c video_card.c kbc.c menu.c anim_sprite.c mouse.c ui.c
+SRCS = main.c sprite.c timer.c utils.c video_card.c kbc.c menu.c anim_sprite.c mouse.c ui.c
 CFLAGS += -pedantic -D_LCOM_OPTIMIZED_ -O2
 
 DPADD += ${LIBLCF}
