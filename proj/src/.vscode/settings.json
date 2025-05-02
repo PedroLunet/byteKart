@@ -7,6 +7,14 @@
   "editor.wordWrap": "bounded",
   "editor.wordWrapColumn": 100,
   "files.associations": {
-    "*.xpm": "c"
+    "*.xpm": "c",
+    "__locale": "c",
+    "atomic": "c",
+    "ios": "c",
+    "limits": "c",
+    "locale": "c",
+    "memory": "c",
+    "string": "c",
+    "type_traits": "c"
   },
 }
