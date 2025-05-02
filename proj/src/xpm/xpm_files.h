@@ -8,5 +8,6 @@
 #include "initial_screen/leaderboard.xpm"
 #include "initial_screen/quit.xpm"
 #include "initial_screen/title.xpm"
+#include "cursor.xpm"
 
 #endif
