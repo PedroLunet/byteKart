@@ -24,10 +24,10 @@ static void draw_mouse_pointer(Menu *this, bool is_hovering) {
 
 static void clear_mouse_pointer(Menu *this) {
     for (int dx = -4; dx <= 4; dx++) {
-        vg_draw_pixel(this->mouse_x + dx, this->mouse_y, 0x000000);
+        vg_draw_pixel(this->mouse_x + dx, this->mouse_y, BACKGROUND_COLOR);
     }
     for (int dy = -4; dy <= 4; dy++) {
-        vg_draw_pixel(this->mouse_x, this->mouse_y + dy, 0x000000);
+        vg_draw_pixel(this->mouse_x, this->mouse_y + dy, BACKGROUND_COLOR);
     }
 }
 
