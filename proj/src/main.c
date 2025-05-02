@@ -7,6 +7,7 @@
 #include "controller/i8042.h"
 #include "controller/i8254.h"
 #include "controller/kbc.h"
+#include "controller/mouse.h"
 
 #include "main.h"
 #include "lcom/timer.h"
@@ -17,6 +18,8 @@
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
 extern int timer_counter;
+extern uint8_t index_packet;
+extern struct packet pp;
 
 Menu *mainMenu = NULL;
 
@@ -33,7 +36,7 @@ InterruptHandler interruptHandlers[NUM_EVENTS] = {
     NULL,
     timer_int_handler,
     kbc_ih,
-    // handleMouseInterrupt,
+    mouse_ih,
     // handleSerialInterrupt,
 };
 
@@ -42,6 +45,7 @@ bool running;
 
 uint8_t irq_set_timer;
 uint8_t irq_set_keyboard;
+uint8_t irq_set_mouse;
 
 
 int (main)(int argc, char *argv[]) {
@@ -82,6 +86,14 @@ int (initial_setup)() {
         return 1;
     }
 
+    if (mouse_subscribe_int(&irq_set_mouse) != 0) {
+        return 1;
+    }
+
+    if (mouse_write_command(MOUSE_ENABLE) != 0) {
+      return 1;
+    }
+
     // Initialize the menu
     mainMenu = menu_create();
     if (!mainMenu) {
@@ -111,6 +123,15 @@ int (restore_system)() {
     // unsubscribe keyboard interrupts
     if (kbc_unsubscribe_int() != 0) {
     return 1;
+    }
+
+    if (mouse_write_command(MOUSE_DISABLE) != 0) {
+      return 1;
+    }
+
+    // unsubscribe mouse interrupts
+    if (mouse_unsubscribe_int() != 0) {
+        return 1;
     }
 
     // restore the original video mode
@@ -193,7 +214,18 @@ int (proj_main_loop)(int argc, char *argv[]) {
                     }
 
                     if (msg.m_notify.interrupts & BIT(irq_set_keyboard)) {
+                        kbc_ih();
                         pendingEvent = EVENT_KEYBOARD;
+                    }
+
+                    if (msg.m_notify.interrupts & BIT(irq_set_mouse)) {
+                        mouse_ih();
+                        mouse_bytes();
+                        if (index_packet == 3) {
+                            mouse_struct_packet(&pp);
+                            index_packet = 0;
+                            pendingEvent = EVENT_MOUSE;
+                        }
                     }
 
                     break;
@@ -203,7 +235,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
         }
 
         if (pendingEvent != EVENT_NONE) {
-            interruptHandlers[pendingEvent]();
+            // interruptHandlers[pendingEvent]();
             current_stat = stateMachineUpdate(current_stat, pendingEvent);
 
             pendingEvent = EVENT_NONE;
