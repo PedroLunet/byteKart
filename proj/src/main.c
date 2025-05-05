@@ -142,6 +142,8 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             MenuSubstate currentMenuSubstate = menu_get_current_substate(mainMenu);
             if (currentMenuSubstate == MENU_FINISHED_PLAY) {
                 nextState = PLAY;
+            } else if (currentMenuSubstate == MENU_SHOW_LEADERBOARD) {
+                show_leaderboard();
             } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
                 nextState = QUIT;
             } else if (currentMenuSubstate == MENU_EXITED) {
