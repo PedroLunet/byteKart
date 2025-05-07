@@ -2,32 +2,28 @@
 #include <stdlib.h>
 
 #include "menu.h"
-#include "macros.h"
-#include "xpm/xpm_files.h"
-#include "controller/video_card.h"
-#include "controller/mouse.h"
 
 extern vbe_mode_info_t vbe_mode_info;
-extern uint8_t scancode;
 extern uint8_t index_packet;
 extern struct packet pp;
 
 static void draw_mouse_pointer(Menu *this, bool is_hovering) {
-    uint32_t color = is_hovering ? 0xFF0000 : 0xFFFFFF;
-    for (int dx = -4; dx <= 4; dx++) {
-        vg_draw_pixel(this->mouse_x + dx, this->mouse_y, color);
-    }
-    for (int dy = -4; dy <= 4; dy++) {
-        vg_draw_pixel(this->mouse_x, this->mouse_y + dy, color);
+    if (is_hovering && this->cursorPointerSprite) {
+        sprite_draw_xpm(this->cursorPointerSprite, this->mouse_x, this->mouse_y);
+        this->prev_cursor = this->cursorPointerSprite;
+    } else if (this->cursorSprite) {
+        sprite_draw_xpm(this->cursorSprite, this->mouse_x, this->mouse_y);
+        this->prev_cursor = this->cursorSprite;
     }
 }
 
-static void clear_mouse_pointer(Menu *this) {
-    for (int dx = -4; dx <= 4; dx++) {
-        vg_draw_pixel(this->mouse_x + dx, this->mouse_y, BACKGROUND_COLOR);
-    }
-    for (int dy = -4; dy <= 4; dy++) {
-        vg_draw_pixel(this->mouse_x, this->mouse_y + dy, BACKGROUND_COLOR);
+static void clear_mouse_pointer(Menu *this, bool is_hovering) {
+    if (this->prev_cursor) {
+        for (int dy = 0; dy < this->prev_cursor->height; dy++) {
+            for (int dx = 0; dx < this->prev_cursor->width; dx++) {
+                vg_draw_pixel(this->prev_mouse_x + dx, this->prev_mouse_y + dy, BACKGROUND_COLOR);
+            }
+        }
     }
 }
 
@@ -70,6 +66,9 @@ static bool is_mouse_over_option(Menu *this, int mouse_x, int mouse_y, int *sele
 }
 
 static void update_mouse_position(Menu *this, int *x, int *y) {
+    this->prev_mouse_x = *x;
+    this->prev_mouse_y = *y;
+
     *x += pp.delta_x;
     *y -= pp.delta_y;
 
@@ -80,13 +79,11 @@ static void update_mouse_position(Menu *this, int *x, int *y) {
 }
 
 static bool handle_mouse_input(Menu *this) {
-    clear_mouse_pointer(this);
-    update_mouse_position(this, &this->mouse_x, &this->mouse_y);
-
-    drawStaticMenu(this);
     bool is_hovering = is_mouse_over_option(this, this->mouse_x, this->mouse_y, &this->selectedOption);
+    update_mouse_position(this, &this->mouse_x, &this->mouse_y);
+    drawStaticMenu(this);
+    clear_mouse_pointer(this, is_hovering);
     draw_mouse_pointer(this, is_hovering);
-
     return pp.lb && this->selectedOption != -1;
 }
 
@@ -126,12 +123,35 @@ Menu *menu_create() {
         return NULL;
     }
 
+    this->cursorSprite = sprite_create_xpm((xpm_map_t) cursor, 0, 0, 0, 0);
+    if (this->cursorSprite == NULL) {
+        sprite_destroy(this->titleSprite);
+        sprite_destroy(this->playSprite);
+        sprite_destroy(this->leaderboardSprite);
+        sprite_destroy(this->quitSprite);
+        free(this);
+        return NULL;
+    }
+
+    this->cursorPointerSprite = sprite_create_xpm((xpm_map_t) cursor_pointer, 0, 0, 0, 0);
+    if (this->cursorPointerSprite == NULL) {
+        sprite_destroy(this->titleSprite);
+        sprite_destroy(this->playSprite);
+        sprite_destroy(this->leaderboardSprite);
+        sprite_destroy(this->quitSprite);
+        sprite_destroy(this->cursorSprite);
+        free(this);
+        return NULL;
+    }
+
     this->centerX = (vbe_mode_info.XResolution - this->playSprite->width) / 2;
     this->centerY = (vbe_mode_info.YResolution - this->playSprite->height) / 2;
     this->mouse_x = (int)vbe_mode_info.XResolution / 2;
     this->mouse_y = (int)vbe_mode_info.YResolution / 2;
     this->selectedOption = 0;
     this->currentSubstate = MENU_MAIN;
+
+    this->prev_cursor = this->cursorSprite;
 
     return this;
 }
@@ -142,6 +162,8 @@ void menu_destroy(Menu *this) {
         sprite_destroy(this->playSprite);
         sprite_destroy(this->leaderboardSprite);
         sprite_destroy(this->quitSprite);
+        sprite_destroy(this->cursorSprite);
+        sprite_destroy(this->cursorPointerSprite);
         free(this);
     }
 }

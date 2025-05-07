@@ -9,5 +9,6 @@
 #include "initial_screen/quit.xpm"
 #include "initial_screen/title.xpm"
 #include "cursor.xpm"
+#include "cursor_pointer.xpm"
 
 #endif

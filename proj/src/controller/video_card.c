@@ -108,7 +108,6 @@ int (start_VBE_mode)(uint16_t mode) {
 // Drawing functions
 int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
   if (x >= get_hres() || y >= get_vres() || x < 0 || y < 0) {
-    printf("Size error.\n");
     return 1;
   }
 
