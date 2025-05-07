@@ -11,8 +11,7 @@ extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
 
 static void drawRoadBackground(Game *this) {
-    sprite_draw_xpm(this->road_sprite1, 0, this->road_y1);
-    sprite_draw_xpm(this->road_sprite2, 0, this->road_y2);
+    draw_road_background();
 }
 
 static void game_draw_internal(GameState *base) {
@@ -114,5 +113,6 @@ GameSubstate game_get_current_substate(Game *this) {
 
 void game_reset_state(Game *this) {
     this->currentSubstate = GAME_SUBSTATE_MENU;
+    cleanup_road_background();
 }
 

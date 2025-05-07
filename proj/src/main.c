@@ -22,7 +22,6 @@ uint8_t irq_set_timer;
 uint8_t irq_set_keyboard;
 uint8_t irq_set_mouse;
 
-
 int (main)(int argc, char *argv[]) {
     // Set the language of LCF messages
     lcf_set_language("EN-US");
