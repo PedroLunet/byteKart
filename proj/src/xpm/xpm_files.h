@@ -8,7 +8,7 @@
 #include "initial_screen/leaderboard.xpm"
 #include "initial_screen/quit.xpm"
 #include "initial_screen/title.xpm"
-#include "cursor.xpm"
-#include "cursor_pointer.xpm"
+#include "cursor/cursor.xpm"
+#include "cursor/cursor_pointer.xpm"
 
 #endif

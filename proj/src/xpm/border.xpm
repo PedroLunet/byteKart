@@ -1,5 +1,5 @@
 /* XPM */
-static char *_f538fa6c91c45d89df02777f78da46641IJPw7gQdPGys3Z[] = {
+static char *border_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "64 64 7 1 ",
 "  c #131213",
@@ -8,7 +8,7 @@ static char *_f538fa6c91c45d89df02777f78da46641IJPw7gQdPGys3Z[] = {
 "o c #181818",
 "O c #635F63",
 "+ c #22B14C",
-"@ c white",
+"@ c #FFFFFF",
 /* pixels */
 "++++++++++++++++++++++++OOOOOOOOOOOOOOOOooX.XXXX@@@@@@@@@@@@@@@@",
 "++++++++++++++++++++++++OOOOOOOOOOOOOOOOXX XXXXX@@@@@@@@@@@@@@@@",

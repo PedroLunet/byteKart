@@ -1,12 +1,12 @@
 /* XPM */
-static char *_928a7132590455eb85267b06678cf2c8GBYd6mmhBF1AlrN[] = {
+static char *track_tile_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "64 64 5 1 ",
 "  c #131313",
 ". c #141314",
 "X c #151415",
-"o c gray9",
-"O c gray10",
+"o c #635F60",
+"O c #635F80",
 /* pixels */
 "XXXXXXOOXXOOOXXXXOX  XXOOXXOOOOXXXXX.XXXOOX.XXXXXXXXXXXXXXXXOOOX",
 "XXXXXXOXXXOOOOXXXXX  XXOOXXOOOOXXXXXX...XX XXXXXXX.XXXXXXXXXXOOX",
