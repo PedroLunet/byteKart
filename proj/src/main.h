@@ -13,5 +13,26 @@
 #include "sprite.h"
 #include "menu.h"
 #include "macros.h"
+#include "game.h"
+#include "road.h"
+
+typedef enum {
+  MENU,
+  SELECT_DIFFICULTY,
+  PLAY,
+  GAMEOVER,
+  QUIT
+} MainState;
+
+typedef void (*InterruptHandler)();
+
+InterruptHandler interruptHandlers[NUM_EVENTS] = {
+  NULL,
+  timer_int_handler,
+  kbc_ih,
+  mouse_ih,
+  // handleSerialInterrupt,
+};
+
 
 #endif //MAIN_H

@@ -5,39 +5,18 @@
 
 #include "main.h"
 
-
 extern vbe_mode_info_t vbe_mode_info;
-extern uint8_t scancode;
-extern int timer_counter;
 extern uint8_t index_packet;
 extern struct packet pp;
 
 Menu *mainMenu = NULL;
 
-typedef enum {
-  MENU,
-  PLAY,
-  GAMEOVER,
-  QUIT
-} MainState;
-
-typedef void (*InterruptHandler)();
-
-InterruptHandler interruptHandlers[NUM_EVENTS] = {
-    NULL,
-    timer_int_handler,
-    kbc_ih,
-    mouse_ih,
-    // handleSerialInterrupt,
-};
-
-static MainState current_stat;
+static MainState current_state;
 bool running;
 
 uint8_t irq_set_timer;
 uint8_t irq_set_keyboard;
 uint8_t irq_set_mouse;
-
 
 int (main)(int argc, char *argv[]) {
     // Set the language of LCF messages
@@ -92,7 +71,7 @@ int (initial_setup)() {
     }
     menu_draw(mainMenu);
 
-    current_stat = MENU;
+    current_state = MENU;
     running = true;
 
     return 0;
@@ -141,6 +120,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             menu_process_event(mainMenu, event);
             MenuSubstate currentMenuSubstate = menu_get_current_substate(mainMenu);
             if (currentMenuSubstate == MENU_FINISHED_PLAY) {
+                game_init();
                 nextState = PLAY;
             } else if (currentMenuSubstate == MENU_SHOW_LEADERBOARD) {
                 // show_leaderboard();
@@ -151,14 +131,14 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             }
             break;
 
-        /*
+        
         case PLAY:
-            game.processEvent(event);
-            GameSubstate currentGameSubstate = game.getCurrentSubstate();
-            if (currentGameSubstate == GAME_FINISHED) {
-                nextState = GAMEOVER;
-            }
+            game_handle_event(event);
+            game_update();
+            game_draw();
             break;
+
+            /*
 
         case GAMEOVER:
             gameover.processEvent(event);
@@ -229,7 +209,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
         if (pendingEvent != EVENT_NONE) {
             // interruptHandlers[pendingEvent]();
-            current_stat = stateMachineUpdate(current_stat, pendingEvent);
+            current_state = stateMachineUpdate(current_state, pendingEvent);
 
             pendingEvent = EVENT_NONE;
         }
