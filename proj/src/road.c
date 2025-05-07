@@ -1,23 +1,32 @@
 #include <lcom/lcf.h>
 #include "road.h"
 
-  void draw_road_background() {
-    int screen_width = 800;
-    int screen_height = 600;
+static Sprite *road_sprite1 = NULL;
+static Sprite *road_sprite2 = NULL;
+static int road_y1 = 0;
+static int road_y2 = 0;
+extern vbe_mode_info_t vbe_mode_info;
 
-    for (int y = 0; y < screen_height; y++) {
-        for (int x = 0; x < screen_width; x++) {
-            if (x < 150 || x > 650) {
-                vg_draw_pixel(x, y, 0x007700);
-            }
-            else if (x >= 390 && x <= 410 && (y / 20) % 2 == 0) {
-                vg_draw_pixel(x, y, 0xFFFFFF); 
-            }
-            else {
-                vg_draw_pixel(x, y, 0x444444); 
-            }
-        }
+void draw_road_background() {
+    if (!road_sprite1 || !road_sprite2) {
+        road_sprite1 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
+        road_sprite2 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
+        if (!road_sprite1 || !road_sprite2) return;
+        road_y1 = 0;
+        road_y2 = -road_sprite1->height;
     }
+    sprite_draw_xpm(road_sprite1, 0, road_y1);
+    sprite_draw_xpm(road_sprite2, 0, road_y2);
 }
 
+void cleanup_road_background() {
+    if (road_sprite1) {
+        sprite_destroy(road_sprite1);
+        road_sprite1 = NULL;
+    }
+    if (road_sprite2) {
+        sprite_destroy(road_sprite2);
+        road_sprite2 = NULL;
+    }
+}
 

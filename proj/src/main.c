@@ -7,6 +7,7 @@
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t index_packet;
+extern uint8_t scancode;
 extern struct packet pp;
 
 Menu *mainMenu = NULL;
@@ -133,9 +134,11 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
 
         
         case PLAY:
-            game_handle_event(event);
-            game_update();
-            game_draw();
+            if (event == EVENT_KEYBOARD && scancode == ESC_MAKECODE) { // For debug
+                nextState = QUIT;
+            } else {
+                game_draw();
+            }
             break;
 
             /*
