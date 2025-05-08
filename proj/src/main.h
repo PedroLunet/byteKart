@@ -11,7 +11,11 @@
 #include "controller/mouse.h"
 #include "lcom/timer.h"
 #include "sprite.h"
-#include "menu.h"
 #include "macros.h"
+
+#include "model/game_state.h"
+#include "menu.h"
+#include "select_car.h"
+
 
 #endif //MAIN_H

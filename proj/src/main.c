@@ -16,6 +16,7 @@ Menu *mainMenu = NULL;
 
 typedef enum {
   MENU,
+  SELECT_CAR,
   PLAY,
   GAMEOVER,
   QUIT
@@ -148,8 +149,16 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 nextState = QUIT;
             }
             break;
-
         /*
+        case SELECT_CAR:
+            select_car_process_event(event);
+            SelectCarSubstate currentSelectCarSubstate = select_car_get_current_substate();
+            if (currentSelectCarSubstate == SELECT_CAR_FINISHED) {
+                nextState = PLAY;
+            }
+            break;
+
+
         case PLAY:
             game.processEvent(event);
             GameSubstate currentGameSubstate = game.getCurrentSubstate();

@@ -2,6 +2,7 @@
 #define MENU_H_
 
 #include <stdint.h>
+#include "model/game_state.h"
 #include "sprite.h"
 #include "macros.h"
 
@@ -13,15 +14,12 @@ typedef enum {
 } MenuSubstate;
 
 typedef struct {
+    GameState base;
     MenuSubstate currentSubstate;
     Sprite *titleSprite;
     Sprite *playSprite;
     Sprite *leaderboardSprite;
     Sprite *quitSprite;
-    uint32_t centerX;
-    uint32_t centerY;
-    int mouse_x;
-    int mouse_y;
     int selectedOption;
 } Menu;
 
