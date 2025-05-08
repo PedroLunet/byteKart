@@ -12,6 +12,27 @@
 #include "lcom/timer.h"
 #include "sprite.h"
 #include "macros.h"
+#include "game.h"
+#include "road.h"
+
+typedef enum {
+  MENU,
+  SELECT_DIFFICULTY,
+  PLAY,
+  GAMEOVER,
+  QUIT
+} MainState;
+
+typedef void (*InterruptHandler)();
+
+InterruptHandler interruptHandlers[NUM_EVENTS] = {
+  NULL,
+  timer_int_handler,
+  kbc_ih,
+  mouse_ih,
+  // handleSerialInterrupt,
+};
+
 
 #include "model/game_state.h"
 #include "menu.h"

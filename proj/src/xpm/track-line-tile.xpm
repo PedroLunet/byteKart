@@ -1,13 +1,13 @@
 /* XPM */
-static char *de4d6d1b918d4ac3c2164c6ffb067bfagDwOiljEN0Fvit5d[] = {
+static char *track_line_tile_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "64 64 6 1 ",
 "  c #131313",
 ". c #141314",
 "X c #151415",
-"o c gray9",
-"O c gray10",
-"+ c white",
+"o c #635F60",
+"O c #635F80",
+"+ c #FFFFFF",
 /* pixels */
 "XXXXXXOOXXOOOXXXXOX  XXOOXXOOOOXXXXX.XXXOOX.XXXXXXXXXXXXXXXXOOOX",
 "XXXXXXOXXXOOOOXXXXX  XXOOXXOOOOXXXXXX...XX XXXXXXX.XXXXXXXXXXOOX",

@@ -1,0 +1,26 @@
+/* XPM */
+static char *cursor_pointer[] = {
+  /* columns rows colors chars-per-pixel */
+  "15 16 3 1 ",
+  "  c None",
+  ". c #FF0000",
+  "X c #FFFFFF",
+  /* pixels */
+  "    .          ",
+  "   .X.         ",
+  "   .XX.        ",
+  "   .XX.        ",
+  "   .XX......   ",
+  "   .XX.XX.XX.. ",
+  " ...XX.XX.XX.X.",
+  ".XX..XXXXXXXXX.",
+  ".XXX.XXXXXXXXX.",
+  " .XXXXX.X.X.XX.",
+  "  .XXXX.X.X.XX.",
+  "  .XXXX.X.X.XX.",
+  "   .XXX.X.X.X. ",
+  "    .XXXXXXX.  ",
+  "     .XXX..X.  ",
+  "     .... ...  ",
+  };
+
