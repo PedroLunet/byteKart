@@ -16,6 +16,9 @@ extern Font *gameFont;
 // UI Components
 static UIComponent *titleText = NULL;
 static UIComponent *optionsRowContainer = NULL;
+static UIComponent *easyContainer = NULL;
+static UIComponent *mediumContainer = NULL;
+static UIComponent *hardContainer = NULL;
 static UIComponent *easyOption = NULL;
 static UIComponent *mediumOption = NULL;
 static UIComponent *hardOption = NULL;
@@ -39,9 +42,9 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
             ContainerData *optionsRowContainerData = (ContainerData *)difficultyContainerData->children[1]->data;
 
             if (optionsRowContainerData->num_children >= 3) {
-                UIComponent *easy = optionsRowContainerData->children[0];
-                UIComponent *medium = optionsRowContainerData->children[1];
-                UIComponent *hard = optionsRowContainerData->children[2];
+                UIComponent *easy = ((ContainerData *)optionsRowContainerData->children[0]->data)->children[0];
+				UIComponent *medium = ((ContainerData *)optionsRowContainerData->children[1]->data)->children[0];
+				UIComponent *hard = ((ContainerData *)optionsRowContainerData->children[2]->data)->children[0];
 
                 if (easy && easy->type == TYPE_TEXT && easy->data) {
                     TextElementData *easyData = (TextElementData *)easy->data;
@@ -149,6 +152,7 @@ SelectDifficulty *select_difficulty_create() {
     }
     set_container_layout(difficultyContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
     set_container_background_color(difficultyContainer, 0x111111);
+    set_container_padding(difficultyContainer, 60, 60, 60, 60);
     set_container_gap(difficultyContainer, 30);
     this->uiRoot = difficultyContainer;
 
@@ -164,36 +168,84 @@ SelectDifficulty *select_difficulty_create() {
 
 
     // Create a container for the difficulty options in a row
-    optionsRowContainer = create_container_component(0, 0, 400, 50);
+    optionsRowContainer = create_container_component(0, 0, 0, 0);
     if (!optionsRowContainer) {
         destroy_ui_component(difficultyContainer);
         free(this);
         return NULL;
     }
-    set_container_layout(optionsRowContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_SPACE_AROUND);
+    set_container_layout(optionsRowContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
     set_container_gap(optionsRowContainer, 30);
-    set_container_background_color(optionsRowContainer, 0x222222);
-    set_container_border_radius(optionsRowContainer, 40);
+    set_container_background_color(optionsRowContainer, 0x111111);
     add_child_to_container_component(difficultyContainer, optionsRowContainer);
 
-    /*
     // Create the difficulty option components
-    easyOption = create_text_component("Easy", gameFont, 0xFFFFFF, 0, 0);
-    mediumOption = create_text_component("Medium", gameFont, 0xFFFFFF, 0, 0);
-    hardOption = create_text_component("Hard", gameFont, 0xFFFFFF, 0, 0);
-
-    if (!easyOption || !mediumOption || !hardOption) {
+    easyContainer = create_container_component(0, 0, 200, 300);
+    if (!easyContainer) {
         destroy_ui_component(difficultyContainer);
         free(this);
         return NULL;
     }
+    set_container_layout(easyContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_END);
+    set_container_background_color(easyContainer, 0x111111);
+    set_container_padding(easyContainer, 40, 40, 40, 40);
+    set_container_border_radius(easyContainer, 20);
+    set_container_border(easyContainer, 4, 0xAA0000);
+    easyOption = create_text_component("Easy", gameFont, 0xFFFFFF);
 
-    add_child_to_container_component(optionsRowContainer, easyOption);
-    add_child_to_container_component(optionsRowContainer, mediumOption);
-    add_child_to_container_component(optionsRowContainer, hardOption);
+    if (!easyOption) {
+        destroy_ui_component(difficultyContainer);
+        free(this);
+        return NULL;
+    }
+    add_child_to_container_component(easyContainer, easyOption);
+    add_child_to_container_component(optionsRowContainer, easyContainer);
+    perform_container_layout(easyContainer);
+
+    mediumContainer = create_container_component(0, 0, 200, 300);
+    if (!mediumContainer) {
+        destroy_ui_component(difficultyContainer);
+        free(this);
+        return NULL;
+    }
+    set_container_layout(mediumContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_END);
+    set_container_background_color(mediumContainer, 0x111111);
+    set_container_padding(mediumContainer, 40, 40, 40, 40);
+    set_container_border_radius(mediumContainer, 20);
+    set_container_border(mediumContainer, 4, 0xAA0000);
+    mediumOption = create_text_component("Medium", gameFont, 0xFFFFFF);
+
+    if (!mediumOption) {
+        destroy_ui_component(difficultyContainer);
+        free(this);
+        return NULL;
+    }
+    add_child_to_container_component(mediumContainer, mediumOption);
+    add_child_to_container_component(optionsRowContainer, mediumContainer);
+    perform_container_layout(mediumContainer);
+
+    hardContainer = create_container_component(0, 0, 200, 300);
+    if (!hardContainer) {
+        destroy_ui_component(difficultyContainer);
+        free(this);
+        return NULL;
+    }
+    set_container_layout(hardContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_END);
+    set_container_background_color(hardContainer, 0x111111);
+    set_container_padding(hardContainer, 40, 40, 40, 40);
+    set_container_border_radius(hardContainer, 20);
+    set_container_border(hardContainer, 4, 0xAA0000);
+    hardOption = create_text_component("Hard", gameFont, 0xFFFFFF);
+    if (!hardOption) {
+        destroy_ui_component(difficultyContainer);
+        free(this);
+        return NULL;
+    }
+    add_child_to_container_component(hardContainer, hardOption);
+    add_child_to_container_component(optionsRowContainer, hardContainer);
+    perform_container_layout(hardContainer);
 
     perform_container_layout(optionsRowContainer);
-     */
     perform_container_layout(difficultyContainer);
 
     return this;

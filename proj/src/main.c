@@ -263,6 +263,11 @@ int (proj_main_loop)(int argc, char *argv[]) {
 
             pendingEvent = EVENT_NONE;
         }
+
+        if (swap_buffers() != 0) {
+            printf("Error swapping buffers.\n");
+            return 1;
+        }
     }
 
     if (restore_system() != 0) {

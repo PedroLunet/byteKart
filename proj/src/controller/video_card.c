@@ -6,6 +6,7 @@ void *video_memory;
 struct minix_mem_range mmr;
 unsigned int vram_size;
 unsigned int vram_base;
+uint8_t *back_buffer;
 
 uint8_t pixelBytes;
 static uint16_t hres; /* XResolution */
@@ -94,6 +95,13 @@ int (start_VBE_mode)(uint16_t mode) {
     return 1;
   }
 
+  back_buffer = (uint8_t *) malloc(vram_size);
+  if (back_buffer == NULL) {
+    printf("Erro ao alocar o back buffer.\n");
+    return 1;
+  }
+  memset(back_buffer, 0, vram_size);
+
   memset(video_memory, 0, vram_size);
 
   ret = change_VBE_mode(mode);
@@ -112,7 +120,7 @@ int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
   }
 
   uint8_t bytes_per_pixel = (get_bits_per_pixel() + 7) / 8;
-  uint8_t* pos = (uint8_t*) video_memory; 
+  uint8_t* pos = back_buffer;
   pos += (get_hres() * y + x) * bytes_per_pixel;
 
   if (get_bits_per_pixel() == 8) { // Indexed mode
@@ -121,6 +129,16 @@ int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
     memcpy(pos, &color, bytes_per_pixel);
   }
   
+  return 0;
+}
+
+int (swap_buffers)() {
+  if (back_buffer == NULL || video_memory == NULL) {
+    return 1;
+  }
+
+  memcpy(video_memory, back_buffer, vram_size);
+
   return 0;
 }
 

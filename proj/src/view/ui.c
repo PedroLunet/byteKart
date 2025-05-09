@@ -26,10 +26,10 @@ static void draw_container_component(UIComponent *component) {
         uint32_t bg = data->background_color;
 
         if (bw > 0) {
-            vg_draw_rounded_rectangle(x + bw, y + bw, w - 2 * bw, h - 2 * bw, br, bg);
             vg_draw_rounded_rectangle(x, y, w, h, br, bc);
+            vg_draw_rounded_rectangle(x + bw, y + bw, w - 2 * bw, h - 2 * bw, br, bg);
         } else {
-            vg_draw_rectangle(x, y, w, h, bg);
+            vg_draw_rounded_rectangle(x, y, w, h, br, bg);
         }
 
         for (int i = 0; i < data->num_children; ++i) {
@@ -232,6 +232,7 @@ void perform_container_layout(UIComponent *component) {
 
         // Calculate total width/height of children
         for (int i = 0; i < data->num_children; ++i) {
+
             UIComponent * currentComponent = (UIComponent *) data->children[i];
             int child_width = 0;
             int child_height = 0;
@@ -242,6 +243,9 @@ void perform_container_layout(UIComponent *component) {
             } else if (currentComponent->type == TYPE_CONTAINER) {
                 child_width = ((ContainerData *)currentComponent->data)->width;
                 child_height = ((ContainerData *)currentComponent->data)->height;
+            } else if (currentComponent->type == TYPE_TEXT) {
+                child_width = ((TextElementData *)currentComponent->data)->width;
+                child_height = ((TextElementData *)currentComponent->data)->height;
             }
 
             if (data->layout == LAYOUT_ROW) {
@@ -280,9 +284,6 @@ void perform_container_layout(UIComponent *component) {
         }
 
         // Now position the children
-        current_x = component->x + data->padding_left;
-        current_y = component->y + data->padding_top;
-
         int available_width = data->width - data->padding_left - data->padding_right;
         int available_height = data->height - data->padding_top - data->padding_bottom;
 
@@ -297,7 +298,12 @@ void perform_container_layout(UIComponent *component) {
                 current_x += spacing_x;
             } else if (data->justify_content == JUSTIFY_CENTER) {
                 current_x += (available_width - total_children_width) / 2;
+            } else if (data->justify_content == JUSTIFY_END) {
+                current_x += available_width - total_children_width;
+            } else if (data->justify_content == JUSTIFY_START) {
+                current_x += current_x;
             }
+
         } else if (data->layout == LAYOUT_COLUMN && data->num_children > 0) {
             if (data->justify_content == JUSTIFY_SPACE_BETWEEN) {
                 spacing_y = (available_height - total_children_height) / (data->num_children - 1 > 0 ? data->num_children - 1 : 1);
@@ -306,6 +312,10 @@ void perform_container_layout(UIComponent *component) {
                 current_y += spacing_y;
             } else if (data->justify_content == JUSTIFY_CENTER) {
                 current_y += (available_height - total_children_height) / 2;
+            } else if (data->justify_content == JUSTIFY_END) {
+                current_y += available_height - total_children_height;
+            } else if (data->justify_content == JUSTIFY_START) {
+                current_y += current_y;
             }
         }
 
@@ -355,8 +365,6 @@ void perform_container_layout(UIComponent *component) {
                 } else if (data->justify_content == JUSTIFY_SPACE_AROUND) {
                     current_y += spacing_y * 2;
                 }
-            } else { // LAYOUT_NONE
-                // Children are positioned manually
             }
 
             if (data->children[i]->type == TYPE_CONTAINER) {
