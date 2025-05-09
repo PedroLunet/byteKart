@@ -42,12 +42,12 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
             ContainerData *optionsRowContainerData = (ContainerData *)difficultyContainerData->children[1]->data;
 
             if (optionsRowContainerData->num_children >= 3) {
-                UIComponent *easy = ((ContainerData *)optionsRowContainerData->children[0]->data)->children[0];
-				UIComponent *medium = ((ContainerData *)optionsRowContainerData->children[1]->data)->children[0];
-				UIComponent *hard = ((ContainerData *)optionsRowContainerData->children[2]->data)->children[0];
+                UIComponent *easy = optionsRowContainerData->children[0];
+				UIComponent *medium = optionsRowContainerData->children[1];
+				UIComponent *hard = optionsRowContainerData->children[2];
 
-                if (easy && easy->type == TYPE_TEXT && easy->data) {
-                    TextElementData *easyData = (TextElementData *)easy->data;
+                if (easy && easy->type == TYPE_CONTAINER && easy->data) {
+                    ContainerData *easyData = (ContainerData *)easy->data;
                     if (mouse_x >= easy->x && mouse_x < easy->x + easyData->width &&
                         mouse_y >= easy->y && mouse_y < easy->y + easyData->height) {
                         *selected = 0;
@@ -56,8 +56,8 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     }
                 }
 
-                if (medium && medium->type == TYPE_TEXT && medium->data) {
-                    TextElementData *mediumData = (TextElementData *)medium->data;
+                if (medium && medium->type == TYPE_CONTAINER && medium->data) {
+                    ContainerData *mediumData = (ContainerData *)medium->data;
                     if (mouse_x >= medium->x && mouse_x < medium->x + mediumData->width &&
                         mouse_y >= medium->y && mouse_y < medium->y + mediumData->height) {
                         *selected = 1;
@@ -66,8 +66,8 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     }
                 }
 
-                if (hard && hard->type == TYPE_TEXT && hard->data) {
-                    TextElementData *hardData = (TextElementData *)hard->data;
+                if (hard && hard->type == TYPE_CONTAINER && hard->data) {
+                    ContainerData *hardData = (ContainerData *)hard->data;
                     if (mouse_x >= hard->x && mouse_x < hard->x + hardData->width &&
                         mouse_y >= hard->y && mouse_y < hard->y + hardData->height) {
                         *selected = 2;
