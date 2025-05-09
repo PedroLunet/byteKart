@@ -20,15 +20,6 @@ typedef struct {
     Sprite *playSprite;
     Sprite *leaderboardSprite;
     Sprite *quitSprite;
-    Sprite *cursorSprite;
-    Sprite *cursorPointerSprite;
-    Sprite *prev_cursor;
-    uint32_t centerX;
-    uint32_t centerY;
-    int mouse_x;
-    int mouse_y;
-    int prev_mouse_x;
-    int prev_mouse_y;
     int selectedOption;
 } Menu;
 

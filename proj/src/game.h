@@ -1,25 +1,25 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "model/game_state.h"
 #include "sprite.h"
 #include "macros.h"
-#include "road.h"
 #include "xpm/xpm_files.h"
 
 
 typedef enum {
-  GAME_STATE_MENU,
-  GAME_STATE_DIFFICULTY,
-  GAME_STATE_TRACK,
-  GAME_STATE_PLAYING,
-  GAME_STATE_GAME_OVER,
-  GAME_STATE_EXIT,
-} GameState;
+  GAME_SUBSTATE_MENU,
+  GAME_SUBSTATE_DIFFICULTY,
+  GAME_SUBSTATE_TRACK,
+  GAME_SUBSTATE_PLAYING,
+  GAME_SUBSTATE_GAME_OVER,
+  GAME_EXITED,
+} GameSubstate;
 
-typedef struct {
- int x, y;
- int speed;
- Sprite *car_sprite;
+typedef struct Car {
+    int x, y;
+    int speed;
+    Sprite *car_sprite;
 } Car;
 
 /*
@@ -31,8 +31,26 @@ typedef struct {
 } Obstacle;
 */
 
+typedef struct Game {
+    GameState base;
+    GameSubstate currentSubstate;
+    Car playerCar;
+    Sprite *road_sprite1;
+    Sprite *road_sprite2;
+    int road_y1;
+    int road_y2;
+} Game;
+
+// Public Game Class Methods
+Game *game_create();
+void game_destroy(Game *this);
+void game_draw(Game *this);
+void game_process_event(Game *this, EventType event);
+void game_update_state(Game *this); // If you have update logic
+GameSubstate game_get_current_substate(Game *this);
+void game_reset_state(Game *this); // If needed
+
 void game_init();
-void game_draw();
 void game_cleanup();
 
 #endif

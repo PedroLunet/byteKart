@@ -4,14 +4,20 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "macros.h"
+#include "sprite.h"
 
 struct GameState;
 
 typedef struct GameState {
     int mouse_x;
     int mouse_y;
+    int prev_mouse_x;
+    int prev_mouse_y;
     uint32_t centerX;
     uint32_t centerY;
+    Sprite *cursorSprite;
+    Sprite *cursorPointerSprite;
+    Sprite *prev_cursor;
 
     void (*draw)(struct GameState *this);
     void (*process_event)(struct GameState *this, EventType event);

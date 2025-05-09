@@ -238,6 +238,26 @@ int (vg_draw_xpm)(uint8_t *map, xpm_image_t *img, uint16_t x, uint16_t y) {
   return 0;
 }
 
+int (vg_draw_text)(uint32_t *color_array, uint16_t array_width, uint16_t x, uint16_t y, uint16_t height, uint16_t width) {
+  if (color_array == NULL) {
+    printf("Invalid color array.\n");
+    return 1;
+  }
+
+  for (uint16_t i = 0; i < height; i++) {
+    for (uint16_t j = 0; j < width; j++) {
+      uint32_t color = color_array[i * array_width + j];
+      if (color != 0x00000000) {
+        if (vg_draw_pixel(x + j, y + i, color) != 0) {
+          return 1;
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
 int (vg_draw_rounded_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t radius, uint32_t color) {
   if (radius > width / 2 || radius > height / 2) {
     printf("Radius is too large for the rectangle.\n");

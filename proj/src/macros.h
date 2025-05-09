@@ -10,6 +10,9 @@ typedef enum {
   NUM_EVENTS
 } EventType;
 
+// Fonts
+#define MAX_FONT_GLYPHS 382
+
 // ESC key
 #define ESC_MAKECODE 0x01
 #define ESC_BREAKCODE 0x81

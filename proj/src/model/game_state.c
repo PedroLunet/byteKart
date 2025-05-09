@@ -4,6 +4,7 @@
 #include "game_state.h"
 #include "controller/video_card.h"
 #include "controller/mouse.h"
+#include "xpm/xpm_files.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 extern struct packet pp;
@@ -19,26 +20,29 @@ static void base_update_mouse_position(GameState *this, int *x, int *y) {
 }
 
 static void base_clear_mouse_pointer(GameState *this) {
-    for (int dx = -4; dx <= 4; dx++) {
-        vg_draw_pixel(this->mouse_x + dx, this->mouse_y, BACKGROUND_COLOR);
-    }
-    for (int dy = -4; dy <= 4; dy++) {
-        vg_draw_pixel(this->mouse_x, this->mouse_y + dy, BACKGROUND_COLOR);
+    if (this->prev_cursor) {
+        for (int dy = 0; dy < this->prev_cursor->height; dy++) {
+            for (int dx = 0; dx < this->prev_cursor->width; dx++) {
+                vg_draw_pixel(this->mouse_x + dx, this->mouse_y + dy, BACKGROUND_COLOR);
+            }
+        }
+        this->prev_cursor = NULL;
     }
 }
 
 static void base_draw_mouse_pointer(GameState *this, uint32_t hover_color, uint32_t default_color, bool is_hovering) {
-    uint32_t color = is_hovering ? hover_color : default_color;
-    for (int dx = -4; dx <= 4; dx++) {
-        vg_draw_pixel(this->mouse_x + dx, this->mouse_y, color);
-    }
-    for (int dy = -4; dy <= 4; dy++) {
-        vg_draw_pixel(this->mouse_x, this->mouse_y + dy, color);
+    Sprite *sprite_to_draw = is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
+
+    if (sprite_to_draw) {
+        sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y);
+        this->prev_cursor = sprite_to_draw;
     }
 }
 
 static bool base_handle_mouse_input(GameState *this, void (*draw_state)(GameState *), bool (*is_over)(GameState *, int, int, void *), void *hover_target) {
     base_clear_mouse_pointer(this);
+    this->prev_mouse_x = this->mouse_x;
+    this->prev_mouse_y = this->mouse_y;
     base_update_mouse_position(this, &this->mouse_x, &this->mouse_y);
 
     if (draw_state) {
@@ -56,6 +60,8 @@ static bool base_handle_mouse_input(GameState *this, void (*draw_state)(GameStat
 
 void base_destroy(GameState *this) {
     if (this) {
+        sprite_destroy(this->cursorSprite);
+        sprite_destroy(this->cursorPointerSprite);
         free(this);
     }
 }
@@ -65,6 +71,8 @@ void init_base_game_state(GameState *state) {
     state->mouse_y = (int)vbe_mode_info.YResolution / 2;
     state->centerX = (vbe_mode_info.XResolution) / 2;
     state->centerY = (vbe_mode_info.YResolution) / 2;
+    state->prev_mouse_x = state->mouse_x;
+    state->prev_mouse_y = state->mouse_y;
 
     state->draw = NULL; // To be overridden
     state->process_event = NULL; // To be overridden
@@ -73,5 +81,9 @@ void init_base_game_state(GameState *state) {
     state->handle_mouse_input = base_handle_mouse_input;
     state->is_mouse_over = NULL; // To be overridden if needed
     state->update_mouse_position = base_update_mouse_position;
+
+    state->cursorSprite = sprite_create_xpm((xpm_map_t) cursor, 0, 0, 0, 0);
+    state->cursorPointerSprite = sprite_create_xpm((xpm_map_t) cursor_pointer, 0, 0, 0, 0);
+    state->prev_cursor = state->cursorSprite;
 }
 

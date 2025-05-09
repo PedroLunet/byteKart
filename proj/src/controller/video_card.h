@@ -13,6 +13,7 @@ int (vg_draw_hline)(uint16_t x, uint16_t y, uint16_t len, uint32_t color);
 int (vg_draw_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
 int (vg_draw_matrix)(uint8_t no_rectangles, uint32_t first, uint8_t step);
 int (vg_draw_xpm)(uint8_t *map, xpm_image_t *img, uint16_t x, uint16_t y);
+int (vg_draw_text)(uint32_t *color_array, uint16_t array_width, uint16_t x, uint16_t y, uint16_t height, uint16_t width);
 int (vg_draw_rounded_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t radius, uint32_t color);
 
 uint16_t get_hres();

@@ -170,6 +170,11 @@ Menu *menu_create() {
 
 void menu_destroy(Menu *this) {
     this->base.destroy(&this->base);
+    sprite_destroy(this->titleSprite);
+    sprite_destroy(this->playSprite);
+    sprite_destroy(this->leaderboardSprite);
+    sprite_destroy(this->quitSprite);
+    free(this);
 }
 
 void menu_draw(Menu *this) {

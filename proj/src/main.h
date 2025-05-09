@@ -12,13 +12,22 @@
 #include "lcom/timer.h"
 #include "sprite.h"
 #include "macros.h"
+#include "fonts/font.h"
+#include "xpm/xpm_files.h"
+
+#include "model/game_state.h"
+#include "menu.h"
+#include "view/select_difficulty.h"
+#include "select_car.h"
 #include "game.h"
-#include "road.h"
+
 
 typedef enum {
   MENU,
   SELECT_DIFFICULTY,
-  PLAY,
+  SELECT_CAR,
+  SELECT_TRACK,
+  GAME,
   GAMEOVER,
   QUIT
 } MainState;
@@ -32,11 +41,5 @@ InterruptHandler interruptHandlers[NUM_EVENTS] = {
   mouse_ih,
   // handleSerialInterrupt,
 };
-
-
-#include "model/game_state.h"
-#include "menu.h"
-#include "select_car.h"
-
 
 #endif //MAIN_H

@@ -2,6 +2,8 @@
 #define SPRITE_H_
 
 #include <stdint.h>
+#include <stdio.h>
+
 #include "controller/video_card.h"
 
 typedef struct {
@@ -9,6 +11,8 @@ typedef struct {
     int x, y;
     int width, height;
     int xspeed, yspeed;
+    uint8_t bytes_per_pixel;
+    uint8_t *data;
 } Sprite;
 
 // Sprite Class Method Prototypes
