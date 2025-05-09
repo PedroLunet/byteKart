@@ -51,6 +51,7 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     if (mouse_x >= easy->x && mouse_x < easy->x + easyData->width &&
                         mouse_y >= easy->y && mouse_y < easy->y + easyData->height) {
                         *selected = 0;
+                        set_container_background_color(easyContainer, 0xA81D1D);
                         return true;
                     }
                 }
@@ -60,6 +61,7 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     if (mouse_x >= medium->x && mouse_x < medium->x + mediumData->width &&
                         mouse_y >= medium->y && mouse_y < medium->y + mediumData->height) {
                         *selected = 1;
+                        set_container_background_color(mediumContainer, 0xA81D1D);
                         return true;
                     }
                 }
@@ -69,8 +71,20 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     if (mouse_x >= hard->x && mouse_x < hard->x + hardData->width &&
                         mouse_y >= hard->y && mouse_y < hard->y + hardData->height) {
                         *selected = 2;
+                        set_container_background_color(hardContainer, 0xA81D1D);
                         return true;
                     }
+                }
+
+                // Reset background color for unselected options
+                if (*selected != 0) {
+                    set_container_background_color(easyContainer, 0x111111);
+                }
+                if (*selected != 1) {
+                    set_container_background_color(mediumContainer, 0x111111);
+                }
+                if (*selected != 2) {
+                    set_container_background_color(hardContainer, 0x111111);
                 }
             }
         }
