@@ -13,6 +13,7 @@ extern struct packet pp;
 
 Menu *mainMenu = NULL;
 SelectDifficulty *selectDifficulty = NULL;
+Game *game = NULL;
 
 static MainState current_state;
 bool running;
@@ -90,6 +91,13 @@ int (initial_setup)() {
         return 1;
     }
 
+    // Initialize the game
+    game = game_create();
+    if (!game) {
+        game_destroy(game);
+        return 1;
+    }
+
     current_state = MENU;
     running = true;
 
@@ -114,6 +122,12 @@ int (restore_system)() {
     if (selectDifficulty) {
         select_difficulty_destroy(selectDifficulty);
         selectDifficulty = NULL;
+    }
+
+    // Destroy the game object
+    if (game) {
+        game_destroy(game);
+        game = NULL;
     }
 
     // unsubscribe timer interrupts
@@ -165,7 +179,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             DifficultyLevel chosenLevel = select_difficulty_get_chosen_level(selectDifficulty);
             if (chosenLevel == DIFFICULTY_EASY || chosenLevel == DIFFICULTY_MEDIUM || chosenLevel == DIFFICULTY_HARD) {
                 // game_set_difficulty(game, chosenLevel);
-                nextState = SELECT_CAR;
+                nextState = GAME;
             } else if (chosenLevel == DIFFICULTY_EXITED) {
                 nextState = QUIT;
             }
@@ -179,15 +193,17 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             // Handle track selection
             break;
 
-        /*
-
-        case PLAY:
-            game.processEvent(event);
-            GameSubstate currentGameSubstate = game.getCurrentSubstate();
+        case GAME:
+            game_process_event(game, event);
+            GameSubstate currentGameSubstate = game_get_current_substate(game);
             if (currentGameSubstate == GAME_FINISHED) {
                 nextState = GAMEOVER;
+            } else if (currentGameSubstate == GAME_EXITED) {
+                nextState = QUIT;
             }
             break;
+
+        /*
 
         case GAMEOVER:
             gameover.processEvent(event);

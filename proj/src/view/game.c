@@ -33,9 +33,10 @@ static void game_process(GameState *base, EventType event) {
             default:
                 break;
         }
-
+        base->draw(base);
     } else if (event == EVENT_MOUSE) {
         // Handle game-specific mouse input
+        base->draw(base);
     }
 }
 
@@ -51,11 +52,9 @@ static void game_update(GameState *base) {
 static void game_destroy_internal(GameState *base) {
     Game *this = (Game *)base;
     if (this) {
-        sprite_destroy(this->road_sprite1);
-        sprite_destroy(this->road_sprite2);
         sprite_destroy(this->playerCar.car_sprite);
-        free(this);
     }
+    free(base);
 }
 
 Game *game_create() {
@@ -72,11 +71,7 @@ Game *game_create() {
     this->base.destroy = game_destroy_internal;
 
     // Initialize game-specific data
-    this->currentSubstate = GAME_SUBSTATE_MENU;
-    this->road_sprite1 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
-    this->road_sprite2 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
-    this->road_y1 = 0;
-    this->road_y2 = -this->road_sprite1->height;
+    this->currentSubstate = GAME_SUBSTATE_PLAYING;
 
     // Initialize the player's car
     this->playerCar.x = vbe_mode_info.XResolution / 2 - 30;
@@ -112,7 +107,7 @@ GameSubstate game_get_current_substate(Game *this) {
 }
 
 void game_reset_state(Game *this) {
-    this->currentSubstate = GAME_SUBSTATE_MENU;
+    this->currentSubstate = GAME_SUBSTATE_PLAYING;
     cleanup_road_background();
 }
 

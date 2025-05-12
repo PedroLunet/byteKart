@@ -119,6 +119,7 @@ static void select_difficulty_process(GameState *base, EventType event) {
         int prevSelected = this->selectedOption;
         if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw_internal, select_difficulty_is_mouse_over, &this->selectedOption)) {
             if (this->selectedOption != -1) {
+                printf("Selected option: %d\n", this->selectedOption);
                 if (this->selectedOption == 0) this->chosenLevel = DIFFICULTY_EASY;
                 else if (this->selectedOption == 1) this->chosenLevel = DIFFICULTY_MEDIUM;
                 else if (this->selectedOption == 2) this->chosenLevel = DIFFICULTY_HARD;

@@ -19,7 +19,7 @@
 #include "menu.h"
 #include "view/select_difficulty.h"
 #include "select_car.h"
-#include "game.h"
+#include "view/game.h"
 
 
 typedef enum {
