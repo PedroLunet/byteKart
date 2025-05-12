@@ -2,35 +2,24 @@
 #define MENU_H_
 
 #include <stdint.h>
+#include "model/game_state.h"
 #include "sprite.h"
 #include "macros.h"
-#include "xpm/xpm_files.h"
-#include "controller/video_card.h"
-#include "controller/mouse.h"
 
 typedef enum {
     MENU_MAIN,
     MENU_FINISHED_PLAY,
-    MENU_SHOW_LEADERBOARD,
     MENU_FINISHED_QUIT,
     MENU_EXITED
 } MenuSubstate;
 
 typedef struct {
+    GameState base;
     MenuSubstate currentSubstate;
     Sprite *titleSprite;
     Sprite *playSprite;
     Sprite *leaderboardSprite;
     Sprite *quitSprite;
-    Sprite *cursorSprite;
-    Sprite *cursorPointerSprite;
-    Sprite *prev_cursor;
-    uint32_t centerX;
-    uint32_t centerY;
-    int mouse_x;
-    int mouse_y;
-    int prev_mouse_x;
-    int prev_mouse_y;
     int selectedOption;
 } Menu;
 

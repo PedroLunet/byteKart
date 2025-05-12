@@ -26,16 +26,23 @@ static void draw_container_component(UIComponent *component) {
         uint32_t bg = data->background_color;
 
         if (bw > 0) {
-            vg_draw_rounded_rectangle(x + bw, y + bw, w - 2 * bw, h - 2 * bw, br, bg);
             vg_draw_rounded_rectangle(x, y, w, h, br, bc);
+            vg_draw_rounded_rectangle(x + bw, y + bw, w - 2 * bw, h - 2 * bw, br, bg);
         } else {
-            vg_draw_rectangle(x, y, w, h, bg);
+            vg_draw_rounded_rectangle(x, y, w, h, br, bg);
         }
 
         for (int i = 0; i < data->num_children; ++i) {
             draw_ui_component(data->children[i]);
         }
 
+    }
+}
+
+static void draw_text_component(UIComponent *component) {
+    TextElementData *data = (TextElementData *)component->data;
+    if (data->pixel_data) {
+        vg_draw_text(data->pixel_data, data->width, component->x, component->y, data->height, data->width);
     }
 }
 
@@ -90,11 +97,65 @@ UIComponent *create_container_component(int x, int y, int width, int height) {
     } else {
         data->is_dynamic_width = 0;
     }
+    if (height == 0) {
+        data->is_dynamic_height = 1;
+    } else {
+        data->is_dynamic_height = 0;
+    }
     data->gap = 0;
     data->border_width = 0;
     data->border_color = 0x000000;
     data->background_color = 0xFFFFFF;
     data->border_radius = 0;
+
+    return component;
+}
+
+UIComponent *create_text_component(const char *text, Font *font, uint32_t color) {
+    UIComponent *component = malloc(sizeof(UIComponent));
+    if (!component) return NULL;
+    component->type = TYPE_TEXT;
+    component->x = 0;
+    component->y = 0;
+    component->draw = draw_text_component;
+    component->layout = NULL;
+
+    TextElementData *text_data = malloc(sizeof(TextElementData));
+    if (!text_data) {
+        free(component);
+        return NULL;
+    }
+    text_data->text = strdup(text);
+    text_data->color = color;
+    text_data->font = font;
+
+    text_data->width = 0;
+    text_data->height = 0;
+    if (text && font) {
+        int temp_x = 0;
+        int max_height = 0;
+        for (int i = 0; text[i] != '\0'; i++) {
+            GlyphData glyphData;
+            if (font_get_glyph_data(font, text[i], &glyphData)) {
+                temp_x += glyphData.xadvance;
+                if (glyphData.height > max_height) {
+                    max_height = glyphData.height;
+                }
+            }
+        }
+        text_data->width = temp_x;
+        text_data->height = max_height;
+    }
+
+    text_data->pixel_data = malloc(text_data->width * text_data->height * sizeof(uint32_t));
+    if (load_text(text, 0, 0, color, font, text_data->pixel_data, text_data->width) != 0) {
+        free(text_data->text);
+        free(text_data);
+        free(component);
+        return NULL;
+    }
+
+    component->data = text_data;
 
     return component;
 }
@@ -171,6 +232,7 @@ void perform_container_layout(UIComponent *component) {
 
         // Calculate total width/height of children
         for (int i = 0; i < data->num_children; ++i) {
+
             UIComponent * currentComponent = (UIComponent *) data->children[i];
             int child_width = 0;
             int child_height = 0;
@@ -181,6 +243,9 @@ void perform_container_layout(UIComponent *component) {
             } else if (currentComponent->type == TYPE_CONTAINER) {
                 child_width = ((ContainerData *)currentComponent->data)->width;
                 child_height = ((ContainerData *)currentComponent->data)->height;
+            } else if (currentComponent->type == TYPE_TEXT) {
+                child_width = ((TextElementData *)currentComponent->data)->width;
+                child_height = ((TextElementData *)currentComponent->data)->height;
             }
 
             if (data->layout == LAYOUT_ROW) {
@@ -219,9 +284,6 @@ void perform_container_layout(UIComponent *component) {
         }
 
         // Now position the children
-        current_x = component->x + data->padding_left;
-        current_y = component->y + data->padding_top;
-
         int available_width = data->width - data->padding_left - data->padding_right;
         int available_height = data->height - data->padding_top - data->padding_bottom;
 
@@ -236,7 +298,12 @@ void perform_container_layout(UIComponent *component) {
                 current_x += spacing_x;
             } else if (data->justify_content == JUSTIFY_CENTER) {
                 current_x += (available_width - total_children_width) / 2;
+            } else if (data->justify_content == JUSTIFY_END) {
+                current_x += available_width - total_children_width;
+            } else if (data->justify_content == JUSTIFY_START) {
+                current_x += current_x;
             }
+
         } else if (data->layout == LAYOUT_COLUMN && data->num_children > 0) {
             if (data->justify_content == JUSTIFY_SPACE_BETWEEN) {
                 spacing_y = (available_height - total_children_height) / (data->num_children - 1 > 0 ? data->num_children - 1 : 1);
@@ -245,6 +312,10 @@ void perform_container_layout(UIComponent *component) {
                 current_y += spacing_y;
             } else if (data->justify_content == JUSTIFY_CENTER) {
                 current_y += (available_height - total_children_height) / 2;
+            } else if (data->justify_content == JUSTIFY_END) {
+                current_y += available_height - total_children_height;
+            } else if (data->justify_content == JUSTIFY_START) {
+                current_y += current_y;
             }
         }
 
@@ -253,12 +324,15 @@ void perform_container_layout(UIComponent *component) {
             int child_width = 0;
             int child_height = 0;
 
-            if (currentComponent->type == TYPE_ELEMENT && ((SpriteElementData *)currentComponent->data)->sprite) {
+            if (currentComponent->type == TYPE_ELEMENT) {
                 child_width = ((SpriteElementData *)currentComponent->data)->width;
                 child_height = ((SpriteElementData *)currentComponent->data)->height;
             } else if (currentComponent->type == TYPE_CONTAINER) {
                 child_width = ((ContainerData *)currentComponent->data)->width;
                 child_height = ((ContainerData *)currentComponent->data)->height;
+            } else if (currentComponent->type == TYPE_TEXT) {
+                child_width = ((TextElementData *)currentComponent->data)->width;
+                child_height = ((TextElementData *)currentComponent->data)->height;
             }
 
             if (data->layout == LAYOUT_ROW) {
@@ -291,8 +365,6 @@ void perform_container_layout(UIComponent *component) {
                 } else if (data->justify_content == JUSTIFY_SPACE_AROUND) {
                     current_y += spacing_y * 2;
                 }
-            } else { // LAYOUT_NONE
-                // Children are positioned manually
             }
 
             if (data->children[i]->type == TYPE_CONTAINER) {
@@ -318,6 +390,14 @@ void destroy_ui_component(UIComponent *component) {
                 }
                 free(data->children);
             }
+        } else if (component->type == TYPE_TEXT) {
+            TextElementData *text_data = (TextElementData *)component->data;
+            if (text_data->text) {
+                free(text_data->text);
+            }
+        } else if (component->type == TYPE_ELEMENT) {
+            SpriteElementData *sprite_data = (SpriteElementData *)component->data;
+            sprite_destroy(sprite_data->sprite);
         }
         free(component->data);
         free(component);

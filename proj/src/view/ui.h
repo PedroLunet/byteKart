@@ -2,23 +2,22 @@
 #define UI_H_
 
 #include "../sprite.h"
+#include "../fonts/font.h"
+#include "text_renderer.h"
 #include <stdint.h>
 
-// Forward declaration
 typedef struct UIComponent UIComponent;
 
-// Enum for the type of UI component
 typedef enum {
     TYPE_ELEMENT, // like a sprite
-    TYPE_CONTAINER // that can contain other components
+    TYPE_CONTAINER, // that can contain other components
+    TYPE_TEXT // text element
 } UIComponentType;
 
-// Base structure for all UI components
 struct UIComponent {
     UIComponentType type;
     int x;
     int y;
-    // Common properties can be added here (e.g., width, height, visibility)
     void (*draw)(struct UIComponent *);
     void (*layout)(struct UIComponent *);
     void *data; // Pointer to type-specific data (children, sprite, etc.)
@@ -53,9 +52,20 @@ typedef struct {
     int border_radius;
 } ContainerData;
 
+// Structure for text elements
+typedef struct TextElementData {
+    char *text;
+    uint32_t color;
+    Font *font;
+    int width;
+    int height;
+    uint32_t *pixel_data;
+} TextElementData;
+
 // Creation functions
 UIComponent *create_sprite_component(Sprite *sprite, int x, int y);
 UIComponent *create_container_component(int x, int y, int width, int height);
+UIComponent *create_text_component(const char *text, Font *font, uint32_t color);
 
 // Management functions for containers
 void add_child_to_container_component(UIComponent *container, UIComponent *child);

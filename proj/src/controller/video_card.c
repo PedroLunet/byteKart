@@ -6,6 +6,7 @@ void *video_memory;
 struct minix_mem_range mmr;
 unsigned int vram_size;
 unsigned int vram_base;
+uint8_t *back_buffer;
 
 uint8_t pixelBytes;
 static uint16_t hres; /* XResolution */
@@ -94,6 +95,13 @@ int (start_VBE_mode)(uint16_t mode) {
     return 1;
   }
 
+  back_buffer = (uint8_t *) malloc(vram_size);
+  if (back_buffer == NULL) {
+    printf("Erro ao alocar o back buffer.\n");
+    return 1;
+  }
+  memset(back_buffer, 0, vram_size);
+
   memset(video_memory, 0, vram_size);
 
   ret = change_VBE_mode(mode);
@@ -112,7 +120,7 @@ int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
   }
 
   uint8_t bytes_per_pixel = (get_bits_per_pixel() + 7) / 8;
-  uint8_t* pos = (uint8_t*) video_memory; 
+  uint8_t* pos = back_buffer;
   pos += (get_hres() * y + x) * bytes_per_pixel;
 
   if (get_bits_per_pixel() == 8) { // Indexed mode
@@ -121,6 +129,16 @@ int (vg_draw_pixel)(uint16_t x, uint16_t y, uint32_t color) {
     memcpy(pos, &color, bytes_per_pixel);
   }
   
+  return 0;
+}
+
+int (swap_buffers)() {
+  if (back_buffer == NULL || video_memory == NULL) {
+    return 1;
+  }
+
+  memcpy(video_memory, back_buffer, vram_size);
+
   return 0;
 }
 
@@ -235,6 +253,26 @@ int (vg_draw_xpm)(uint8_t *map, xpm_image_t *img, uint16_t x, uint16_t y) {
       }
     }
   }
+  return 0;
+}
+
+int (vg_draw_text)(uint32_t *color_array, uint16_t array_width, uint16_t x, uint16_t y, uint16_t height, uint16_t width) {
+  if (color_array == NULL) {
+    printf("Invalid color array.\n");
+    return 1;
+  }
+
+  for (uint16_t i = 0; i < height; i++) {
+    for (uint16_t j = 0; j < width; j++) {
+      uint32_t color = color_array[i * array_width + j];
+      if (color != 0x00000000) {
+        if (vg_draw_pixel(x + j, y + i, color) != 0) {
+          return 1;
+        }
+      }
+    }
+  }
+
   return 0;
 }
 

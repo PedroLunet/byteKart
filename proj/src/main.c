@@ -6,14 +6,18 @@
 #include "main.h"
 
 extern vbe_mode_info_t vbe_mode_info;
-extern uint8_t index_packet;
 extern uint8_t scancode;
+extern int timer_counter;
+extern uint8_t index_packet;
 extern struct packet pp;
 
 Menu *mainMenu = NULL;
+SelectDifficulty *selectDifficulty = NULL;
+Game *game = NULL;
 
 static MainState current_state;
 bool running;
+Font *gameFont = NULL;
 
 uint8_t irq_set_timer;
 uint8_t irq_set_keyboard;
@@ -65,12 +69,34 @@ int (initial_setup)() {
       return 1;
     }
 
+    // Load font
+    gameFont = font_load_xpm((xpm_map_t) font_2_0, "/home/lcom/labs/proj/src/fonts/font_2.fnt");
+    if (!gameFont) {
+        printf("Error loading font.\n");
+        return 1;
+    }
+
     // Initialize the menu
     mainMenu = menu_create();
     if (!mainMenu) {
+        menu_destroy(mainMenu);
         return 1;
     }
     menu_draw(mainMenu);
+
+    // Initialize select difficulty
+    selectDifficulty = select_difficulty_create();
+    if (!selectDifficulty) {
+        select_difficulty_destroy(selectDifficulty);
+        return 1;
+    }
+
+    // Initialize the game
+    game = game_create();
+    if (!game) {
+        game_destroy(game);
+        return 1;
+    }
 
     current_state = MENU;
     running = true;
@@ -80,10 +106,28 @@ int (initial_setup)() {
 
 int (restore_system)() {
 
+    // Destroy the font
+    if (gameFont) {
+        font_destroy(gameFont);
+        gameFont = NULL;
+    }
+
     // Destroy the menu object
     if (mainMenu) {
         menu_destroy(mainMenu);
         mainMenu = NULL;
+    }
+
+    // Destroy the select difficulty object
+    if (selectDifficulty) {
+        select_difficulty_destroy(selectDifficulty);
+        selectDifficulty = NULL;
+    }
+
+    // Destroy the game object
+    if (game) {
+        game_destroy(game);
+        game = NULL;
     }
 
     // unsubscribe timer interrupts
@@ -121,10 +165,8 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             menu_process_event(mainMenu, event);
             MenuSubstate currentMenuSubstate = menu_get_current_substate(mainMenu);
             if (currentMenuSubstate == MENU_FINISHED_PLAY) {
-                game_init();
-                nextState = PLAY;
-            } else if (currentMenuSubstate == MENU_SHOW_LEADERBOARD) {
-                // show_leaderboard();
+                menu_reset_state(mainMenu);
+                nextState = SELECT_DIFFICULTY;
             } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
                 nextState = QUIT;
             } else if (currentMenuSubstate == MENU_EXITED) {
@@ -132,16 +174,36 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             }
             break;
 
-        
-        case PLAY:
-            if (event == EVENT_KEYBOARD && scancode == ESC_MAKECODE) { // For debug
+        case SELECT_DIFFICULTY:
+            select_difficulty_process_event(selectDifficulty, event);
+            DifficultyLevel chosenLevel = select_difficulty_get_chosen_level(selectDifficulty);
+            if (chosenLevel == DIFFICULTY_EASY || chosenLevel == DIFFICULTY_MEDIUM || chosenLevel == DIFFICULTY_HARD) {
+                // game_set_difficulty(game, chosenLevel);
+                nextState = GAME;
+            } else if (chosenLevel == DIFFICULTY_EXITED) {
                 nextState = QUIT;
-            } else {
-                game_draw();
             }
             break;
 
-            /*
+        case SELECT_CAR:
+            // Handle car selection
+            break;
+
+        case SELECT_TRACK:
+            // Handle track selection
+            break;
+
+        case GAME:
+            game_process_event(game, event);
+            GameSubstate currentGameSubstate = game_get_current_substate(game);
+            if (currentGameSubstate == GAME_FINISHED) {
+                nextState = GAMEOVER;
+            } else if (currentGameSubstate == GAME_EXITED) {
+                nextState = QUIT;
+            }
+            break;
+
+        /*
 
         case GAMEOVER:
             gameover.processEvent(event);
@@ -215,6 +277,11 @@ int (proj_main_loop)(int argc, char *argv[]) {
             current_state = stateMachineUpdate(current_state, pendingEvent);
 
             pendingEvent = EVENT_NONE;
+        }
+
+        if (swap_buffers() != 0) {
+            printf("Error swapping buffers.\n");
+            return 1;
         }
     }
 

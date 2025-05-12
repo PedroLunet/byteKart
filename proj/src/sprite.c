@@ -21,6 +21,8 @@ Sprite *sprite_create_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed) {
     this->y = y;
     this->xspeed = xspeed;
     this->yspeed = yspeed;
+    this->bytes_per_pixel = 4;
+    this->data = (uint8_t *)this->map;
 
     return this;
 }

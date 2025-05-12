@@ -11,5 +11,7 @@
 #include "cursor/cursor.xpm"
 #include "cursor/cursor_pointer.xpm"
 #include "road.xpm"
+#include "game/car.xpm"
+#include "fonts/font_2_0.xpm"
 
 #endif
