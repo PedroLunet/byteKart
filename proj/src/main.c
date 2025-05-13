@@ -13,6 +13,7 @@ extern struct packet pp;
 
 Menu *mainMenu = NULL;
 SelectDifficulty *selectDifficulty = NULL;
+SelectCar *selectCar = NULL;
 Game *game = NULL;
 
 static MainState current_state;
@@ -91,6 +92,13 @@ int (initial_setup)() {
         return 1;
     }
 
+    // Initialize select car
+    selectCar = select_car_create();
+    if (!selectCar) {
+        select_car_destroy(selectCar);
+        return 1;
+    }
+
     // Initialize the game
     game = game_create();
     if (!game) {
@@ -122,6 +130,12 @@ int (restore_system)() {
     if (selectDifficulty) {
         select_difficulty_destroy(selectDifficulty);
         selectDifficulty = NULL;
+    }
+
+    // Destroy the select car object
+    if (selectCar) {
+        select_car_destroy(selectCar);
+        selectCar = NULL;
     }
 
     // Destroy the game object
@@ -179,14 +193,22 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             DifficultyLevel chosenLevel = select_difficulty_get_chosen_level(selectDifficulty);
             if (chosenLevel == DIFFICULTY_EASY || chosenLevel == DIFFICULTY_MEDIUM || chosenLevel == DIFFICULTY_HARD) {
                 // game_set_difficulty(game, chosenLevel);
-                nextState = GAME;
+                nextState = SELECT_CAR;
             } else if (chosenLevel == DIFFICULTY_EXITED) {
                 nextState = QUIT;
             }
             break;
 
         case SELECT_CAR:
-            // Handle car selection
+            select_car_process_event(selectCar, event);
+            CarSelection chosenCar = select_car_get_chosen_level(selectCar);
+            if (chosenCar == CAR_FIRST || chosenCar == CAR_SECOND || chosenCar == CAR_THIRD || chosenCar == CAR_FOURTH) {
+                // game_set_car(game, chosenLevel);
+                nextState = GAME;
+            } else if (chosenCar == CAR_EXITED) {
+                nextState = QUIT;
+            }
+
             break;
 
         case SELECT_TRACK:

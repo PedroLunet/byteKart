@@ -77,7 +77,7 @@ Game *game_create() {
     this->playerCar.x = vbe_mode_info.XResolution / 2 - 30;
     this->playerCar.y = vbe_mode_info.YResolution - 100;
     this->playerCar.speed = 5;
-    this->playerCar.car_sprite = sprite_create_xpm((xpm_map_t) car_xpm, 0, 0, 0, 0);
+    this->playerCar.car_sprite = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
     if (!this->playerCar.car_sprite) {
         free(this);
         return NULL;
