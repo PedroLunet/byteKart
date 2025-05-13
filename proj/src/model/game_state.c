@@ -73,13 +73,13 @@ static bool base_handle_mouse_input(GameState *this, void (*draw_state)(GameStat
 }
 
 static void update_mouse_delta(GameState *this) {
-    this->cursor_delta_x += pp.delta_x;
-    this->cursor_delta_y += pp.delta_y;
+    this->mouse_displacement_x += pp.delta_x;
+    this->mouse_displacement_y += pp.delta_y;
 }
 
 static void reset_mouse_delta(GameState *this) {
-    this->cursor_delta_x = 0;
-    this->cursor_delta_y = 0;
+    this->mouse_displacement_x = 0;
+    this->mouse_displacement_y = 0;
 }
 
 void base_destroy(GameState *this) {
@@ -117,7 +117,7 @@ void init_base_game_state(GameState *state) {
     state->mouse_dirty = false;
     state->prev_cursor_width = 0;
     state->prev_cursor_height = 0;
-    state->cursor_delta_x = 0;
-    state->cursor_delta_y = 0;
+    state->mouse_displacement_x = 0;
+    state->mouse_displacement_y = 0;
 }
 

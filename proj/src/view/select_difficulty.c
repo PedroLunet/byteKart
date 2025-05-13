@@ -16,8 +16,8 @@ static UIComponent *hardContainer = NULL;
 static UIComponent *easyOption = NULL;
 static UIComponent *mediumOption = NULL;
 static UIComponent *hardOption = NULL;
-static UIComponent *backRowContainer = NULL;
-// static UIComponent *backContainer = NULL;
+static UIComponent *backButton = NULL;
+static UIComponent *backText = NULL;
 
 static UIComponent *containers[4];
 
@@ -25,6 +25,9 @@ static void select_difficulty_draw_internal(GameState *base) {
     SelectDifficulty *this = (SelectDifficulty *)base;
     if (this->uiRoot) {
         draw_ui_component(this->uiRoot);
+    }
+    if (this->backButton) {
+        draw_ui_component(this->backButton);
     }
 }
 
@@ -74,6 +77,15 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
         }
     }
 
+    if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
+        ContainerData *backButtonData = (ContainerData *)this->backButton->data;
+        if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
+            mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
+            *selected = 3;
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -88,10 +100,10 @@ static void select_difficulty_process(GameState *base, EventType event) {
                 if (this->selectedOption < 2) this->selectedOption++;
             break;
             case UP_ARROW:
-                if (this->selectedOption == 2) this->selectedOption++;
+                if (this->selectedOption < 3) this->selectedOption = 3;
             break;
             case DOWN_ARROW:
-                if (this->selectedOption == 3) this->selectedOption--;
+                if (this->selectedOption == 3) this->selectedOption = 0;
             break;
             case ENTER_KEY:
                 this->chosenLevel = difficultyLevels[this->selectedOption + 1];
@@ -107,11 +119,9 @@ static void select_difficulty_process(GameState *base, EventType event) {
         int prevSelected = this->selectedOption;
         base->update_mouse_delta(base);
         if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw, select_difficulty_is_mouse_over, &this->selectedOption)) {
-            printf("Mouse over option %d\n", this->selectedOption);
             this->chosenLevel = difficultyLevels[this->selectedOption + 1];
-            printf("Selected difficulty: %d\n", this->chosenLevel);
         }
-        if (this->selectedOption != prevSelected) {
+        if (this->selectedOption != prevSelected && (base->mouse_displacement_x >= 12 || base->mouse_displacement_y >= 12)) {
             base->draw(base);
             base->reset_mouse_delta(base);
         }
@@ -119,6 +129,8 @@ static void select_difficulty_process(GameState *base, EventType event) {
 
     if (this->selectedOption >= 0 && this->selectedOption < 3 && containers[this->selectedOption] != NULL) {
         is_container_hovered(containers[this->selectedOption]);
+    } else if (this->selectedOption == 3 && backButton != NULL) {
+        is_container_hovered(backButton);
     }
 
 }
@@ -198,6 +210,7 @@ SelectDifficulty *select_difficulty_create() {
     set_container_padding(easyContainer, 40, 40, 40, 40);
     set_container_border_radius(easyContainer, 20);
     set_container_border(easyContainer, 4, 0xAA0000);
+    set_container_hover_color(easyContainer, 0xAA0000);
     easyOption = create_text_component("Easy", gameFont, 0xFFFFFF);
 
     if (!easyOption) {
@@ -220,6 +233,7 @@ SelectDifficulty *select_difficulty_create() {
     set_container_padding(mediumContainer, 40, 40, 40, 40);
     set_container_border_radius(mediumContainer, 20);
     set_container_border(mediumContainer, 4, 0xAA0000);
+    set_container_hover_color(mediumContainer, 0xAA0000);
     mediumOption = create_text_component("Medium", gameFont, 0xFFFFFF);
 
     if (!mediumOption) {
@@ -242,6 +256,7 @@ SelectDifficulty *select_difficulty_create() {
     set_container_padding(hardContainer, 40, 40, 40, 40);
     set_container_border_radius(hardContainer, 20);
     set_container_border(hardContainer, 4, 0xAA0000);
+    set_container_hover_color(hardContainer, 0xAA0000);
     hardOption = create_text_component("Hard", gameFont, 0xFFFFFF);
     if (!hardOption) {
         destroy_ui_component(difficultyContainer);
@@ -255,10 +270,32 @@ SelectDifficulty *select_difficulty_create() {
     perform_container_layout(optionsRowContainer);
     perform_container_layout(difficultyContainer);
 
+    // Create the back button
+    backButton = create_container_component(30, 30, 40, 40);
+    if (!backButton) {
+        destroy_ui_component(difficultyContainer);
+        free(this);
+        return NULL;
+    }
+    set_container_layout(backButton, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(backButton, 0x00BB00);
+    set_container_hover_color(backButton, 0x00DD00);
+    set_container_border_radius(backButton, 15);
+    set_container_border(backButton, 2, 0x00DD00);
+    backText = create_text_component("<", gameFont, 0xFFFFFF);
+    if (!backText) {
+        destroy_ui_component(difficultyContainer);
+        free(this);
+        return NULL;
+    }
+    add_child_to_container_component(backButton, backText);
+
+    perform_container_layout(backButton);
+    this->backButton = backButton;
+
     containers[0] = easyContainer;
     containers[1] = mediumContainer;
     containers[2] = hardContainer;
-    containers[3] = backRowContainer;
 
     return this;
 }

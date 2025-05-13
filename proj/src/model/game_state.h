@@ -22,8 +22,8 @@ typedef struct GameState {
     bool mouse_dirty;
     int prev_cursor_width;
     int prev_cursor_height;
-    int cursor_delta_x;
-    int cursor_delta_y;
+    int mouse_displacement_x;
+    int mouse_displacement_y;
 
     void (*draw)(struct GameState *this);
     void (*process_event)(struct GameState *this, EventType event);

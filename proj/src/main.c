@@ -195,6 +195,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 // game_set_difficulty(game, chosenLevel);
                 nextState = SELECT_CAR;
             } else if (chosenLevel == DIFFICULTY_BACK) {
+                select_difficulty_reset_state(selectDifficulty);
                 menu_reset_state(mainMenu);
                 nextState = MENU;
             } else if (chosenLevel == DIFFICULTY_EXITED) {

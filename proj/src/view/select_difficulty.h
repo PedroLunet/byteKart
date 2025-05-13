@@ -34,6 +34,7 @@ typedef struct SelectDifficulty {
     int selectedOption;
     DifficultyLevel chosenLevel;
     UIComponent *uiRoot;
+    UIComponent *backButton;
 } SelectDifficulty;
 
 // Public SelectDifficulty Class Methods

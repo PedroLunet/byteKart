@@ -31,7 +31,7 @@ int sprite_draw_xpm(Sprite *this, int x, int y) {
     uint16_t height = this->height;
     uint16_t width = this->width;
     uint32_t current_color;
-    uint32_t transparent = this->map[0];
+    uint32_t transparent = this->map[width * height - 1];
 
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
