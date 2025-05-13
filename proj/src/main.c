@@ -270,7 +270,8 @@ int (proj_main_loop)(int argc, char *argv[]) {
                 case HARDWARE:
 
                     if (msg.m_notify.interrupts & BIT(irq_set_timer)) {
-                        // pendingEvent = EVENT_TIMER;
+                        timer_int_handler();
+                        pendingEvent = EVENT_TIMER;
                     }
 
                     if (msg.m_notify.interrupts & BIT(irq_set_keyboard)) {
@@ -294,7 +295,12 @@ int (proj_main_loop)(int argc, char *argv[]) {
             }
         }
 
-        if (pendingEvent != EVENT_NONE) {
+        if (pendingEvent == EVENT_TIMER) {
+            if (swap_buffers() != 0) {
+                printf("Error swapping buffers.\n");
+                return 1;
+            }
+        } else if (pendingEvent != EVENT_NONE) {
             // interruptHandlers[pendingEvent]();
             current_state = stateMachineUpdate(current_state, pendingEvent);
 
