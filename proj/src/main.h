@@ -18,7 +18,7 @@
 #include "model/game_state.h"
 #include "menu.h"
 #include "view/select_difficulty.h"
-#include "select_car.h"
+#include "view/select_car.h"
 #include "view/game.h"
 
 
