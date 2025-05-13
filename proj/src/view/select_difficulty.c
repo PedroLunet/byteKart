@@ -91,16 +91,23 @@ static void select_difficulty_process(GameState *base, EventType event) {
     SelectDifficulty *this = (SelectDifficulty *)base;
     if (event == EVENT_KEYBOARD) {
         switch (scancode) {
-            case UP_ARROW:
+            case LEFT_ARROW:
                 if (this->selectedOption > 0) this->selectedOption--;
             break;
-            case DOWN_ARROW:
+            case RIGHT_ARROW:
                 if (this->selectedOption < 2) this->selectedOption++;
+            break;
+            case UP_ARROW:
+                if (this->backButton == 0) this->backButton++;
+            break;
+            case DOWN_ARROW:
+                if (this->backButton == 1) this->backButton--;
             break;
             case ENTER_KEY:
                 if (this->selectedOption == 0) this->chosenLevel = DIFFICULTY_EASY;
                 else if (this->selectedOption == 1) this->chosenLevel = DIFFICULTY_MEDIUM;
                 else if (this->selectedOption == 2) this->chosenLevel = DIFFICULTY_HARD;
+                else if (this->backButton == 1) this->chosenLevel = DIFFICULTY_BACK;
             break;
             case ESC_BREAKCODE:
                 this->chosenLevel = DIFFICULTY_EXITED;
@@ -111,7 +118,7 @@ static void select_difficulty_process(GameState *base, EventType event) {
         base->draw(base);
     } else if (event == EVENT_MOUSE) {
         int prevSelected = this->selectedOption;
-        if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw_internal, select_difficulty_is_mouse_over, &this->selectedOption)) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw, select_difficulty_is_mouse_over, &this->selectedOption)) {
             if (this->selectedOption != -1) {
                 if (this->selectedOption == 0) this->chosenLevel = DIFFICULTY_EASY;
                 else if (this->selectedOption == 1) this->chosenLevel = DIFFICULTY_MEDIUM;
@@ -149,6 +156,7 @@ SelectDifficulty *select_difficulty_create() {
     this->base.is_mouse_over = select_difficulty_is_mouse_over;
 
     this->selectedOption = 0;
+    this->backButton = 0;
     this->chosenLevel = DIFFICULTY_START;
     this->uiRoot = NULL;
 
@@ -264,7 +272,9 @@ void select_difficulty_destroy(SelectDifficulty *this) {
 }
 
 void select_difficulty_draw(SelectDifficulty *this) {
+    this->base.clear_mouse_area(&this->base);
     this->base.draw(&this->base);
+    this->base.draw_mouse(&this->base);
 }
 
 void select_difficulty_process_event(SelectDifficulty *this, EventType event) {

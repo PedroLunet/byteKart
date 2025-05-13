@@ -154,9 +154,8 @@ static void select_car_process(GameState *base, EventType event) {
         base->draw(base);
     } else if (event == EVENT_MOUSE) {
         int prevSelected = this->selectedOption;
-        if (base->handle_mouse_input(base, (void (*)(GameState *))select_car_draw_internal, select_car_is_mouse_over, &this->selectedOption)) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))select_car_draw, select_car_is_mouse_over, &this->selectedOption)) {
             if (this->selectedOption != -1) {
-                printf("Selected option: %d\n", this->selectedOption);
                 if (this->selectedOption == 0) this->chosenLevel = CAR_FIRST;
                 else if (this->selectedOption == 1) this->chosenLevel = CAR_SECOND;
                 else if (this->selectedOption == 2) this->chosenLevel = CAR_THIRD;
@@ -376,7 +375,9 @@ void select_car_destroy(SelectCar *this) {
 }
 
 void select_car_draw(SelectCar *this) {
+    this->base.clear_mouse_area(&this->base);
     this->base.draw(&this->base);
+    this->base.draw_mouse(&this->base);
 }
 
 void select_car_process_event(SelectCar *this, EventType event) {
