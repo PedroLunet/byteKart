@@ -5,6 +5,12 @@
 #include "model/game_state.h"
 #include "sprite.h"
 #include "macros.h"
+#include "xpm/xpm_files.h"
+#include "macros.h"
+#include "controller/video_card.h"
+#include "controller/mouse.h"
+#include "fonts/font.h"
+#include "view/ui.h"
 
 typedef enum {
     MENU_MAIN,
@@ -21,9 +27,9 @@ typedef struct {
     Sprite *leaderboardSprite;
     Sprite *quitSprite;
     int selectedOption;
+    UIComponent *uiRoot;
 } Menu;
 
-// Public Menu Class Method
 Menu *menu_create();
 void menu_destroy(Menu *this);
 void menu_draw(Menu *this);
@@ -31,4 +37,4 @@ void menu_process_event(Menu *this, EventType event);
 MenuSubstate menu_get_current_substate(Menu *this);
 void menu_reset_state(Menu *this);
 
-#endif /* MENU_H_ */
+#endif 
