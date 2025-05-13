@@ -31,11 +31,12 @@ int sprite_draw_xpm(Sprite *this, int x, int y) {
     uint16_t height = this->height;
     uint16_t width = this->width;
     uint32_t current_color;
+    uint32_t transparent = this->map[0];
 
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             current_color = this->map[w + h * width];
-            if (current_color == TRANSPARENT)
+            if (current_color == transparent)
                 continue;
             if (vg_draw_pixel(x + w, y + h, current_color) != 0)
                 return 1;

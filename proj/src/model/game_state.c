@@ -19,43 +19,57 @@ static void base_update_mouse_position(GameState *this, int *x, int *y) {
     if (*y >= (int)vbe_mode_info.YResolution) *y = (int)vbe_mode_info.YResolution - 1;
 }
 
-static void base_clear_mouse_pointer(GameState *this) {
-    if (this->prev_cursor) {
-        for (int dy = 0; dy < this->prev_cursor->height; dy++) {
-            for (int dx = 0; dx < this->prev_cursor->width; dx++) {
-                vg_draw_pixel(this->mouse_x + dx, this->mouse_y + dy, BACKGROUND_COLOR);
+static void base_clear_mouse_area(GameState *this) {
+    if (this->mouse_dirty) {
+        int prev_x = this->prev_mouse_x;
+        int prev_y = this->prev_mouse_y;
+        int width = this->prev_cursor_width;
+        int height = this->prev_cursor_height;
+        uint32_t clear_color = BACKGROUND_COLOR;
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int draw_x = prev_x + x;
+                int draw_y = prev_y + y;
+                if (draw_x >= 0 && draw_x < (int)vbe_mode_info.XResolution &&
+                    draw_y >= 0 && draw_y < (int)vbe_mode_info.YResolution) {
+                    vg_draw_pixel(draw_x, draw_y, clear_color);
+                }
             }
         }
-        this->prev_cursor = NULL;
     }
 }
 
-static void base_draw_mouse_pointer(GameState *this, uint32_t hover_color, uint32_t default_color, bool is_hovering) {
-    Sprite *sprite_to_draw = is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
-
-    if (sprite_to_draw) {
-        sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y);
-        this->prev_cursor = sprite_to_draw;
+static void base_draw_mouse(GameState *this) {
+     if (this->mouse_dirty) {
+        Sprite *sprite_to_draw = this->is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
+        if (sprite_to_draw) {
+            sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y);
+        }
+        this->mouse_dirty = false;
     }
 }
 
 static bool base_handle_mouse_input(GameState *this, void (*draw_state)(GameState *), bool (*is_over)(GameState *, int, int, void *), void *hover_target) {
-    base_clear_mouse_pointer(this);
-    this->prev_mouse_x = this->mouse_x;
-    this->prev_mouse_y = this->mouse_y;
+    bool mouse_moved = (this->mouse_x != this->prev_mouse_x) || (this->mouse_y != this->prev_mouse_y);
+
+    if (mouse_moved) {
+        this->prev_cursor_width = (this->cursorSprite) ? this->cursorSprite->width : (this->cursorPointerSprite ? this->cursorPointerSprite->width : 0);
+        this->prev_cursor_height = (this->cursorSprite) ? this->cursorSprite->height : (this->cursorPointerSprite ? this->cursorPointerSprite->height : 0);
+        this->prev_mouse_x = this->mouse_x;
+        this->prev_mouse_y = this->mouse_y;
+        this->mouse_dirty = true;
+    }
+
     base_update_mouse_position(this, &this->mouse_x, &this->mouse_y);
 
     if (draw_state) {
         draw_state(this);
     }
 
-    bool is_hovering = false;
-    if (is_over && hover_target) {
-        is_hovering = is_over(this, this->mouse_x, this->mouse_y, hover_target);
-    }
-    base_draw_mouse_pointer(this, 0xFF0000, 0xFFFFFF, is_hovering);
+    this->is_hovering = (is_over && hover_target) ? is_over(this, this->mouse_x, this->mouse_y, hover_target) : false;
 
-    return pp.lb && is_hovering;
+    return pp.lb && this->is_hovering;
 }
 
 void base_destroy(GameState *this) {
@@ -81,9 +95,14 @@ void init_base_game_state(GameState *state) {
     state->handle_mouse_input = base_handle_mouse_input;
     state->is_mouse_over = NULL; // To be overridden if needed
     state->update_mouse_position = base_update_mouse_position;
-
+    state->draw_mouse = base_draw_mouse;
+    state->clear_mouse_area = base_clear_mouse_area;
+    state->is_hovering = false;
     state->cursorSprite = sprite_create_xpm((xpm_map_t) cursor, 0, 0, 0, 0);
     state->cursorPointerSprite = sprite_create_xpm((xpm_map_t) cursor_pointer, 0, 0, 0, 0);
     state->prev_cursor = state->cursorSprite;
+    state->mouse_dirty = false;
+    state->prev_cursor_width = 0;
+    state->prev_cursor_height = 0;
 }
 

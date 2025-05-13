@@ -18,6 +18,10 @@ typedef struct GameState {
     Sprite *cursorSprite;
     Sprite *cursorPointerSprite;
     Sprite *prev_cursor;
+    bool is_hovering;
+    bool mouse_dirty;
+    int prev_cursor_width;
+    int prev_cursor_height;
 
     void (*draw)(struct GameState *this);
     void (*process_event)(struct GameState *this, EventType event);
@@ -26,6 +30,8 @@ typedef struct GameState {
     bool (*handle_mouse_input)(struct GameState *this, void (*draw_state)(struct GameState *), bool (*is_over)(struct GameState *, int, int, void *), void *hover_target);
     bool (*is_mouse_over)(struct GameState *this, int x, int y, void *target);
     void (*update_mouse_position)(struct GameState *this, int *x, int *y);
+    void (*draw_mouse)(struct GameState *this);
+    void (*clear_mouse_area)(struct GameState *this);
 } GameState;
 
 
