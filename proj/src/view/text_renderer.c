@@ -1,10 +1,6 @@
 #include <lcom/lcf.h>
 
-#include <stdio.h>
-#include <stdint.h>
-
 #include "text_renderer.h"
-#include "controller/video_card.h"
 
 int load_text(const char *text, int x, int y, uint32_t color, const Font *font, uint32_t *pixel_data, int buffer_width) {
     if (!font || !font->atlas || !font->glyphsLoaded) {

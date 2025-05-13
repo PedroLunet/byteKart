@@ -1,12 +1,6 @@
 #include <lcom/lcf.h>
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-
 #include "select_difficulty.h"
-#include "controller/video_card.h"
-#include "controller/mouse.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;

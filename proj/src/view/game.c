@@ -1,11 +1,6 @@
 #include <lcom/lcf.h>
 
-#include <stdint.h>
-#include <stdio.h>
-
 #include "game.h"
-#include "model/game_state.h"
-#include "xpm/xpm_files.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
@@ -35,14 +30,12 @@ static void game_process(GameState *base, EventType event) {
         }
         base->draw(base);
     } else if (event == EVENT_MOUSE) {
-        // Handle game-specific mouse input
         base->draw(base);
     }
 }
 
 static void game_update(GameState *base) {
     Game *this = (Game *)base;
-    // Update game logic here (e.g., car movement, obstacle movement, collision detection)
     this->road_y1 += 2;
     this->road_y2 += 2;
     if (this->road_y1 >= (int)vbe_mode_info.YResolution) this->road_y1 = -this->road_sprite1->height;
@@ -63,17 +56,14 @@ Game *game_create() {
         return NULL;
     }
 
-    // Initialize the base GameState
     init_base_game_state(&this->base);
     this->base.draw = (void (*)(GameState *))game_draw_internal;
     this->base.process_event = game_process;
     this->base.update_state = game_update;
     this->base.destroy = game_destroy_internal;
 
-    // Initialize game-specific data
     this->currentSubstate = GAME_SUBSTATE_PLAYING;
 
-    // Initialize the player's car
     this->playerCar.x = vbe_mode_info.XResolution / 2 - 30;
     this->playerCar.y = vbe_mode_info.YResolution - 100;
     this->playerCar.speed = 5;

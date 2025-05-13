@@ -1,10 +1,13 @@
 #ifndef UI_H_
 #define UI_H_
 
+#include <stdlib.h>
+#include <stdint.h>
+
 #include "../sprite.h"
 #include "../fonts/font.h"
 #include "text_renderer.h"
-#include <stdint.h>
+#include "../controller/video_card.h"
 
 typedef struct UIComponent UIComponent;
 

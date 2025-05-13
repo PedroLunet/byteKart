@@ -1,10 +1,6 @@
 #include <lcom/lcf.h>
 
-#include <stdlib.h>
-#include <stdint.h>
-
 #include "ui.h"
-#include "../controller/video_card.h"
 
 static void draw_sprite_component(UIComponent *component) {
     SpriteElementData *data = (SpriteElementData *)component->data;

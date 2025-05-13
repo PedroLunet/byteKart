@@ -1,9 +1,15 @@
 #ifndef SELECT_DIFFICULTY_H
 #define SELECT_DIFFICULTY_H
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
 #include "model/game_state.h"
 #include "view/ui.h"
 #include "macros.h"
+#include "controller/video_card.h"
+#include "controller/mouse.h"
 
 typedef enum {
     DIFFICULTY_START,

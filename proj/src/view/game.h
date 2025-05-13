@@ -1,6 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <stdint.h>
+#include <stdio.h>
+
 #include "model/game_state.h"
 #include "sprite.h"
 #include "macros.h"

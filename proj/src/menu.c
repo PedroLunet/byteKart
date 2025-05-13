@@ -8,6 +8,7 @@ extern uint8_t index_packet;
 extern struct packet pp;
 extern Font *gameFont;
 
+static UIComponent *menuContainer = NULL;
 static UIComponent *titleText = NULL;
 static UIComponent *playText =  NULL;
 static UIComponent *playContainer = NULL;
@@ -124,7 +125,7 @@ Menu *menu_create() {
     this->uiRoot = NULL;
 
     // Title 
-    UIComponent *menuContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
+    menuContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
     if (!menuContainer) {
         free(this);
         return NULL;
@@ -143,7 +144,7 @@ Menu *menu_create() {
     add_child_to_container_component(menuContainer, titleText);
 
     // Play option
-    playContainer = create_container_component(0, 0, 300, 100);
+    playContainer = create_container_component(0, 0, 200, 50);
     if (!playContainer) {
         destroy_ui_component(menuContainer);
         free(this);
@@ -165,15 +166,13 @@ Menu *menu_create() {
     perform_container_layout(playContainer);
 
     // Leaderboard option
-    leaderboardContainer = create_container_component(0, 0, 300, 100);
+    leaderboardContainer = create_container_component(0, 0, 200, 50);
     if (!leaderboardContainer) {
         destroy_ui_component(menuContainer);
         free(this);
         return NULL;
     }
     set_container_layout(leaderboardContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-
-
     set_container_background_color(leaderboardContainer, 0x111111);
     set_container_padding(leaderboardContainer, 20, 20, 20, 20);
     set_container_border_radius(leaderboardContainer, 10);
@@ -189,14 +188,13 @@ Menu *menu_create() {
     perform_container_layout(leaderboardContainer);
 
     // Quit option
-    quitContainer = create_container_component(0, 0, 300, 100);
+    quitContainer = create_container_component(0, 0, 200, 50);
     if (!quitContainer) {
         destroy_ui_component(menuContainer);
         free(this);
         return NULL;
     }
     set_container_layout(quitContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-
     set_container_background_color(quitContainer, 0x111111);
     set_container_padding(quitContainer, 20, 20, 20, 20);
     set_container_border_radius(quitContainer, 10);
