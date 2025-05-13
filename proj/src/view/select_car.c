@@ -40,6 +40,89 @@ static bool select_car_is_mouse_over(GameState *base, int mouse_x, int mouse_y, 
     *selected = -1;
 
     if (this->uiRoot && this->uiRoot->type == TYPE_CONTAINER && this->uiRoot->data) {
+          ContainerData *carContainerData = (ContainerData *)this->uiRoot->data;
+
+          if (carContainerData->num_children > 1 && carContainerData->children[1] && carContainerData->children[1]->type == TYPE_CONTAINER && carContainerData->children[1]->data) {
+              ContainerData *optionsRowContainerData = (ContainerData *)carContainerData->children[1]->data;
+
+              if (optionsRowContainerData->num_children >= 2) {
+                  UIComponent *firstRowConteiner = optionsRowContainerData->children[0];
+                  UIComponent *secondRowContainer = optionsRowContainerData->children[1];
+
+                  if (firstRowConteiner && firstRowConteiner->type == TYPE_CONTAINER && firstRowConteiner->data) {
+                      ContainerData *firstRowData = (ContainerData *)firstRowConteiner->data;
+
+                      if (firstRowData->num_children >= 2) {
+                            UIComponent *firstCarContainer = firstRowData->children[0];
+                            UIComponent *secondCarContainer = firstRowData->children[1];
+
+                            if (firstCarContainer && firstCarContainer->type == TYPE_CONTAINER && firstCarContainer->data) {
+                                ContainerData *firstCarData = (ContainerData *)firstCarContainer->data;
+                                if (mouse_x >= firstCarContainer->x && mouse_x < firstCarContainer->x + firstCarData->width &&
+                                    mouse_y >= firstCarContainer->y && mouse_y < firstCarContainer->y + firstCarData->height) {
+                                    *selected = 0;
+                                    set_container_background_color(firstCarContainer, 0xA81D1D);
+                                    return true;
+                                }
+                            }
+
+                            if (secondCarContainer && secondCarContainer->type == TYPE_CONTAINER && secondCarContainer->data) {
+                                ContainerData *secondCarData = (ContainerData *)secondCarContainer->data;
+                                if (mouse_x >= secondCarContainer->x && mouse_x < secondCarContainer->x + secondCarData->width &&
+                                    mouse_y >= secondCarContainer->y && mouse_y < secondCarContainer->y + secondCarData->height) {
+                                    *selected = 1;
+                                    set_container_background_color(secondCarContainer, 0xA81D1D);
+                                    return true;
+                                }
+                            }
+
+                            if (*selected != 0) {
+                                set_container_background_color(firstCarContainer, 0x111111);
+                            }
+                            if (*selected != 1) {
+                                set_container_background_color(secondCarContainer, 0x111111);
+                            }
+                      }
+                  }
+
+                  if (secondRowContainer && secondRowContainer->type == TYPE_CONTAINER && secondRowContainer->data) {
+                      ContainerData *secondRowData = (ContainerData *)secondRowContainer->data;
+
+                      if (secondRowData->num_children >= 2) {
+                            UIComponent *thirdCarContainer = secondRowData->children[0];
+                            UIComponent *fourthCarContainer = secondRowData->children[1];
+
+                            if (thirdCarContainer && thirdCarContainer->type == TYPE_CONTAINER && thirdCarContainer->data) {
+                                ContainerData *thirdCarData = (ContainerData *)thirdCarContainer->data;
+                                if (mouse_x >= thirdCarContainer->x && mouse_x < thirdCarContainer->x + thirdCarData->width &&
+                                    mouse_y >= thirdCarContainer->y && mouse_y < thirdCarContainer->y + thirdCarData->height) {
+                                    *selected = 2;
+                                    set_container_background_color(thirdCarContainer, 0xA81D1D);
+                                    return true;
+                                }
+                            }
+
+                            if (fourthCarContainer && fourthCarContainer->type == TYPE_CONTAINER && fourthCarContainer->data) {
+                                ContainerData *fourthCarData = (ContainerData *)fourthCarContainer->data;
+                                if (mouse_x >= fourthCarContainer->x && mouse_x < fourthCarContainer->x + fourthCarData->width &&
+                                    mouse_y >= fourthCarContainer->y && mouse_y < fourthCarContainer->y + fourthCarData->height) {
+                                    *selected = 3;
+                                    set_container_background_color(fourthCarContainer, 0xA81D1D);
+                                    return true;
+                                }
+                            }
+
+                            // Reset background color for unselected options
+                            if (*selected != 2) {
+                                set_container_background_color(thirdCarContainer, 0x111111);
+                            }
+                            if (*selected != 3) {
+                                set_container_background_color(fourthCarContainer, 0x111111);
+                            }
+                      }
+                  }
+              }
+          }
 
     }
 
