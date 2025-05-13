@@ -16,6 +16,10 @@ static UIComponent *hardContainer = NULL;
 static UIComponent *easyOption = NULL;
 static UIComponent *mediumOption = NULL;
 static UIComponent *hardOption = NULL;
+static UIComponent *backRowContainer = NULL;
+// static UIComponent *backContainer = NULL;
+
+static UIComponent *containers[4];
 
 static void select_difficulty_draw_internal(GameState *base) {
     SelectDifficulty *this = (SelectDifficulty *)base;
@@ -45,7 +49,6 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     if (mouse_x >= easy->x && mouse_x < easy->x + easyData->width &&
                         mouse_y >= easy->y && mouse_y < easy->y + easyData->height) {
                         *selected = 0;
-                        set_container_background_color(easyContainer, 0xA81D1D);
                         return true;
                     }
                 }
@@ -55,7 +58,6 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     if (mouse_x >= medium->x && mouse_x < medium->x + mediumData->width &&
                         mouse_y >= medium->y && mouse_y < medium->y + mediumData->height) {
                         *selected = 1;
-                        set_container_background_color(mediumContainer, 0xA81D1D);
                         return true;
                     }
                 }
@@ -65,20 +67,8 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
                     if (mouse_x >= hard->x && mouse_x < hard->x + hardData->width &&
                         mouse_y >= hard->y && mouse_y < hard->y + hardData->height) {
                         *selected = 2;
-                        set_container_background_color(hardContainer, 0xA81D1D);
                         return true;
                     }
-                }
-
-                // Reset background color for unselected options
-                if (*selected != 0) {
-                    set_container_background_color(easyContainer, 0x111111);
-                }
-                if (*selected != 1) {
-                    set_container_background_color(mediumContainer, 0x111111);
-                }
-                if (*selected != 2) {
-                    set_container_background_color(hardContainer, 0x111111);
                 }
             }
         }
@@ -98,16 +88,13 @@ static void select_difficulty_process(GameState *base, EventType event) {
                 if (this->selectedOption < 2) this->selectedOption++;
             break;
             case UP_ARROW:
-                if (this->backButton == 0) this->backButton++;
+                if (this->selectedOption == 2) this->selectedOption++;
             break;
             case DOWN_ARROW:
-                if (this->backButton == 1) this->backButton--;
+                if (this->selectedOption == 3) this->selectedOption--;
             break;
             case ENTER_KEY:
-                if (this->selectedOption == 0) this->chosenLevel = DIFFICULTY_EASY;
-                else if (this->selectedOption == 1) this->chosenLevel = DIFFICULTY_MEDIUM;
-                else if (this->selectedOption == 2) this->chosenLevel = DIFFICULTY_HARD;
-                else if (this->backButton == 1) this->chosenLevel = DIFFICULTY_BACK;
+                this->chosenLevel = difficultyLevels[this->selectedOption + 1];
             break;
             case ESC_BREAKCODE:
                 this->chosenLevel = DIFFICULTY_EXITED;
@@ -118,17 +105,22 @@ static void select_difficulty_process(GameState *base, EventType event) {
         base->draw(base);
     } else if (event == EVENT_MOUSE) {
         int prevSelected = this->selectedOption;
+        base->update_mouse_delta(base);
         if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw, select_difficulty_is_mouse_over, &this->selectedOption)) {
-            if (this->selectedOption != -1) {
-                if (this->selectedOption == 0) this->chosenLevel = DIFFICULTY_EASY;
-                else if (this->selectedOption == 1) this->chosenLevel = DIFFICULTY_MEDIUM;
-                else if (this->selectedOption == 2) this->chosenLevel = DIFFICULTY_HARD;
-            }
+            printf("Mouse over option %d\n", this->selectedOption);
+            this->chosenLevel = difficultyLevels[this->selectedOption + 1];
+            printf("Selected difficulty: %d\n", this->chosenLevel);
         }
         if (this->selectedOption != prevSelected) {
             base->draw(base);
+            base->reset_mouse_delta(base);
         }
     }
+
+    if (this->selectedOption >= 0 && this->selectedOption < 3 && containers[this->selectedOption] != NULL) {
+        is_container_hovered(containers[this->selectedOption]);
+    }
+
 }
 
 static void select_difficulty_destroy_internal(GameState *base) {
@@ -156,7 +148,6 @@ SelectDifficulty *select_difficulty_create() {
     this->base.is_mouse_over = select_difficulty_is_mouse_over;
 
     this->selectedOption = 0;
-    this->backButton = 0;
     this->chosenLevel = DIFFICULTY_START;
     this->uiRoot = NULL;
 
@@ -263,6 +254,11 @@ SelectDifficulty *select_difficulty_create() {
 
     perform_container_layout(optionsRowContainer);
     perform_container_layout(difficultyContainer);
+
+    containers[0] = easyContainer;
+    containers[1] = mediumContainer;
+    containers[2] = hardContainer;
+    containers[3] = backRowContainer;
 
     return this;
 }

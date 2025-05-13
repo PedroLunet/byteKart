@@ -20,6 +20,10 @@ static void draw_container_component(UIComponent *component) {
         uint32_t bc = data->border_color;
         int br = data->border_radius;
         uint32_t bg = data->background_color;
+        uint32_t hover_color = data->hover_color;
+        if (data->is_hovered) {
+            bg = hover_color;
+        }
 
         if (bw > 0) {
             vg_draw_rounded_rectangle(x, y, w, h, br, bc);
@@ -31,6 +35,8 @@ static void draw_container_component(UIComponent *component) {
         for (int i = 0; i < data->num_children; ++i) {
             draw_ui_component(data->children[i]);
         }
+
+        // data->is_hovered = false;
 
     }
 }
@@ -102,6 +108,8 @@ UIComponent *create_container_component(int x, int y, int width, int height) {
     data->border_width = 0;
     data->border_color = 0x000000;
     data->background_color = 0xFFFFFF;
+    data->hover_color = 0xAAAAAA;
+    data->is_hovered = false;
     data->border_radius = 0;
 
     return component;
@@ -205,6 +213,20 @@ void set_container_background_color(UIComponent *container, uint32_t color) {
     if (container->type == TYPE_CONTAINER) {
         ContainerData *data = (ContainerData *)container->data;
         data->background_color = color;
+    }
+}
+
+void set_container_hover_color(UIComponent *container, uint32_t color) {
+    if (container->type == TYPE_CONTAINER) {
+        ContainerData *data = (ContainerData *)container->data;
+        data->hover_color = color;
+    }
+}
+
+void is_container_hovered(UIComponent *container) {
+    if (container->type == TYPE_CONTAINER) {
+        ContainerData *data = (ContainerData *)container->data;
+        data->is_hovered = true;
     }
 }
 

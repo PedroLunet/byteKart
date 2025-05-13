@@ -20,10 +20,18 @@ typedef enum {
     DIFFICULTY_EXITED
 } DifficultyLevel;
 
+static const DifficultyLevel difficultyLevels[] = {
+    DIFFICULTY_START,
+    DIFFICULTY_EASY,
+    DIFFICULTY_MEDIUM,
+    DIFFICULTY_HARD,
+    DIFFICULTY_BACK,
+    DIFFICULTY_EXITED
+};
+
 typedef struct SelectDifficulty {
     GameState base;
     int selectedOption;
-    int backButton;
     DifficultyLevel chosenLevel;
     UIComponent *uiRoot;
 } SelectDifficulty;
