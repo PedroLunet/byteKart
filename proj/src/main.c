@@ -281,8 +281,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
             switch (_ENDPOINT_P(msg.m_source)) {
                 case HARDWARE:
 
-                    if (msg.m_notify.interrupts & BIT(irq_set_timer)) {
-                        timer_int_handler();
+                    if (msg.m_notify.interrupts & irq_set_timer) {
                         pendingEvent = EVENT_TIMER;
                     }
 
@@ -312,17 +311,14 @@ int (proj_main_loop)(int argc, char *argv[]) {
                 printf("Error swapping buffers.\n");
                 return 1;
             }
-        } else if (pendingEvent != EVENT_NONE) {
+        }
+        if (pendingEvent != EVENT_NONE) {
             // interruptHandlers[pendingEvent]();
             current_state = stateMachineUpdate(current_state, pendingEvent);
 
             pendingEvent = EVENT_NONE;
         }
 
-        if (swap_buffers() != 0) {
-            printf("Error swapping buffers.\n");
-            return 1;
-        }
     }
 
     if (restore_system() != 0) {

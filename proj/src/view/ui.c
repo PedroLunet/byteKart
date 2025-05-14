@@ -47,7 +47,6 @@ static void draw_container_component(UIComponent *component) {
         }
 
         data->is_hovered = false;
-
     }
 }
 
@@ -112,20 +111,20 @@ static void draw_dirty_container(UIComponent *container, int x, int y, int width
         bg = hover_color;
     }
 
-    if (bw > 0) {
-        if (bg_image) {
-            sprite_draw_partial_xpm(bg_image, x, y, width, height, false);
-        } else {
+    if (bg_image) {
+        sprite_draw_partial_xpm(bg_image, x, y, width, height, false);
+    } else {
+        if (bw > 0) {
             vg_draw_rounded_rectangle_section(container_x1, container_y1, data->width, data->height, br, bc, dirty_x1, dirty_y1, width, height);
             vg_draw_rounded_rectangle_section(container_x1 + bw, container_y1 + bw, data->width - 2 * bw, data->height - 2 * bw, br, bg, dirty_x1, dirty_y1, width, height);
-        }
-    } else {
-        if (bg_image) {
-            sprite_draw_partial_xpm(bg_image, x, y, width, height, false);
         } else {
             vg_draw_rounded_rectangle_section(container_x1, container_y1, data->width, data->height, br, bg, dirty_x1, dirty_y1, width, height);
         }
     }
+
+    data->is_hovered = false;
+
+    return;
 }
 
 void draw_dirty_area(UIComponent *element, int x, int y, int width, int height) {

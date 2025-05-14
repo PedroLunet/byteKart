@@ -14,7 +14,7 @@ static void game_draw_internal(GameState *base) {
     drawRoadBackground(this);
 
     if (this->playerCar.car_sprite) {
-        sprite_draw_xpm(this->playerCar.car_sprite, this->playerCar.x, this->playerCar.y);
+        sprite_draw_xpm(this->playerCar.car_sprite, this->playerCar.x, this->playerCar.y, true);
     }
 }
 

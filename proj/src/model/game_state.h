@@ -34,8 +34,6 @@ typedef struct GameState {
     void (*update_mouse_position)(struct GameState *this, int *x, int *y);
     void (*draw_mouse)(struct GameState *this);
     void (*clear_mouse_area)(struct GameState *this);
-    void (*update_mouse_delta)(struct GameState *this);
-    void (*reset_mouse_delta)(struct GameState *this);
 } GameState;
 
 void base_destroy(GameState *this);

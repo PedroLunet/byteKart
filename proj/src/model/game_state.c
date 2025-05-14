@@ -20,12 +20,9 @@ static void base_update_mouse_position(GameState *this, int *x, int *y) {
 }
 
 static void base_draw_mouse(GameState *this) {
-     if (this->mouse_dirty) {
-        Sprite *sprite_to_draw = this->is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
-        if (sprite_to_draw) {
-            sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y, true);
-        }
-        this->mouse_dirty = false;
+    Sprite *sprite_to_draw = this->is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
+    if (sprite_to_draw) {
+        sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y, true);
     }
 }
 
@@ -38,29 +35,15 @@ static bool base_handle_mouse_input(GameState *this, void (*draw_state)(GameStat
         this->prev_mouse_x = this->mouse_x;
         this->prev_mouse_y = this->mouse_y;
         this->mouse_dirty = true;
-        printf("Mouse moved to (%d, %d)\n", this->mouse_x, this->mouse_y);
     }
 
-    if (draw_state) {
-        printf("Drawing state\n");
-        draw_state(this);
-    }
+    draw_state(this);
     base_update_mouse_position(this, &this->mouse_x, &this->mouse_y);
     base_draw_mouse(this);
 
     this->is_hovering = (is_over && hover_target) ? is_over(this, this->mouse_x, this->mouse_y, hover_target) : false;
 
     return pp.lb && this->is_hovering;
-}
-
-static void update_mouse_delta(GameState *this) {
-    this->mouse_displacement_x += pp.delta_x;
-    this->mouse_displacement_y += pp.delta_y;
-}
-
-static void reset_mouse_delta(GameState *this) {
-    this->mouse_displacement_x = 0;
-    this->mouse_displacement_y = 0;
 }
 
 void base_destroy(GameState *this) {
@@ -88,8 +71,6 @@ void init_base_game_state(GameState *state) {
     state->update_mouse_position = base_update_mouse_position;
     state->draw_mouse = base_draw_mouse;
     state->clear_mouse_area = NULL;
-    state->update_mouse_delta = update_mouse_delta;
-    state->reset_mouse_delta = reset_mouse_delta;
 
     state->is_hovering = false;
     state->cursorSprite = sprite_create_xpm((xpm_map_t) cursor, 0, 0, 0, 0);

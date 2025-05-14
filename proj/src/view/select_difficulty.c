@@ -30,7 +30,17 @@ static void select_difficulty_draw_internal(GameState *base) {
         draw_ui_component(this->backButton);
     }
 }
-
+/*
+static void select_difficulty_clean_dirty_mouse_internal(GameState *base) {
+    SelectDifficulty *this = (SelectDifficulty *)base;
+    if (this->uiRoot) {
+        draw_dirty_area(this->uiRoot, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
+    }
+    if (this->backButton) {
+        draw_dirty_area(this->backButton, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
+    }
+}
+*/
 static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mouse_y, void *data) {
     SelectDifficulty *this = (SelectDifficulty *)base;
     int *selected = (int *)data;
@@ -91,6 +101,7 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
 
 static void select_difficulty_process(GameState *base, EventType event) {
     SelectDifficulty *this = (SelectDifficulty *)base;
+    int prevSelected = this->selectedOption;
     if (event == EVENT_KEYBOARD) {
         switch (scancode) {
             case LEFT_ARROW:
@@ -114,16 +125,9 @@ static void select_difficulty_process(GameState *base, EventType event) {
             default:
                 break;
         }
-        base->draw(base);
     } else if (event == EVENT_MOUSE) {
-        int prevSelected = this->selectedOption;
-        base->update_mouse_delta(base);
         if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw, select_difficulty_is_mouse_over, &this->selectedOption)) {
             this->chosenLevel = DIFFICULTY_SELECTED;
-        }
-        if (this->selectedOption != prevSelected && (base->mouse_displacement_x >= 12 || base->mouse_displacement_y >= 12)) {
-            base->draw(base);
-            base->reset_mouse_delta(base);
         }
     }
 
@@ -131,6 +135,10 @@ static void select_difficulty_process(GameState *base, EventType event) {
         is_container_hovered(containers[this->selectedOption]);
     } else if (this->selectedOption == 3 && backButton != NULL) {
         is_container_hovered(backButton);
+    }
+
+     if (this->selectedOption != prevSelected) {
+        base->draw(base);
     }
 
 }
@@ -206,7 +214,7 @@ SelectDifficulty *select_difficulty_create() {
         return NULL;
     }
     set_container_layout(easyContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_END);
-    set_container_background_color(easyContainer, 0x111111);
+    set_container_background_color(easyContainer, 0x222222);
     set_container_padding(easyContainer, 40, 40, 40, 40);
     set_container_border_radius(easyContainer, 20);
     set_container_border(easyContainer, 4, 0xAA0000);
@@ -252,7 +260,7 @@ SelectDifficulty *select_difficulty_create() {
         return NULL;
     }
     set_container_layout(hardContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_END);
-    set_container_background_color(hardContainer, 0x111111);
+    set_container_background_color(hardContainer, 0x222222);
     set_container_padding(hardContainer, 40, 40, 40, 40);
     set_container_border_radius(hardContainer, 20);
     set_container_border(hardContainer, 4, 0xAA0000);
@@ -306,7 +314,6 @@ void select_difficulty_destroy(SelectDifficulty *this) {
 
 void select_difficulty_draw(SelectDifficulty *this) {
     this->base.draw(&this->base);
-    this->base.draw_mouse(&this->base);
 }
 
 void select_difficulty_process_event(SelectDifficulty *this, EventType event) {

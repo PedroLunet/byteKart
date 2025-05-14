@@ -32,7 +32,17 @@ static void select_car_draw_internal(GameState *base) {
         draw_ui_component(this->backButton);
     }
 }
-
+/*
+static void select_car_clean_dirty_mouse_internal(GameState *base) {
+    SelectCar *this = (SelectCar *)base;
+    if (this->uiRoot) {
+        draw_dirty_area(this->uiRoot, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
+    }
+    if (this->backButton) {
+        draw_dirty_area(this->backButton, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
+    }
+}
+*/
 static bool select_car_is_mouse_over(GameState *base, int mouse_x, int mouse_y, void *data) {
     SelectCar *this = (SelectCar *)base;
     int *selected = (int *)data;
@@ -56,7 +66,7 @@ static bool select_car_is_mouse_over(GameState *base, int mouse_x, int mouse_y, 
                                  ContainerData *carData = (ContainerData *)indicidualCarContainer->data;
                                  if (mouse_x >= indicidualCarContainer->x && mouse_x < indicidualCarContainer->x + carData->width &&
                                      mouse_y >= indicidualCarContainer->y && mouse_y < indicidualCarContainer->y + carData->height) {
-                                     *selected = row * 2 + col;
+                                     *selected = row * 5 + col;
                                      return true;
                                  }
                               }
@@ -82,6 +92,7 @@ static bool select_car_is_mouse_over(GameState *base, int mouse_x, int mouse_y, 
 
 static void select_car_process(GameState *base, EventType event) {
     SelectCar *this = (SelectCar *)base;
+    int prevSelected = this->selectedOption;
     if (event == EVENT_KEYBOARD) {
         int matrix_x = this->selectedOption % 5;
         int matrix_y = this->selectedOption / 5;
@@ -110,16 +121,9 @@ static void select_car_process(GameState *base, EventType event) {
             default:
                 break;
         }
-        base->draw(base);
     } else if (event == EVENT_MOUSE) {
-        int prevSelected = this->selectedOption;
-        base->update_mouse_delta(base);
         if (base->handle_mouse_input(base, (void (*)(GameState *))select_car_draw, select_car_is_mouse_over, &this->selectedOption)) {
             this->chosenLevel = CAR_SELECTED;
-        }
-        if (this->selectedOption != prevSelected && (base->mouse_displacement_x >= 12 || base->mouse_displacement_y >= 12)) {
-            base->draw(base);
-            base->reset_mouse_delta(base);
         }
     }
 
@@ -127,6 +131,10 @@ static void select_car_process(GameState *base, EventType event) {
         is_container_hovered(containers[this->selectedOption]);
     } else if (this->selectedOption == 10 && backButton != NULL) {
         is_container_hovered(backButton);
+    }
+
+    if (this->selectedOption != prevSelected) {
+        base->draw(base);
     }
 }
 
