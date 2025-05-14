@@ -44,7 +44,7 @@ static void base_draw_mouse(GameState *this) {
      if (this->mouse_dirty) {
         Sprite *sprite_to_draw = this->is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
         if (sprite_to_draw) {
-            sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y);
+            sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y, true);
         }
         this->mouse_dirty = false;
     }

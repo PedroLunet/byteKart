@@ -5,7 +5,7 @@
 static void draw_sprite_component(UIComponent *component) {
     SpriteElementData *data = (SpriteElementData *)component->data;
     if (data->sprite) {
-        sprite_draw_xpm(data->sprite, component->x, component->y);
+        sprite_draw_xpm(data->sprite, component->x, component->y, true);
     }
 }
 
@@ -20,16 +20,26 @@ static void draw_container_component(UIComponent *component) {
         uint32_t bc = data->border_color;
         int br = data->border_radius;
         uint32_t bg = data->background_color;
+        Sprite *bg_image = data->background_image;
+
         uint32_t hover_color = data->hover_color;
         if (data->is_hovered) {
             bg = hover_color;
         }
 
         if (bw > 0) {
-            vg_draw_rounded_rectangle(x, y, w, h, br, bc);
+            if (bg_image) {
+                sprite_draw_xpm(bg_image, x, y, false);
+            } else {
+                vg_draw_rounded_rectangle(x, y, w, h, br, bc);
+            }
             vg_draw_rounded_rectangle(x + bw, y + bw, w - 2 * bw, h - 2 * bw, br, bg);
         } else {
-            vg_draw_rounded_rectangle(x, y, w, h, br, bg);
+            if (bg_image) {
+                sprite_draw_xpm(bg_image, x, y, false);
+            } else {
+                vg_draw_rounded_rectangle(x, y, w, h, br, bg);
+            }
         }
 
         for (int i = 0; i < data->num_children; ++i) {
@@ -108,6 +118,7 @@ UIComponent *create_container_component(int x, int y, int width, int height) {
     data->border_width = 0;
     data->border_color = 0x000000;
     data->background_color = 0xFFFFFF;
+    data->background_image = NULL;
     data->hover_color = 0xAAAAAA;
     data->is_hovered = false;
     data->border_radius = 0;
@@ -213,6 +224,13 @@ void set_container_background_color(UIComponent *container, uint32_t color) {
     if (container->type == TYPE_CONTAINER) {
         ContainerData *data = (ContainerData *)container->data;
         data->background_color = color;
+    }
+}
+
+void set_container_background_image(UIComponent *container, Sprite *sprite) {
+    if (container->type == TYPE_CONTAINER) {
+        ContainerData *data = (ContainerData *)container->data;
+        data->background_image = sprite;
     }
 }
 

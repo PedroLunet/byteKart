@@ -27,7 +27,7 @@ Sprite *sprite_create_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed) {
     return this;
 }
 
-int sprite_draw_xpm(Sprite *this, int x, int y) {
+int sprite_draw_xpm(Sprite *this, int x, int y, bool has_transparent) {
     uint16_t height = this->height;
     uint16_t width = this->width;
     uint32_t current_color;
@@ -36,7 +36,7 @@ int sprite_draw_xpm(Sprite *this, int x, int y) {
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             current_color = this->map[w + h * width];
-            if (current_color == transparent)
+            if (current_color == transparent && has_transparent)
                 continue;
             if (vg_draw_pixel(x + w, y + h, current_color) != 0)
                 return 1;

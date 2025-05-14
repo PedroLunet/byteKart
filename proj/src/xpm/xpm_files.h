@@ -13,5 +13,6 @@
 #include "game/road.xpm"
 #include "cars/car1.xpm"
 #include "fonts/font_2_0.xpm"
+#include "game/byte-kart.xpm"
 
 #endif

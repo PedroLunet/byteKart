@@ -52,6 +52,7 @@ typedef struct {
     int border_width;
     uint32_t border_color;
     uint32_t background_color;
+    Sprite *background_image;
     uint32_t hover_color;
     bool is_hovered;
     int border_radius;
@@ -79,6 +80,7 @@ void set_container_padding(UIComponent *container, int top, int bottom, int left
 void set_container_gap(UIComponent *container, int gap);
 void set_container_border(UIComponent *container, int width, uint32_t color);
 void set_container_background_color(UIComponent *container, uint32_t color);
+void set_container_background_image(UIComponent *container, Sprite *sprite);
 void set_container_hover_color(UIComponent *container, uint32_t color);
 void is_container_hovered(UIComponent *container);
 void set_container_border_radius(UIComponent *container, int radius);

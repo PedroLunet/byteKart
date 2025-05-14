@@ -158,7 +158,8 @@ Menu *menu_create() {
         return NULL;
     }
     set_container_layout(menuContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(menuContainer, 0x111111);
+    Sprite *backgroundSprite = sprite_create_xpm((xpm_map_t) main_background, 0, 0, 0, 0);
+    set_container_background_image(menuContainer, backgroundSprite);
     set_container_gap(menuContainer, 30);
     this->uiRoot = menuContainer;
 

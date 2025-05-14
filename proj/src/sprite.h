@@ -18,7 +18,7 @@ typedef struct {
 // Sprite Class Method Prototypes
 Sprite *sprite_create_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed);
 void sprite_destroy(Sprite *this);
-int sprite_draw_xpm(Sprite *this, int x, int y);
+int sprite_draw_xpm(Sprite *this, int x, int y, bool has_transparent);
 
 // Getters and Setters (if needed)
 int sprite_get_width(Sprite *this);

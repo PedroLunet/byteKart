@@ -10,6 +10,7 @@
 #include "macros.h"
 #include "controller/video_card.h"
 #include "controller/mouse.h"
+#include "xpm/xpm_files.h"
 
 typedef enum {
     DIFFICULTY_START,
