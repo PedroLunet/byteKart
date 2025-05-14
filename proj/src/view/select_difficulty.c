@@ -19,7 +19,7 @@ static UIComponent *hardOption = NULL;
 static UIComponent *backButton = NULL;
 static UIComponent *backText = NULL;
 
-static UIComponent *containers[4];
+static UIComponent *containers[3];
 
 static void select_difficulty_draw_internal(GameState *base) {
     SelectDifficulty *this = (SelectDifficulty *)base;
@@ -229,7 +229,7 @@ SelectDifficulty *select_difficulty_create() {
         return NULL;
     }
     set_container_layout(mediumContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_END);
-    set_container_background_color(mediumContainer, 0x111111);
+    set_container_background_color(mediumContainer, 0x222222);
     set_container_padding(mediumContainer, 40, 40, 40, 40);
     set_container_border_radius(mediumContainer, 20);
     set_container_border(mediumContainer, 4, 0xAA0000);

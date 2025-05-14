@@ -18,19 +18,18 @@ static UIComponent *titleText = NULL;
 static UIComponent *optionsRowContainer = NULL;
 static UIComponent *firstRowOptions = NULL;
 static UIComponent *secondRowOptions = NULL;
-static UIComponent *firstCarContainer = NULL;
-static UIComponent *secondCarContainer = NULL;
-static UIComponent *thirdCarContainer = NULL;
-static UIComponent *fourthCarContainer = NULL;
-static UIComponent *firstCarOption = NULL;
-static UIComponent *secondCarOption = NULL;
-static UIComponent *thirdCarOption = NULL;
-static UIComponent *fourthCarOption = NULL;
+static UIComponent *backButton = NULL;
+static UIComponent *backText = NULL;
+
+static UIComponent *containers[10];
 
 static void select_car_draw_internal(GameState *base) {
     SelectCar *this = (SelectCar *)base;
     if (this->uiRoot) {
         draw_ui_component(this->uiRoot);
+    }
+    if (this->backButton) {
+        draw_ui_component(this->backButton);
     }
 }
 
@@ -45,85 +44,37 @@ static bool select_car_is_mouse_over(GameState *base, int mouse_x, int mouse_y, 
           if (carContainerData->num_children > 1 && carContainerData->children[1] && carContainerData->children[1]->type == TYPE_CONTAINER && carContainerData->children[1]->data) {
               ContainerData *optionsRowContainerData = (ContainerData *)carContainerData->children[1]->data;
 
-              if (optionsRowContainerData->num_children >= 2) {
-                  UIComponent *firstRowConteiner = optionsRowContainerData->children[0];
-                  UIComponent *secondRowContainer = optionsRowContainerData->children[1];
+              for (int row = 0; row < 2; row++) {
+                  if (optionsRowContainerData->num_children > row) {
+                      UIComponent *rowContainer = optionsRowContainerData->children[row];
+                      if (rowContainer && rowContainer->type == TYPE_CONTAINER && rowContainer->data) {
+                          ContainerData *rowData = (ContainerData *)rowContainer->data;
 
-                  if (firstRowConteiner && firstRowConteiner->type == TYPE_CONTAINER && firstRowConteiner->data) {
-                      ContainerData *firstRowData = (ContainerData *)firstRowConteiner->data;
-
-                      if (firstRowData->num_children >= 2) {
-                            UIComponent *firstCarContainer = firstRowData->children[0];
-                            UIComponent *secondCarContainer = firstRowData->children[1];
-
-                            if (firstCarContainer && firstCarContainer->type == TYPE_CONTAINER && firstCarContainer->data) {
-                                ContainerData *firstCarData = (ContainerData *)firstCarContainer->data;
-                                if (mouse_x >= firstCarContainer->x && mouse_x < firstCarContainer->x + firstCarData->width &&
-                                    mouse_y >= firstCarContainer->y && mouse_y < firstCarContainer->y + firstCarData->height) {
-                                    *selected = 0;
-                                    set_container_background_color(firstCarContainer, 0xA81D1D);
-                                    return true;
-                                }
-                            }
-
-                            if (secondCarContainer && secondCarContainer->type == TYPE_CONTAINER && secondCarContainer->data) {
-                                ContainerData *secondCarData = (ContainerData *)secondCarContainer->data;
-                                if (mouse_x >= secondCarContainer->x && mouse_x < secondCarContainer->x + secondCarData->width &&
-                                    mouse_y >= secondCarContainer->y && mouse_y < secondCarContainer->y + secondCarData->height) {
-                                    *selected = 1;
-                                    set_container_background_color(secondCarContainer, 0xA81D1D);
-                                    return true;
-                                }
-                            }
-
-                            if (*selected != 0) {
-                                set_container_background_color(firstCarContainer, 0x111111);
-                            }
-                            if (*selected != 1) {
-                                set_container_background_color(secondCarContainer, 0x111111);
-                            }
-                      }
-                  }
-
-                  if (secondRowContainer && secondRowContainer->type == TYPE_CONTAINER && secondRowContainer->data) {
-                      ContainerData *secondRowData = (ContainerData *)secondRowContainer->data;
-
-                      if (secondRowData->num_children >= 2) {
-                            UIComponent *thirdCarContainer = secondRowData->children[0];
-                            UIComponent *fourthCarContainer = secondRowData->children[1];
-
-                            if (thirdCarContainer && thirdCarContainer->type == TYPE_CONTAINER && thirdCarContainer->data) {
-                                ContainerData *thirdCarData = (ContainerData *)thirdCarContainer->data;
-                                if (mouse_x >= thirdCarContainer->x && mouse_x < thirdCarContainer->x + thirdCarData->width &&
-                                    mouse_y >= thirdCarContainer->y && mouse_y < thirdCarContainer->y + thirdCarData->height) {
-                                    *selected = 2;
-                                    set_container_background_color(thirdCarContainer, 0xA81D1D);
-                                    return true;
-                                }
-                            }
-
-                            if (fourthCarContainer && fourthCarContainer->type == TYPE_CONTAINER && fourthCarContainer->data) {
-                                ContainerData *fourthCarData = (ContainerData *)fourthCarContainer->data;
-                                if (mouse_x >= fourthCarContainer->x && mouse_x < fourthCarContainer->x + fourthCarData->width &&
-                                    mouse_y >= fourthCarContainer->y && mouse_y < fourthCarContainer->y + fourthCarData->height) {
-                                    *selected = 3;
-                                    set_container_background_color(fourthCarContainer, 0xA81D1D);
-                                    return true;
-                                }
-                            }
-
-                            // Reset background color for unselected options
-                            if (*selected != 2) {
-                                set_container_background_color(thirdCarContainer, 0x111111);
-                            }
-                            if (*selected != 3) {
-                                set_container_background_color(fourthCarContainer, 0x111111);
-                            }
+                          for (int col = 0; col < rowData->num_children; col++) {
+                              UIComponent *indicidualCarContainer = rowData->children[col];
+                              if (indicidualCarContainer && indicidualCarContainer->type == TYPE_CONTAINER && indicidualCarContainer->data) {
+                                 ContainerData *carData = (ContainerData *)indicidualCarContainer->data;
+                                 if (mouse_x >= indicidualCarContainer->x && mouse_x < indicidualCarContainer->x + carData->width &&
+                                     mouse_y >= indicidualCarContainer->y && mouse_y < indicidualCarContainer->y + carData->height) {
+                                     *selected = row * 2 + col;
+                                     return true;
+                                 }
+                              }
+                          }
                       }
                   }
               }
           }
 
+    }
+
+    if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
+        ContainerData *backButtonData = (ContainerData *)this->backButton->data;
+        if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
+            mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
+            *selected = 10;
+            return true;
+        }
     }
 
     return false;
@@ -132,18 +83,26 @@ static bool select_car_is_mouse_over(GameState *base, int mouse_x, int mouse_y, 
 static void select_car_process(GameState *base, EventType event) {
     SelectCar *this = (SelectCar *)base;
     if (event == EVENT_KEYBOARD) {
+        int matrix_x = this->selectedOption % 5;
+        int matrix_y = this->selectedOption / 5;
+
         switch (scancode) {
+            case LEFT_ARROW:
+                if (matrix_x > 0) this->selectedOption--;
+            break;
+            case RIGHT_ARROW:
+                if (matrix_x < 4) this->selectedOption++;
+            break;
             case UP_ARROW:
-                if (this->selectedOption > 0) this->selectedOption--;
+                if (matrix_y < 1) this->selectedOption = 10;
+                if (matrix_y == 1) this->selectedOption -= 5;
             break;
             case DOWN_ARROW:
-                if (this->selectedOption < 4) this->selectedOption++;
+                if (matrix_y == 0) this->selectedOption += 5;
+                if (matrix_y == 2) this->selectedOption = 0;
             break;
             case ENTER_KEY:
-                if (this->selectedOption == 0) this->chosenLevel = CAR_FIRST;
-                else if (this->selectedOption == 1) this->chosenLevel = CAR_SECOND;
-                else if (this->selectedOption == 2) this->chosenLevel = CAR_THIRD;
-                else if (this->selectedOption == 3) this->chosenLevel = CAR_FOURTH;
+                this->chosenLevel = CAR_SELECTED;
             break;
             case ESC_BREAKCODE:
                 this->chosenLevel = CAR_EXITED;
@@ -154,17 +113,20 @@ static void select_car_process(GameState *base, EventType event) {
         base->draw(base);
     } else if (event == EVENT_MOUSE) {
         int prevSelected = this->selectedOption;
+        base->update_mouse_delta(base);
         if (base->handle_mouse_input(base, (void (*)(GameState *))select_car_draw, select_car_is_mouse_over, &this->selectedOption)) {
-            if (this->selectedOption != -1) {
-                if (this->selectedOption == 0) this->chosenLevel = CAR_FIRST;
-                else if (this->selectedOption == 1) this->chosenLevel = CAR_SECOND;
-                else if (this->selectedOption == 2) this->chosenLevel = CAR_THIRD;
-                else if (this->selectedOption == 3) this->chosenLevel = CAR_FOURTH;
-            }
+            this->chosenLevel = CAR_SELECTED;
         }
-        if (this->selectedOption != prevSelected) {
+        if (this->selectedOption != prevSelected && (base->mouse_displacement_x >= 12 || base->mouse_displacement_y >= 12)) {
             base->draw(base);
+            base->reset_mouse_delta(base);
         }
+    }
+
+    if (this->selectedOption >= 0 && this->selectedOption < 10 && containers[this->selectedOption] != NULL) {
+        is_container_hovered(containers[this->selectedOption]);
+    } else if (this->selectedOption == 10 && backButton != NULL) {
+        is_container_hovered(backButton);
     }
 }
 
@@ -177,14 +139,6 @@ static void select_car_destroy_internal(GameState *base) {
         optionsRowContainer = NULL;
         firstRowOptions = NULL;
         secondRowOptions = NULL;
-        firstCarContainer = NULL;
-        secondCarContainer = NULL;
-        thirdCarContainer = NULL;
-        fourthCarContainer = NULL;
-        firstCarOption = NULL;
-        secondCarOption = NULL;
-        thirdCarOption = NULL;
-        fourthCarOption = NULL;
     }
     free(base);
 }
@@ -203,6 +157,7 @@ SelectCar *select_car_create() {
     this->selectedOption = 0;
     this->chosenLevel = CAR_START;
     this->uiRoot = NULL;
+    this->backButton = NULL;
 
     // Create UI Components
     UIComponent *carContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
@@ -241,131 +196,85 @@ SelectCar *select_car_create() {
 
         // Create the first row of car options
         firstRowOptions = create_container_component(0, 0, 0, 0);
-        if (!firstRowOptions) {
+        secondRowOptions = create_container_component(0, 0, 0, 0);
+        if (!firstRowOptions || !secondRowOptions) {
             destroy_ui_component(carContainer);
             free(this);
             return NULL;
         }
         set_container_layout(firstRowOptions, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
-        set_container_gap(firstRowOptions, 20);
-        set_container_background_color(firstRowOptions, 0x111111);
-        add_child_to_container_component(optionsRowContainer, firstRowOptions);
-
-            // Create the first car option
-            firstCarContainer = create_container_component(0, 0, 150, 170);
-            if (!firstCarContainer) {
-                destroy_ui_component(carContainer);
-                free(this);
-                return NULL;
-            }
-            set_container_layout(firstCarContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-            set_container_background_color(firstCarContainer, 0xAA0000);
-            set_container_padding(firstCarContainer, 40, 40, 40, 40);
-            set_container_border_radius(firstCarContainer, 20);
-            set_container_border(firstCarContainer, 4, 0x8F8483);
-            // Sprite *car1 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            // firstCarOption = create_sprite_component(car1, 0, 0);
-            firstCarOption = create_text_component("Car 1", gameFont, 0xFFFFFF);
-            if (!firstCarOption) {
-                destroy_ui_component(carContainer);
-                free(this);
-                return NULL;
-            }
-            add_child_to_container_component(firstCarContainer, firstCarOption);
-            add_child_to_container_component(firstRowOptions, firstCarContainer);
-            perform_container_layout(firstCarContainer);
-
-            // Create the second car option
-            secondCarContainer = create_container_component(0, 0, 150, 170);
-            if (!secondCarContainer) {
-                destroy_ui_component(carContainer);
-                free(this);
-                return NULL;
-            }
-            set_container_layout(secondCarContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-            set_container_background_color(secondCarContainer, 0xAA0000);
-            set_container_padding(secondCarContainer, 40, 40, 40, 40);
-            set_container_border_radius(secondCarContainer, 20);
-            set_container_border(secondCarContainer, 4, 0x8F8483);
-            // Sprite *car2 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            //secondCarOption = create_sprite_component(car2, 0, 0);
-            secondCarOption = create_text_component("Car 2", gameFont, 0xFFFFFF);
-            if (!secondCarOption) {
-                destroy_ui_component(carContainer);
-                free(this);
-                return NULL;
-            }
-            add_child_to_container_component(secondCarContainer, secondCarOption);
-            add_child_to_container_component(firstRowOptions, secondCarContainer);
-            perform_container_layout(secondCarContainer);
-
-        perform_container_layout(firstRowOptions);
-
-
-        // Create the second row of car options
-        secondRowOptions = create_container_component(0, 0, 0, 0);
-        if (!secondRowOptions) {
-            destroy_ui_component(carContainer);
-            free(this);
-            return NULL;
-        }
         set_container_layout(secondRowOptions, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
+        set_container_gap(firstRowOptions, 20);
         set_container_gap(secondRowOptions, 20);
+        set_container_background_color(firstRowOptions, 0x111111);
         set_container_background_color(secondRowOptions, 0x111111);
+        add_child_to_container_component(optionsRowContainer, firstRowOptions);
         add_child_to_container_component(optionsRowContainer, secondRowOptions);
 
-            // Create the third car option
-            thirdCarContainer = create_container_component(0, 0, 150, 170);
-            if (!thirdCarContainer) {
+        // Create the car option components
+        for (int i = 0; i < 10; i++) {
+            UIComponent *individualCarContainer = create_container_component(0, 0, 110, 150);
+            if (!individualCarContainer) {
                 destroy_ui_component(carContainer);
                 free(this);
                 return NULL;
             }
-            set_container_layout(thirdCarContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-            set_container_background_color(thirdCarContainer, 0xAA0000);
-            set_container_padding(thirdCarContainer, 40, 40, 40, 40);
-            set_container_border_radius(thirdCarContainer, 20);
-            set_container_border(thirdCarContainer, 4, 0x8F8483);
-            // Sprite *car3 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            //thirdCarOption = create_sprite_component(car3, 0, 0);
-            thirdCarOption = create_text_component("Car 3", gameFont, 0xFFFFFF);
-            if (!thirdCarOption) {
-                destroy_ui_component(carContainer);
-                free(this);
-                return NULL;
-            }
-            add_child_to_container_component(thirdCarContainer, thirdCarOption);
-            add_child_to_container_component(secondRowOptions, thirdCarContainer);
-            perform_container_layout(thirdCarContainer);
+            set_container_layout(individualCarContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+            set_container_background_color(individualCarContainer, 0x222222);
+            set_container_padding(individualCarContainer, 40, 40, 40, 40);
+            set_container_border_radius(individualCarContainer, 20);
+            set_container_border(individualCarContainer, 4, 0xAA0000);
+            set_container_hover_color(individualCarContainer, 0xAA0000);
 
-            // Create the fourth car option
-            fourthCarContainer = create_container_component(0, 0, 150, 170);
-            if (!fourthCarContainer) {
+            // Create the car image component
+            char carText[10];
+            snprintf(carText, sizeof(carText), "Car %d", i + 1);
+            UIComponent *carOption = create_text_component(carText, gameFont, 0xFFFFFF);
+            if (!carOption) {
                 destroy_ui_component(carContainer);
                 free(this);
                 return NULL;
             }
-            set_container_layout(fourthCarContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-            set_container_background_color(fourthCarContainer, 0xAA0000);
-            set_container_padding(fourthCarContainer, 40, 40, 40, 40);
-            set_container_border_radius(fourthCarContainer, 20);
-            set_container_border(fourthCarContainer, 4, 0x8F8483);
-            // Sprite *car4 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            // fourthCarOption = create_sprite_component(car4, 0, 0);
-            fourthCarOption = create_text_component("Car 4", gameFont, 0xFFFFFF);
-            if (!fourthCarOption) {
-                destroy_ui_component(carContainer);
-                free(this);
-                return NULL;
+            add_child_to_container_component(individualCarContainer, carOption);
+
+            // Add the car image to the container
+            if (i < 5) {
+                add_child_to_container_component(firstRowOptions, individualCarContainer);
+            } else {
+                add_child_to_container_component(secondRowOptions, individualCarContainer);
             }
-            add_child_to_container_component(fourthCarContainer, fourthCarOption);
-            add_child_to_container_component(secondRowOptions, fourthCarContainer);
-            perform_container_layout(fourthCarContainer);
+
+            perform_container_layout(individualCarContainer);
+            containers[i] = individualCarContainer;
+        }
+        perform_container_layout(firstRowOptions);
         perform_container_layout(secondRowOptions);
-    perform_container_layout(optionsRowContainer);
 
-    // Add the rows to the options row container
+    perform_container_layout(optionsRowContainer);
     perform_container_layout(carContainer);
+
+    // Create the back button
+    backButton = create_container_component(30, 30, 40, 40);
+    if (!backButton) {
+        destroy_ui_component(carContainer);
+        free(this);
+        return NULL;
+    }
+    set_container_layout(backButton, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(backButton, 0x00BB00);
+    set_container_hover_color(backButton, 0x00DD00);
+    set_container_border_radius(backButton, 15);
+    set_container_border(backButton, 2, 0x00DD00);
+    backText = create_text_component("<", gameFont, 0xFFFFFF);
+    if (!backText) {
+        destroy_ui_component(carContainer);
+        free(this);
+        return NULL;
+    }
+    add_child_to_container_component(backButton, backText);
+
+    perform_container_layout(backButton);
+    this->backButton = backButton;
 
     return this;
 }
@@ -382,6 +291,10 @@ void select_car_draw(SelectCar *this) {
 
 void select_car_process_event(SelectCar *this, EventType event) {
     this->base.process_event(&this->base, event);
+}
+
+int select_car_get_selected_option(SelectCar *this) {
+    return this->selectedOption;
 }
 
 CarSelection select_car_get_chosen_level(SelectCar *this) {

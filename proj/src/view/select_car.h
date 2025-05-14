@@ -8,10 +8,7 @@
 
 typedef enum {
     CAR_START,
-    CAR_FIRST,
-    CAR_SECOND,
-    CAR_THIRD,
-    CAR_FOURTH,
+    CAR_SELECTED,
     CAR_EXITED
 } CarSelection;
 
@@ -20,6 +17,7 @@ typedef struct SelectCar {
     int selectedOption;
     CarSelection chosenLevel;
     UIComponent *uiRoot;
+    UIComponent *backButton;
 } SelectCar;
 
 // Public SelectCar Class Methods
@@ -27,6 +25,7 @@ SelectCar *select_car_create();
 void select_car_destroy(SelectCar *this);
 void select_car_draw(SelectCar *this);
 void select_car_process_event(SelectCar *this, EventType event);
+int select_car_get_selected_option(SelectCar *this);
 CarSelection select_car_get_chosen_level(SelectCar *this);
 void select_car_reset_state(SelectCar *this);
 

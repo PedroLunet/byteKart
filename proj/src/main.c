@@ -206,13 +206,19 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
         case SELECT_CAR:
             select_car_process_event(selectCar, event);
             CarSelection chosenCar = select_car_get_chosen_level(selectCar);
-            if (chosenCar == CAR_FIRST || chosenCar == CAR_SECOND || chosenCar == CAR_THIRD || chosenCar == CAR_FOURTH) {
-                // game_set_car(game, chosenLevel);
-                nextState = GAME;
+            if (chosenCar == CAR_SELECTED) {
+                int carIndex = select_car_get_selected_option(selectCar);
+                if (carIndex == 10) {
+                    select_car_reset_state(selectCar);
+                    select_difficulty_reset_state(selectDifficulty);
+				    nextState = SELECT_DIFFICULTY;
+                } else {
+                    // game_set_car(game, carIndex);
+                    nextState = GAME;
+                }
             } else if (chosenCar == CAR_EXITED) {
                 nextState = QUIT;
             }
-
             break;
 
         case SELECT_TRACK:
