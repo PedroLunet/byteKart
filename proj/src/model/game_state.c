@@ -19,27 +19,6 @@ static void base_update_mouse_position(GameState *this, int *x, int *y) {
     if (*y >= (int)vbe_mode_info.YResolution) *y = (int)vbe_mode_info.YResolution - 1;
 }
 
-static void base_clear_mouse_area(GameState *this) {
-    if (this->mouse_dirty) {
-        int prev_x = this->prev_mouse_x;
-        int prev_y = this->prev_mouse_y;
-        int width = this->prev_cursor_width;
-        int height = this->prev_cursor_height;
-        uint32_t clear_color = BACKGROUND_COLOR;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int draw_x = prev_x + x;
-                int draw_y = prev_y + y;
-                if (draw_x >= 0 && draw_x < (int)vbe_mode_info.XResolution &&
-                    draw_y >= 0 && draw_y < (int)vbe_mode_info.YResolution) {
-                    vg_draw_pixel(draw_x, draw_y, clear_color);
-                }
-            }
-        }
-    }
-}
-
 static void base_draw_mouse(GameState *this) {
      if (this->mouse_dirty) {
         Sprite *sprite_to_draw = this->is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
@@ -59,13 +38,15 @@ static bool base_handle_mouse_input(GameState *this, void (*draw_state)(GameStat
         this->prev_mouse_x = this->mouse_x;
         this->prev_mouse_y = this->mouse_y;
         this->mouse_dirty = true;
+        printf("Mouse moved to (%d, %d)\n", this->mouse_x, this->mouse_y);
     }
-
-    base_update_mouse_position(this, &this->mouse_x, &this->mouse_y);
 
     if (draw_state) {
+        printf("Drawing state\n");
         draw_state(this);
     }
+    base_update_mouse_position(this, &this->mouse_x, &this->mouse_y);
+    base_draw_mouse(this);
 
     this->is_hovering = (is_over && hover_target) ? is_over(this, this->mouse_x, this->mouse_y, hover_target) : false;
 
@@ -106,7 +87,7 @@ void init_base_game_state(GameState *state) {
     state->is_mouse_over = NULL; // To be overridden if needed
     state->update_mouse_position = base_update_mouse_position;
     state->draw_mouse = base_draw_mouse;
-    state->clear_mouse_area = base_clear_mouse_area;
+    state->clear_mouse_area = NULL;
     state->update_mouse_delta = update_mouse_delta;
     state->reset_mouse_delta = reset_mouse_delta;
 

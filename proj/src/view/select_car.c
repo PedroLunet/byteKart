@@ -284,7 +284,6 @@ void select_car_destroy(SelectCar *this) {
 }
 
 void select_car_draw(SelectCar *this) {
-    this->base.clear_mouse_area(&this->base);
     this->base.draw(&this->base);
     this->base.draw_mouse(&this->base);
 }

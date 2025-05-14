@@ -32,8 +32,8 @@ static void draw_container_component(UIComponent *component) {
                 sprite_draw_xpm(bg_image, x, y, false);
             } else {
                 vg_draw_rounded_rectangle(x, y, w, h, br, bc);
+                vg_draw_rounded_rectangle(x + bw, y + bw, w - 2 * bw, h - 2 * bw, br, bg);
             }
-            vg_draw_rounded_rectangle(x + bw, y + bw, w - 2 * bw, h - 2 * bw, br, bg);
         } else {
             if (bg_image) {
                 sprite_draw_xpm(bg_image, x, y, false);
@@ -58,6 +58,121 @@ static void draw_text_component(UIComponent *component) {
     }
 }
 
+static void draw_dirty_element(UIComponent *element, int x, int y, int width, int height) {
+    if (!element || element->type != TYPE_ELEMENT) return;
+
+    SpriteElementData *data = (SpriteElementData *)element->data;
+
+    int dirty_x1 = x;
+    int dirty_y1 = y;
+    int dirty_x2 = x + width;
+    int dirty_y2 = y + height;
+
+    int element_x1 = element->x;
+    int element_y1 = element->y;
+    int element_x2 = element->x + data->width;
+    int element_y2 = element->y + data->height;
+
+    if (element_x1 >= dirty_x2 || element_x2 <= dirty_x1 ||
+        element_y1 >= dirty_y2 || element_y2 <= dirty_y1) {
+        return;
+    }
+
+    sprite_draw_partial_xpm(data->sprite, x, y, width, height, false);
+}
+
+static void draw_dirty_container(UIComponent *container, int x, int y, int width, int height) {
+    if (!container || container->type != TYPE_CONTAINER) return;
+
+    ContainerData *data = (ContainerData *)container->data;
+
+    int dirty_x1 = x;
+    int dirty_y1 = y;
+    int dirty_x2 = x + width;
+    int dirty_y2 = y + height;
+
+    int container_x1 = container->x;
+    int container_y1 = container->y;
+    int container_x2 = container->x + data->width;
+    int container_y2 = container->y + data->height;
+
+    if (container_x1 >= dirty_x2 || container_x2 <= dirty_x1 ||
+        container_y1 >= dirty_y2 || container_y2 <= dirty_y1) {
+        return;
+    }
+
+    int bw = data->border_width;
+    uint32_t bc = data->border_color;
+    int br = data->border_radius;
+    uint32_t bg = data->background_color;
+    Sprite *bg_image = data->background_image;
+
+    uint32_t hover_color = data->hover_color;
+    if (data->is_hovered) {
+        bg = hover_color;
+    }
+
+    if (bw > 0) {
+        if (bg_image) {
+            sprite_draw_partial_xpm(bg_image, x, y, width, height, false);
+        } else {
+            vg_draw_rounded_rectangle_section(container_x1, container_y1, data->width, data->height, br, bc, dirty_x1, dirty_y1, width, height);
+            vg_draw_rounded_rectangle_section(container_x1 + bw, container_y1 + bw, data->width - 2 * bw, data->height - 2 * bw, br, bg, dirty_x1, dirty_y1, width, height);
+        }
+    } else {
+        if (bg_image) {
+            sprite_draw_partial_xpm(bg_image, x, y, width, height, false);
+        } else {
+            vg_draw_rounded_rectangle_section(container_x1, container_y1, data->width, data->height, br, bg, dirty_x1, dirty_y1, width, height);
+        }
+    }
+}
+
+void draw_dirty_area(UIComponent *element, int x, int y, int width, int height) {
+    int dirty_x1 = x;
+    int dirty_y1 = y;
+    int dirty_x2 = x + width;
+    int dirty_y2 = y + height;
+
+    int element_x1 = element->x;
+    int element_y1 = element->y;
+
+    int element_x2, element_y2;
+
+    if (element->type == TYPE_ELEMENT) {
+        SpriteElementData *data = (SpriteElementData *)element->data;
+        element_x2 = element->x + data->width;
+        element_y2 = element->y + data->height;
+    } else if (element->type == TYPE_CONTAINER) {
+        ContainerData *data = (ContainerData *)element->data;
+        element_x2 = element->x + data->width;
+        element_y2 = element->y + data->height;
+    } else if (element->type == TYPE_TEXT) {
+        TextElementData *data = (TextElementData *)element->data;
+        element_x2 = element->x + data->width;
+        element_y2 = element->y + data->height;
+    }
+
+    if (element_x1 >= dirty_x2 || element_x2 <= dirty_x1 ||
+        element_y1 >= dirty_y2 || element_y2 <= dirty_y1) {
+        return;
+    }
+
+    if (element->type == TYPE_ELEMENT) {
+        draw_dirty_element(element, x, y, width, height);
+    } else if (element->type == TYPE_CONTAINER) {
+        ContainerData *data = (ContainerData *)element->data;
+        draw_dirty_container(element, x, y, width, height);
+        for (int i = 0; i < data->num_children; ++i) {
+            UIComponent *child = data->children[i];
+            draw_dirty_area(child, x, y, width, height);
+        }
+    } else if (element->type == TYPE_TEXT) {
+        draw_text_component(element);
+    }
+
+    return;
+}
 
 UIComponent *create_sprite_component(Sprite *sprite, int x, int y) {
     UIComponent *component = malloc(sizeof(UIComponent));

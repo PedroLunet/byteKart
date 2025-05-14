@@ -68,6 +68,8 @@ typedef struct TextElementData {
     uint32_t *pixel_data;
 } TextElementData;
 
+void draw_dirty_area(UIComponent *container, int x, int y, int width, int height);
+
 // Creation functions
 UIComponent *create_sprite_component(Sprite *sprite, int x, int y);
 UIComponent *create_container_component(int x, int y, int width, int height);

@@ -24,6 +24,13 @@ static void menu_draw_internal(GameState *base) {
     }
 }
 
+static void menu_draw_mouse_internal(GameState *base) {
+    Menu *this = (Menu *)base;
+    if (this->uiRoot && base->mouse_dirty) {
+        draw_dirty_area(this->uiRoot, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
+    }
+}
+
 static bool menu_is_mouse_over_option(GameState *base, int mouse_x, int mouse_y, void *data) {
     Menu *this = (Menu *)base;
     int *selected_option = (int *)data;
@@ -85,6 +92,7 @@ static bool menu_is_mouse_over_option(GameState *base, int mouse_x, int mouse_y,
 static void menu_process(GameState *base, EventType event) {
     Menu *this = (Menu *)base;
     if (event == EVENT_KEYBOARD) {
+        int prevSelected = this->selectedOption;
         switch (scancode) {
             case UP_ARROW:
                 this->selectedOption = (this->selectedOption - 1 + 3) % 3;
@@ -107,9 +115,12 @@ static void menu_process(GameState *base, EventType event) {
             default:
                 break;
         }
+        if (this->selectedOption != prevSelected) {
+            base->draw(base);
+        }
     } else if (event == EVENT_MOUSE) {
         int prevSelected = this->selectedOption;
-        if (base->handle_mouse_input(base, (void (*)(GameState *))menu_draw, menu_is_mouse_over_option, &this->selectedOption)) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))menu_draw_mouse_internal, menu_is_mouse_over_option, &this->selectedOption)) {
             if (this->selectedOption == 0) {
                 this->currentSubstate = MENU_FINISHED_PLAY;
             } else if (this->selectedOption == 1) {
@@ -247,9 +258,7 @@ void menu_destroy(Menu *this) {
 }
 
 void menu_draw(Menu *this) {
-    this->base.clear_mouse_area(&this->base);
     this->base.draw(&this->base);
-    this->base.draw_mouse(&this->base);
 }
 
 void menu_process_event(Menu *this, EventType event) {

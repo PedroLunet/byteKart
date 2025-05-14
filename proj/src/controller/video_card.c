@@ -326,3 +326,56 @@ int (vg_draw_rounded_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t
 
   return 0;
 }
+
+int vg_draw_rounded_rectangle_section(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t radius, uint32_t color,
+                                       uint16_t section_x, uint16_t section_y, uint16_t section_width, uint16_t section_height) {
+    if (radius > width / 2 || radius > height / 2) {
+        printf("Radius is too large for the rectangle.\n");
+        return 1;
+    }
+
+    uint16_t end_x = x + width - 1;
+    uint16_t end_y = y + height - 1;
+    uint16_t section_end_x = section_x + section_width - 1;
+    uint16_t section_end_y = section_y + section_height - 1;
+
+    // Calculate intersection boundaries
+    uint16_t draw_x1 = (x > section_x) ? x : section_x;
+    uint16_t draw_y1 = (y > section_y) ? y : section_y;
+    uint16_t draw_x2 = (end_x < section_end_x) ? end_x : section_end_x;
+    uint16_t draw_y2 = (end_y < section_end_y) ? end_y : section_end_y;
+
+    if (draw_x1 > draw_x2 || draw_y1 > draw_y2) {
+        return 0; // No intersection
+    }
+
+    for (uint16_t draw_x = draw_x1; draw_x <= draw_x2; draw_x++) {
+        for (uint16_t draw_y = draw_y1; draw_y <= draw_y2; draw_y++) {
+            // Check if the pixel is within the rounded rectangle
+            int is_in_rect = 0;
+
+            if ((draw_x >= x + radius && draw_x < end_x - radius) || (draw_y >= y + radius && draw_y < end_y - radius)) {
+                is_in_rect = 1; // Center rectangle
+            } else if (draw_x < x + radius && draw_y < y + radius) { // Top-left corner
+                if ((draw_x - (x + radius)) * (draw_x - (x + radius)) + (draw_y - (y + radius)) * (draw_y - (y + radius)) <= radius * radius)
+                    is_in_rect = 1;
+            } else if (draw_x > end_x - radius && draw_y < y + radius) { // Top-right corner
+                if ((draw_x - (end_x - radius)) * (draw_x - (end_x - radius)) + (draw_y - (y + radius)) * (draw_y - (y + radius)) <= radius * radius)
+                    is_in_rect = 1;
+            } else if (draw_x < x + radius && draw_y > end_y - radius) { // Bottom-left corner
+                if ((draw_x - (x + radius)) * (draw_x - (x + radius)) + (draw_y - (end_y - radius)) * (draw_y - (end_y - radius)) <= radius * radius)
+                    is_in_rect = 1;
+            } else if (draw_x > end_x - radius && draw_y > end_y - radius) { // Bottom-right corner
+                if ((draw_x - (end_x - radius)) * (draw_x - (end_x - radius)) + (draw_y - (end_y - radius)) * (draw_y - (end_y - radius)) <= radius * radius)
+                    is_in_rect = 1;
+            }
+
+            if (is_in_rect) {
+                if (vg_draw_pixel(draw_x, draw_y, color) != 0)
+                    return 1;
+            }
+        }
+    }
+    return 0;
+}
+

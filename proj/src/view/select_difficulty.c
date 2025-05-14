@@ -305,7 +305,6 @@ void select_difficulty_destroy(SelectDifficulty *this) {
 }
 
 void select_difficulty_draw(SelectDifficulty *this) {
-    this->base.clear_mouse_area(&this->base);
     this->base.draw(&this->base);
     this->base.draw_mouse(&this->base);
 }
