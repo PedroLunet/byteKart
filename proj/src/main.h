@@ -21,10 +21,12 @@
 #include "view/select_car.h"
 #include "view/game.h"
 
+#include "gameover_menu.h"
 
 typedef enum {
   MENU,
   SELECT_DIFFICULTY,
+  LEADERBOARD,
   SELECT_CAR,
   SELECT_TRACK,
   GAME,

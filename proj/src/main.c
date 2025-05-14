@@ -15,6 +15,8 @@ Menu *mainMenu = NULL;
 SelectDifficulty *selectDifficulty = NULL;
 SelectCar *selectCar = NULL;
 Game *game = NULL;
+//GameOver *gameOver = NULL;
+
 
 static MainState current_state;
 bool running;
@@ -181,6 +183,8 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             if (currentMenuSubstate == MENU_FINISHED_PLAY) {
                 menu_reset_state(mainMenu);
                 nextState = SELECT_DIFFICULTY;
+            } else if (currentMenuSubstate == MENU_FINISHED_LEADERBOARD) {
+                nextState = LEADERBOARD;
             } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
                 nextState = QUIT;
             } else if (currentMenuSubstate == MENU_EXITED) {
@@ -228,9 +232,17 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
         /*
 
         case GAMEOVER:
-            gameover.processEvent(event);
-            GameOverSubstate currentGameOverSubstate = gameover.getCurrentSubstate();
-            if (currentGameOverSubstate == GAMEOVER_FINISHED_QUIT) {
+            gameover_process_event(gameOver, event);
+            GameOverSubstate currentGameOverSubstate = gameover_get_current_substate(gameOver);
+            if (currentGameOverSubstate == GAMEOVER_MENU) {
+                // próprio menu
+            } else if (currentGameOverSubstate == GAMEOVER_RESTART) {
+                // play again
+            } else if (currentGameOverSubstate == GAMEOVER_MAIN_MENU) {
+                // voltar menu inicial
+            } else if (currentGameOverSubstate == GAMEOVER_QUIT_BUTTON) {
+                nextState = QUIT;
+            } else if (currentGameOverSubstate == GAMEOVER_EXITED) {
                 nextState = QUIT;
             }
             break;
