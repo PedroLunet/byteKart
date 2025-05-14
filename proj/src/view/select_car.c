@@ -162,7 +162,7 @@ SelectCar *select_car_create() {
     this->base.destroy = select_car_destroy_internal;
     this->base.is_mouse_over = select_car_is_mouse_over;
 
-    this->selectedOption = 0;
+    this->selectedOption = -1;
     this->chosenLevel = CAR_START;
     this->uiRoot = NULL;
     this->backButton = NULL;
@@ -309,7 +309,7 @@ CarSelection select_car_get_chosen_level(SelectCar *this) {
 }
 
 void select_car_reset_state(SelectCar *this) {
-    this->selectedOption = 0;
+    this->selectedOption = -1;
     this->chosenLevel = CAR_START;
     this->base.draw(&this->base);
 }

@@ -76,7 +76,6 @@ void init_base_game_state(GameState *state) {
     state->cursorSprite = sprite_create_xpm((xpm_map_t) cursor, 0, 0, 0, 0);
     state->cursorPointerSprite = sprite_create_xpm((xpm_map_t) cursor_pointer, 0, 0, 0, 0);
     state->prev_cursor = state->cursorSprite;
-    state->mouse_dirty = false;
     state->prev_cursor_width = 0;
     state->prev_cursor_height = 0;
     state->mouse_displacement_x = 0;

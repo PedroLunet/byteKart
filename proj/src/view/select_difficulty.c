@@ -167,7 +167,7 @@ SelectDifficulty *select_difficulty_create() {
     this->base.destroy = select_difficulty_destroy_internal;
     this->base.is_mouse_over = select_difficulty_is_mouse_over;
 
-    this->selectedOption = 0;
+    this->selectedOption = -1;
     this->chosenLevel = DIFFICULTY_START;
     this->uiRoot = NULL;
 
@@ -178,7 +178,7 @@ SelectDifficulty *select_difficulty_create() {
         return NULL;
     }
     set_container_layout(difficultyContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(difficultyContainer, 0x0000BB);
+    set_container_background_color(difficultyContainer, 0x111111);
     set_container_padding(difficultyContainer, 60, 60, 60, 60);
     set_container_gap(difficultyContainer, 30);
     this->uiRoot = difficultyContainer;
@@ -329,7 +329,7 @@ DifficultyLevel select_difficulty_get_chosen_level(SelectDifficulty *this) {
 }
 
 void select_difficulty_reset_state(SelectDifficulty *this) {
-    this->selectedOption = 0;
+    this->selectedOption = -1;
     this->chosenLevel = DIFFICULTY_START;
     this->base.draw(&this->base);
 }
