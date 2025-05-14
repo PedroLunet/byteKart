@@ -30,7 +30,7 @@ static void select_difficulty_draw_internal(GameState *base) {
         draw_ui_component(this->backButton);
     }
 }
-/*
+
 static void select_difficulty_clean_dirty_mouse_internal(GameState *base) {
     SelectDifficulty *this = (SelectDifficulty *)base;
     if (this->uiRoot) {
@@ -40,7 +40,7 @@ static void select_difficulty_clean_dirty_mouse_internal(GameState *base) {
         draw_dirty_area(this->backButton, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
     }
 }
-*/
+
 static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mouse_y, void *data) {
     SelectDifficulty *this = (SelectDifficulty *)base;
     int *selected = (int *)data;
@@ -126,7 +126,7 @@ static void select_difficulty_process(GameState *base, EventType event) {
                 break;
         }
     } else if (event == EVENT_MOUSE) {
-        if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw, select_difficulty_is_mouse_over, &this->selectedOption)) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_clean_dirty_mouse_internal, select_difficulty_is_mouse_over, &this->selectedOption)) {
             this->chosenLevel = DIFFICULTY_SELECTED;
         }
     }
@@ -178,7 +178,7 @@ SelectDifficulty *select_difficulty_create() {
         return NULL;
     }
     set_container_layout(difficultyContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(difficultyContainer, 0x111111);
+    set_container_background_color(difficultyContainer, 0x0000BB);
     set_container_padding(difficultyContainer, 60, 60, 60, 60);
     set_container_gap(difficultyContainer, 30);
     this->uiRoot = difficultyContainer;

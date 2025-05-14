@@ -32,7 +32,7 @@ static void select_car_draw_internal(GameState *base) {
         draw_ui_component(this->backButton);
     }
 }
-/*
+
 static void select_car_clean_dirty_mouse_internal(GameState *base) {
     SelectCar *this = (SelectCar *)base;
     if (this->uiRoot) {
@@ -42,7 +42,7 @@ static void select_car_clean_dirty_mouse_internal(GameState *base) {
         draw_dirty_area(this->backButton, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
     }
 }
-*/
+
 static bool select_car_is_mouse_over(GameState *base, int mouse_x, int mouse_y, void *data) {
     SelectCar *this = (SelectCar *)base;
     int *selected = (int *)data;
@@ -122,7 +122,7 @@ static void select_car_process(GameState *base, EventType event) {
                 break;
         }
     } else if (event == EVENT_MOUSE) {
-        if (base->handle_mouse_input(base, (void (*)(GameState *))select_car_draw, select_car_is_mouse_over, &this->selectedOption)) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))select_car_clean_dirty_mouse_internal, select_car_is_mouse_over, &this->selectedOption)) {
             this->chosenLevel = CAR_SELECTED;
         }
     }
