@@ -46,6 +46,29 @@ int sprite_draw_xpm(Sprite *this, int x, int y, bool has_transparent) {
     return 0;
 }
 
+int sprite_draw_partial_xpm(Sprite *this, int x, int y, int width, int height, bool has_transparent) {
+    uint16_t sprite_width = this->width;
+    uint16_t sprite_height = this->height;
+    uint32_t current_color;
+    uint32_t transparent = this->map[sprite_width * sprite_height - 1];
+
+    int start_x = (x < this->x) ? 0 : x - this->x;
+    int start_y = (y < this->y) ? 0 : y - this->y;
+    int end_x = (x + width > this->x + sprite_width) ? sprite_width : start_x + width;
+    int end_y = (y + height > this->y + sprite_height) ? sprite_height : start_y + height;
+
+    for (int h = start_y; h < end_y; h++) {
+        for (int w = start_x; w < end_x; w++) {
+            current_color = this->map[w + h * sprite_width];
+            if (current_color == transparent && has_transparent)
+                continue;
+            if (vg_draw_pixel(this->x + w, this->y + h, current_color) != 0)
+                return 1;
+        }
+    }
+    return 0;
+}
+
 void sprite_destroy(Sprite *this) {
     if (this == NULL)
         return;

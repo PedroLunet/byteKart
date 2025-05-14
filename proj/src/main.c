@@ -195,13 +195,15 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
         case SELECT_DIFFICULTY:
             select_difficulty_process_event(selectDifficulty, event);
             DifficultyLevel chosenLevel = select_difficulty_get_chosen_level(selectDifficulty);
-            if (chosenLevel == DIFFICULTY_EASY || chosenLevel == DIFFICULTY_MEDIUM || chosenLevel == DIFFICULTY_HARD) {
-                // game_set_difficulty(game, chosenLevel);
-                nextState = SELECT_CAR;
-            } else if (chosenLevel == DIFFICULTY_BACK) {
-                select_difficulty_reset_state(selectDifficulty);
-                menu_reset_state(mainMenu);
-                nextState = MENU;
+            if (chosenLevel == DIFFICULTY_SELECTED) {
+                int difficultyIndex = select_difficulty_get_selected_option(selectDifficulty);
+                if (difficultyIndex == 3) {
+                    select_difficulty_reset_state(selectDifficulty);
+                    nextState = MENU;
+                } else {
+                    // game_set_difficulty(game, difficultyIndex);
+                    nextState = SELECT_CAR;
+                }
             } else if (chosenLevel == DIFFICULTY_EXITED) {
                 nextState = QUIT;
             }
@@ -210,13 +212,19 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
         case SELECT_CAR:
             select_car_process_event(selectCar, event);
             CarSelection chosenCar = select_car_get_chosen_level(selectCar);
-            if (chosenCar == CAR_FIRST || chosenCar == CAR_SECOND || chosenCar == CAR_THIRD || chosenCar == CAR_FOURTH) {
-                // game_set_car(game, chosenLevel);
-                nextState = GAME;
+            if (chosenCar == CAR_SELECTED) {
+                int carIndex = select_car_get_selected_option(selectCar);
+                if (carIndex == 10) {
+                    select_car_reset_state(selectCar);
+                    select_difficulty_reset_state(selectDifficulty);
+				    nextState = SELECT_DIFFICULTY;
+                } else {
+                    // game_set_car(game, carIndex);
+                    nextState = GAME;
+                }
             } else if (chosenCar == CAR_EXITED) {
                 nextState = QUIT;
             }
-
             break;
 
         case SELECT_TRACK:
@@ -285,8 +293,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
             switch (_ENDPOINT_P(msg.m_source)) {
                 case HARDWARE:
 
-                    if (msg.m_notify.interrupts & BIT(irq_set_timer)) {
-                        timer_int_handler();
+                    if (msg.m_notify.interrupts & irq_set_timer) {
                         pendingEvent = EVENT_TIMER;
                     }
 
@@ -316,17 +323,14 @@ int (proj_main_loop)(int argc, char *argv[]) {
                 printf("Error swapping buffers.\n");
                 return 1;
             }
-        } else if (pendingEvent != EVENT_NONE) {
+        }
+        if (pendingEvent != EVENT_NONE) {
             // interruptHandlers[pendingEvent]();
             current_state = stateMachineUpdate(current_state, pendingEvent);
 
             pendingEvent = EVENT_NONE;
         }
 
-        if (swap_buffers() != 0) {
-            printf("Error swapping buffers.\n");
-            return 1;
-        }
     }
 
     if (restore_system() != 0) {

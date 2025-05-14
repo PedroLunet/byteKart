@@ -15,8 +15,8 @@ void draw_road_background() {
         road_y1 = 0;
         road_y2 = -road_sprite1->height;
     }
-    sprite_draw_xpm(road_sprite1, 0, road_y1);
-    sprite_draw_xpm(road_sprite2, 0, road_y2);
+    sprite_draw_xpm(road_sprite1, 0, road_y1, false);
+    sprite_draw_xpm(road_sprite2, 0, road_y2, false);
 }
 
 void cleanup_road_background() {
