@@ -15,6 +15,7 @@
 typedef enum {
     MENU_MAIN,
     MENU_FINISHED_PLAY,
+    MENU_FINISHED_LEADERBOARD,
     MENU_FINISHED_QUIT,
     MENU_EXITED
 } MenuSubstate;
