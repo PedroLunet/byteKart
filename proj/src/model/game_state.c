@@ -22,24 +22,24 @@ static void base_update_mouse_position(GameState *this, int *x, int *y) {
 static void base_draw_mouse(GameState *this) {
     Sprite *sprite_to_draw = this->is_hovering && this->cursorPointerSprite ? this->cursorPointerSprite : this->cursorSprite;
     if (sprite_to_draw) {
+        this->prev_cursor = sprite_to_draw;
         sprite_draw_xpm(sprite_to_draw, this->mouse_x, this->mouse_y, true);
     }
 }
 
 static bool base_handle_mouse_input(GameState *this, void (*draw_state)(GameState *), bool (*is_over)(GameState *, int, int, void *), void *hover_target) {
+    base_update_mouse_position(this, &this->mouse_x, &this->mouse_y);
     bool mouse_moved = (this->mouse_x != this->prev_mouse_x) || (this->mouse_y != this->prev_mouse_y);
 
     if (mouse_moved) {
-        this->prev_cursor_width = (this->cursorSprite) ? this->cursorSprite->width : (this->cursorPointerSprite ? this->cursorPointerSprite->width : 0);
-        this->prev_cursor_height = (this->cursorSprite) ? this->cursorSprite->height : (this->cursorPointerSprite ? this->cursorPointerSprite->height : 0);
+        draw_state(this);
+        base_draw_mouse(this);
+
+        this->prev_cursor_width = (this->prev_cursor) ? this->prev_cursor->width : this->cursorSprite->width;
+        this->prev_cursor_height = (this->prev_cursor) ? this->prev_cursor->height : this->cursorSprite->height;
         this->prev_mouse_x = this->mouse_x;
         this->prev_mouse_y = this->mouse_y;
-        this->mouse_dirty = true;
     }
-
-    draw_state(this);
-    base_update_mouse_position(this, &this->mouse_x, &this->mouse_y);
-    base_draw_mouse(this);
 
     this->is_hovering = (is_over && hover_target) ? is_over(this, this->mouse_x, this->mouse_y, hover_target) : false;
 
@@ -76,7 +76,6 @@ void init_base_game_state(GameState *state) {
     state->cursorSprite = sprite_create_xpm((xpm_map_t) cursor, 0, 0, 0, 0);
     state->cursorPointerSprite = sprite_create_xpm((xpm_map_t) cursor_pointer, 0, 0, 0, 0);
     state->prev_cursor = state->cursorSprite;
-    state->mouse_dirty = false;
     state->prev_cursor_width = 0;
     state->prev_cursor_height = 0;
     state->mouse_displacement_x = 0;

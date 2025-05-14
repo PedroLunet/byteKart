@@ -46,7 +46,7 @@ static void draw_container_component(UIComponent *component) {
             draw_ui_component(data->children[i]);
         }
 
-        data->is_hovered = false;
+        // data->is_hovered = false;
     }
 }
 

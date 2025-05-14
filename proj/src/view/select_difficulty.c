@@ -30,7 +30,7 @@ static void select_difficulty_draw_internal(GameState *base) {
         draw_ui_component(this->backButton);
     }
 }
-/*
+
 static void select_difficulty_clean_dirty_mouse_internal(GameState *base) {
     SelectDifficulty *this = (SelectDifficulty *)base;
     if (this->uiRoot) {
@@ -40,7 +40,7 @@ static void select_difficulty_clean_dirty_mouse_internal(GameState *base) {
         draw_dirty_area(this->backButton, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
     }
 }
-*/
+
 static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mouse_y, void *data) {
     SelectDifficulty *this = (SelectDifficulty *)base;
     int *selected = (int *)data;
@@ -126,7 +126,7 @@ static void select_difficulty_process(GameState *base, EventType event) {
                 break;
         }
     } else if (event == EVENT_MOUSE) {
-        if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw, select_difficulty_is_mouse_over, &this->selectedOption)) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_clean_dirty_mouse_internal, select_difficulty_is_mouse_over, &this->selectedOption)) {
             this->chosenLevel = DIFFICULTY_SELECTED;
         }
     }
@@ -167,7 +167,7 @@ SelectDifficulty *select_difficulty_create() {
     this->base.destroy = select_difficulty_destroy_internal;
     this->base.is_mouse_over = select_difficulty_is_mouse_over;
 
-    this->selectedOption = 0;
+    this->selectedOption = -1;
     this->chosenLevel = DIFFICULTY_START;
     this->uiRoot = NULL;
 
@@ -329,7 +329,7 @@ DifficultyLevel select_difficulty_get_chosen_level(SelectDifficulty *this) {
 }
 
 void select_difficulty_reset_state(SelectDifficulty *this) {
-    this->selectedOption = 0;
+    this->selectedOption = -1;
     this->chosenLevel = DIFFICULTY_START;
     this->base.draw(&this->base);
 }

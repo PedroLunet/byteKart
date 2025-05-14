@@ -19,7 +19,6 @@ typedef struct GameState {
     Sprite *cursorPointerSprite;
     Sprite *prev_cursor;
     bool is_hovering;
-    bool mouse_dirty;
     int prev_cursor_width;
     int prev_cursor_height;
     int mouse_displacement_x;
