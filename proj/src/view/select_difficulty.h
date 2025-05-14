@@ -14,21 +14,9 @@
 
 typedef enum {
     DIFFICULTY_START,
-    DIFFICULTY_EASY,
-    DIFFICULTY_MEDIUM,
-    DIFFICULTY_HARD,
-    DIFFICULTY_BACK,
+    DIFFICULTY_SELECTED,
     DIFFICULTY_EXITED
 } DifficultyLevel;
-
-static const DifficultyLevel difficultyLevels[] = {
-    DIFFICULTY_START,
-    DIFFICULTY_EASY,
-    DIFFICULTY_MEDIUM,
-    DIFFICULTY_HARD,
-    DIFFICULTY_BACK,
-    DIFFICULTY_EXITED
-};
 
 typedef struct SelectDifficulty {
     GameState base;
@@ -43,6 +31,7 @@ SelectDifficulty *select_difficulty_create();
 void select_difficulty_destroy(SelectDifficulty *this);
 void select_difficulty_draw(SelectDifficulty *this);
 void select_difficulty_process_event(SelectDifficulty *this, EventType event);
+int select_difficulty_get_selected_option(SelectDifficulty *this);
 DifficultyLevel select_difficulty_get_chosen_level(SelectDifficulty *this);
 void select_difficulty_reset_state(SelectDifficulty *this);
 

@@ -191,13 +191,15 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
         case SELECT_DIFFICULTY:
             select_difficulty_process_event(selectDifficulty, event);
             DifficultyLevel chosenLevel = select_difficulty_get_chosen_level(selectDifficulty);
-            if (chosenLevel == DIFFICULTY_EASY || chosenLevel == DIFFICULTY_MEDIUM || chosenLevel == DIFFICULTY_HARD) {
-                // game_set_difficulty(game, chosenLevel);
-                nextState = SELECT_CAR;
-            } else if (chosenLevel == DIFFICULTY_BACK) {
-                select_difficulty_reset_state(selectDifficulty);
-                menu_reset_state(mainMenu);
-                nextState = MENU;
+            if (chosenLevel == DIFFICULTY_SELECTED) {
+                int difficultyIndex = select_difficulty_get_selected_option(selectDifficulty);
+                if (difficultyIndex == 3) {
+                    select_difficulty_reset_state(selectDifficulty);
+                    nextState = MENU;
+                } else {
+                    // game_set_difficulty(game, difficultyIndex);
+                    nextState = SELECT_CAR;
+                }
             } else if (chosenLevel == DIFFICULTY_EXITED) {
                 nextState = QUIT;
             }

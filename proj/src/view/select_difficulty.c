@@ -106,7 +106,7 @@ static void select_difficulty_process(GameState *base, EventType event) {
                 if (this->selectedOption == 3) this->selectedOption = 0;
             break;
             case ENTER_KEY:
-                this->chosenLevel = difficultyLevels[this->selectedOption + 1];
+                this->chosenLevel = DIFFICULTY_SELECTED;
             break;
             case ESC_BREAKCODE:
                 this->chosenLevel = DIFFICULTY_EXITED;
@@ -119,7 +119,7 @@ static void select_difficulty_process(GameState *base, EventType event) {
         int prevSelected = this->selectedOption;
         base->update_mouse_delta(base);
         if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_draw, select_difficulty_is_mouse_over, &this->selectedOption)) {
-            this->chosenLevel = difficultyLevels[this->selectedOption + 1];
+            this->chosenLevel = DIFFICULTY_SELECTED;
         }
         if (this->selectedOption != prevSelected && (base->mouse_displacement_x >= 12 || base->mouse_displacement_y >= 12)) {
             base->draw(base);
@@ -312,6 +312,10 @@ void select_difficulty_draw(SelectDifficulty *this) {
 
 void select_difficulty_process_event(SelectDifficulty *this, EventType event) {
     this->base.process_event(&this->base, event);
+}
+
+int select_difficulty_get_selected_option(SelectDifficulty *this) {
+    return this->selectedOption;
 }
 
 DifficultyLevel select_difficulty_get_chosen_level(SelectDifficulty *this) {
