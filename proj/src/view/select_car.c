@@ -264,8 +264,8 @@ SelectCar *select_car_create() {
             set_container_padding(firstCarContainer, 40, 40, 40, 40);
             set_container_border_radius(firstCarContainer, 20);
             set_container_border(firstCarContainer, 4, 0x8F8483);
-            // Sprite *car1 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            // firstCarOption = create_sprite_component(car1, 0, 0);
+            // Sprite *red_car = sprite_create_xpm((xpm_map_t) red_car_xpm, 0, 0, 0, 0);
+            // firstCarOption = create_sprite_component(red_car, 0, 0);
             firstCarOption = create_text_component("Car 1", gameFont, 0xFFFFFF);
             if (!firstCarOption) {
                 destroy_ui_component(carContainer);
@@ -288,8 +288,8 @@ SelectCar *select_car_create() {
             set_container_padding(secondCarContainer, 40, 40, 40, 40);
             set_container_border_radius(secondCarContainer, 20);
             set_container_border(secondCarContainer, 4, 0x8F8483);
-            // Sprite *car2 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            //secondCarOption = create_sprite_component(car2, 0, 0);
+            // Sprite *pink_car = sprite_create_xpm((xpm_map_t) pink_car_xpm, 0, 0, 0, 0);
+            //secondCarOption = create_sprite_component(pink_car, 0, 0);
             secondCarOption = create_text_component("Car 2", gameFont, 0xFFFFFF);
             if (!secondCarOption) {
                 destroy_ui_component(carContainer);
@@ -327,8 +327,8 @@ SelectCar *select_car_create() {
             set_container_padding(thirdCarContainer, 40, 40, 40, 40);
             set_container_border_radius(thirdCarContainer, 20);
             set_container_border(thirdCarContainer, 4, 0x8F8483);
-            // Sprite *car3 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            //thirdCarOption = create_sprite_component(car3, 0, 0);
+            // Sprite *orange_car = sprite_create_xpm((xpm_map_t) orange_car_xpm, 0, 0, 0, 0);
+            //thirdCarOption = create_sprite_component(orange_car, 0, 0);
             thirdCarOption = create_text_component("Car 3", gameFont, 0xFFFFFF);
             if (!thirdCarOption) {
                 destroy_ui_component(carContainer);
@@ -351,8 +351,8 @@ SelectCar *select_car_create() {
             set_container_padding(fourthCarContainer, 40, 40, 40, 40);
             set_container_border_radius(fourthCarContainer, 20);
             set_container_border(fourthCarContainer, 4, 0x8F8483);
-            // Sprite *car4 = sprite_create_xpm((xpm_map_t) car1_xpm, 0, 0, 0, 0);
-            // fourthCarOption = create_sprite_component(car4, 0, 0);
+            // Sprite *blue_car = sprite_create_xpm((xpm_map_t) blue_car_xpm, 0, 0, 0, 0);
+            // fourthCarOption = create_sprite_component(blue_car, 0, 0);
             fourthCarOption = create_text_component("Car 4", gameFont, 0xFFFFFF);
             if (!fourthCarOption) {
                 destroy_ui_component(carContainer);

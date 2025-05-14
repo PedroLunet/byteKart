@@ -8,7 +8,10 @@
 #include "cursor/cursor.xpm"
 #include "cursor/cursor_pointer.xpm"
 #include "game/road.xpm"
-#include "cars/car1.xpm"
+#include "cars/blue_car.xpm"
+#include "cars/orange_car.xpm"
+#include "cars/pink_car.xpm"
+#include "cars/red_car.xpm"
 #include "fonts/font_2_0.xpm"
 
 #endif
