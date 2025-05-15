@@ -10,6 +10,10 @@ typedef enum {
   NUM_EVENTS
 } EventType;
 
+// Game
+#define PLAYER_TURN_INCREMENT_DEG 6.0f
+#define PLAYER_TURN_INCREMENT_RAD (PLAYER_TURN_INCREMENT_DEG * (M_PI / 180.0f))
+
 // Fonts
 #define MAX_FONT_GLYPHS 382
 
