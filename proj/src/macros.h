@@ -1,6 +1,8 @@
 #ifndef MACROS_H
 #define MACROS_H
 
+#include <math.h>
+
 typedef enum {
   EVENT_NONE,
   EVENT_TIMER,
@@ -9,10 +11,6 @@ typedef enum {
   // EVENT_SERIAL,
   NUM_EVENTS
 } EventType;
-
-// Game
-#define PLAYER_TURN_INCREMENT_DEG 6.0f
-#define PLAYER_TURN_INCREMENT_RAD (PLAYER_TURN_INCREMENT_DEG * (M_PI / 180.0f))
 
 // Fonts
 #define MAX_FONT_GLYPHS 382
@@ -39,5 +37,26 @@ typedef enum {
 
 #define BACKGROUND_COLOR 0x000000
 #define TRANSPARENT 0xFFFFFE
+
+// Game
+#define PLAYER_TURN_INCREMENT_DEG 6.0f
+#define PLAYER_TURN_INCREMENT_RAD (PLAYER_TURN_INCREMENT_DEG * (M_PI / 180.0f))
+
+#define AI_EASY_BASE_SPEED 2.0f
+#define AI_MEDIUM_BASE_SPEED 3.0f
+#define AI_HARD_BASE_SPEED 4.0f
+
+#define AI_ACCELERATION 1.8f
+#define AI_DECELERATION 1.5f
+
+#define AI_EASY_LOOKAHEAD 40.0f
+#define AI_MEDIUM_LOOKAHEAD 60.0f
+#define AI_HARD_LOOKAHEAD 80.0f
+
+#define AI_MAX_STEERING_RATE_RAD_PER_SEC (M_PI / 2.0f)
+
+#define AI_EASY_PATH_ADHERENCE 0.6f
+#define AI_MEDIUM_PATH_ADHERENCE 0.8f
+#define AI_HARD_PATH_ADHERENCE 1.0f
 
 #endif
