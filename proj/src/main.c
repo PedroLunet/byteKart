@@ -227,7 +227,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
 
         case GAME:
             if (game == NULL) {
-                game = game_state_create_playing(difficulty, NULL, "tracks/track_1.dat", NULL, NULL);
+                game = game_state_create_playing(difficulty, NULL, TRACK_1_FILENAME, NULL, NULL);
                 if (!game) {
                     return 1;
                 }
@@ -294,6 +294,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                 case HARDWARE:
 
                     if (msg.m_notify.interrupts & irq_set_timer) {
+                        timer_int_handler();
                         pendingEvent = EVENT_TIMER;
                     }
 

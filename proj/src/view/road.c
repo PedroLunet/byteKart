@@ -106,19 +106,19 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
 
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        perror("Error opening track file");
+        printf("Error opening track file");
         return 2;
     }
 
     // Read number of points
     if (fread(&road->num_center_points, sizeof(int), 1, file) != 1) {
-        fprintf(stderr, "Error reading number of points from track file.\n");
+        printf("Error reading number of points from track file.\n");
         fclose(file);
         return 3;
     }
 
     if (road->num_center_points < 2) {
-        fprintf(stderr, "Track file must contain at least 2 points.\n");
+        printf("Track file must contain at least 2 points.\n");
         fclose(file);
         return 4;
     }
@@ -126,18 +126,26 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
     // Allocate memory for centerline points
     road->center_points = malloc(road->num_center_points * sizeof(Point));
     if (!road->center_points) {
-        fprintf(stderr, "Memory allocation failed for center_points.\n");
+        printf("Memory allocation failed for center_points.\n");
         fclose(file);
         return 5;
     }
 
     // Read all centerline points
-    if (fread(road->center_points, sizeof(Point), road->num_center_points, file) != (size_t)road->num_center_points) {
-        fprintf(stderr, "Error reading point data from track file.\n");
-        free(road->center_points);
-        road->center_points = NULL;
-        fclose(file);
-        return 6;
+    typedef struct { int x; int y; } IntPointFile;
+    IntPointFile temp_point_from_file;
+
+    for (int i = 0; i < road->num_center_points; ++i) {
+        if (fread(&temp_point_from_file, sizeof(IntPointFile), 1, file) != 1) {
+            printf("road_load: Error reading point %d data from track file.\n", i);
+            free(road->center_points);
+            road->center_points = NULL;
+            road->num_center_points = 0;
+            fclose(file);
+            return 6;
+        }
+        road->center_points[i].x = (float)temp_point_from_file.x;
+        road->center_points[i].y = (float)temp_point_from_file.y;
     }
 
     fclose(file);
@@ -148,7 +156,7 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
 
     // Calculate edge points
     if (road_calculate_edge_points(road) != 0) {
-        fprintf(stderr, "Failed to calculate road edge points.\n");
+        printf("Failed to calculate road edge points.\n");
         free(road->center_points);
         road->center_points = NULL;
         return 7;

@@ -12,6 +12,9 @@ typedef enum {
   NUM_EVENTS
 } EventType;
 
+// Tracks
+#define TRACK_1_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.dat"
+
 // Fonts
 #define MAX_FONT_GLYPHS 382
 
@@ -44,27 +47,27 @@ typedef enum {
 
 // Game
 #define MAX_LAPS 3
-#define MAX_AI_CARS 3
+#define MAX_AI_CARS 1
 
 #define PLAYER_TURN_INCREMENT_DEG 6.0f
 #define PLAYER_TURN_INCREMENT_RAD (PLAYER_TURN_INCREMENT_DEG * (M_PI / 180.0f))
 
-#define PLAYER_BASE_SPEED 3.0f
+#define PLAYER_BASE_SPEED 250.0f
 
-#define PLAYER_ACCELERATION 1.8f
-#define PLAYER_DECELERATION 1.5f
-#define PLAYER_SKID_DECELERATION 2.5f
+#define PLAYER_ACCELERATION 100.0f
+#define PLAYER_DECELERATION 80.0f
+#define PLAYER_SKID_DECELERATION 150.0f
 
-#define AI_EASY_BASE_SPEED 2.0f
-#define AI_MEDIUM_BASE_SPEED 3.0f
-#define AI_HARD_BASE_SPEED 4.0f
+#define AI_EASY_BASE_SPEED 220.0f
+#define AI_MEDIUM_BASE_SPEED 250.0f
+#define AI_HARD_BASE_SPEED 280.0f
 
-#define AI_ACCELERATION 1.8f
-#define AI_DECELERATION 1.5f
+#define AI_ACCELERATION 100.0f
+#define AI_DECELERATION 80.0f
 
-#define AI_EASY_LOOKAHEAD 40.0f
-#define AI_MEDIUM_LOOKAHEAD 60.0f
-#define AI_HARD_LOOKAHEAD 80.0f
+#define AI_EASY_LOOKAHEAD 180.0f // 0.8s
+#define AI_MEDIUM_LOOKAHEAD 250.0f // 1.0s
+#define AI_HARD_LOOKAHEAD 340.0f // 1.2s
 
 #define AI_MAX_STEERING_RATE_RAD_PER_SEC (M_PI / 2.0f)
 

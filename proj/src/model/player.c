@@ -100,7 +100,7 @@ static void player_check_lap_completion(Player *player, Road *road) {
      player->last_meaningful_road_segment_idx = current_frame_segment;
 }
 
-int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road, xpm_image_t *car_sprite_xpm) {
+int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road, xpm_map_t *car_sprite_xpm) {
     if (!player) return 1;
     if (!road) {
         fprintf(stderr, "player_create: Road pointer is NULL.\n");
@@ -154,8 +154,13 @@ int player_create(Player *player, Point initial_car_center_world, float initial_
         fprintf(stderr, "Warning: Player created off-track or on invalid track, defaulting to start.\n");
     }
 
-    Sprite *car_sprite = sprite_create_xpm((xpm_map_t) car_sprite_xpm, player->world_position_car_center.x, player->world_position_car_center.y, 0, 0);
-    player->sprite = car_sprite;
+    if (car_sprite_xpm) {
+        player->sprite = sprite_create_xpm((xpm_map_t) car_sprite_xpm, initial_car_center_world.x, initial_car_center_world.y, 0, 0);
+        if (!player->sprite) {
+            fprintf(stderr, "Warning: Failed to load player car sprite.\n");
+            return 1;
+        }
+    }
 
     player->current_lap = 0;
     player->total_laps = MAX_LAPS;

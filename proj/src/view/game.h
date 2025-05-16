@@ -41,6 +41,8 @@ typedef struct Game {
     int player_turn_input_sign; // -1 for left, 0 for none, 1 for right
     bool pause_requested;
 
+    int timer_count_down;
+
 } Game;
 
 // Public Game Class Methods

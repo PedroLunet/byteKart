@@ -3,6 +3,7 @@
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
+extern int timer_counter;
 
 static void transform_world_to_screen(const Player *player_camera_view, Point world_p, Point *screen_p) {
     if (!player_camera_view || !screen_p) return;
@@ -60,9 +61,11 @@ static void playing_process_event_internal(GameState *base, EventType event) {
     Game *this = (Game *)base;
     if (!this) return;
 
+    /*
     if (this->current_running_state == GAME_SUBSTATE_PAUSED || this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
         return;
     }
+     */
 
     if (event == EVENT_TIMER) {
         this->base.update_state(base);
@@ -125,11 +128,16 @@ static void playing_update_internal(GameState *base) {
 
     switch(this->current_running_state) {
         case GAME_SUBSTATE_LOADING:
-            // if (assets_loaded()) game->current_running_state = GAME_RUN_STATE_COUNTDOWN;
+            // if (assets_loaded()) this->current_running_state = GAME_RUN_STATE_COUNTDOWN;
             break;
         case GAME_SUBSTATE_COUNTDOWN:
-            // update_countdown_timer(game, delta_time);
-            // if (countdown_finished(game)) game->current_running_state = GAME_RUN_STATE_PLAYING;
+            if (timer_counter % 120 == 0) {
+                printf("Countdown Timer: %d\n", this->timer_count_down);
+                this->timer_count_down--;
+            }
+            if (this->timer_count_down == 0) {
+              this->current_running_state = GAME_SUBSTATE_PLAYING;
+            }
             break;
         case GAME_SUBSTATE_PLAYING:
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
@@ -138,6 +146,10 @@ static void playing_update_internal(GameState *base) {
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
+                    if (timer_counter % 60 == 0) {
+                        printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id,
+                               (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
+                    }
                 }
             }
             // TODO: Collision detection, lap counting, finish conditions
@@ -218,24 +230,22 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
         return NULL;
     }
 
-    /*
     // Initialize Player
     Point player_start_pos = this->road_data.start_point;
     float player_initial_angle_rad = 0.0f;
-    if (this->road_data.num_points > 1) {
-        player_initial_angle_rad = atan2(this->road_data.points[1].y - this->road_data.points[0].y,
-                                         this->road_data.points[1].x - this->road_data.points[0].x);
+    if (this->road_data.num_center_points > 1) {
+        player_initial_angle_rad = atan2(this->road_data.center_points[1].y - this->road_data.center_points[0].y,
+                                         this->road_data.center_points[1].x - this->road_data.center_points[0].x);
     }
 
-    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, *player_xpm) != 0) {
+    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, player_xpm) != 0) {
         printf("Failed to initialize player\n");
         road_destroy(&this->road_data);
         base_destroy(&this->base);
         free(this);
         return NULL;
     }
-     */
-    /*
+
     // Initialize AI Cars
     this->num_active_ai_cars = 0;
     for (int i = 0; i < MAX_AI_CARS; i++) {
@@ -256,13 +266,13 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
             ai_difficulty = AI_DIFFICULTY_HARD;
         }
 
-        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, NULL  car_ai_blue_xpm , &this->road_data);
+        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, NULL, &this->road_data);
         if (this->ai_cars[i]) {
             this->num_active_ai_cars++;
         } else {
             fprintf(stderr, "game_state_create_playing: Failed to create AI car %d.\n", i);
             for (int j = 0; j < i; j++) {
-                ai_car_destroy(&this->ai_cars[j]);
+                ai_car_destroy(this->ai_cars[j]);
             }
         }
     }
@@ -274,7 +284,6 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
         free(this);
         return NULL;
     }
-    */
 
     // Initialize Game State
     this->current_running_state = GAME_SUBSTATE_COUNTDOWN;
@@ -282,6 +291,8 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
     this->player_turn_input_sign = 0;
     this->current_lap = 0;
     this->pause_requested = false;
+
+    this->timer_count_down = 3;
 
     return this;
 }

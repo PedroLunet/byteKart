@@ -46,7 +46,7 @@ typedef struct Player_s {
 
 } Player;
 
-int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road, xpm_image_t *car_sprite_xpm);
+int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road, xpm_map_t *car_sprite_xpm);
 void player_destroy(Player *player);
 void player_update(Player *player, Road *road, bool skid_input, float delta_time);
 void player_handle_turn_input(Player *player, int turn_direction_sign);
