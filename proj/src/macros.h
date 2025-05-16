@@ -13,6 +13,10 @@ typedef enum {
 // Fonts
 #define MAX_FONT_GLYPHS 382
 
+// Boundaries for the road
+#define RIGHT_BOUNDARY 480
+#define LEFT_BOUNDARY 130
+
 // ESC key
 #define ESC_MAKECODE 0x01
 #define ESC_BREAKCODE 0x81

@@ -24,7 +24,17 @@ static void game_process(GameState *base, EventType event) {
         switch (scancode) {
             case ESC_BREAKCODE:
                 this->currentSubstate = GAME_EXITED;
-            break;
+                break;
+            case LEFT_ARROW:
+                if (this->playerCar.x > 0) {
+                    car_move_left(&this->playerCar, LEFT_BOUNDARY, STEP);
+                }
+                break;
+            case RIGHT_ARROW:
+                if (this->playerCar.x > 0) {
+                    car_move_right(&this->playerCar, RIGHT_BOUNDARY, STEP);
+                }
+                break;
             default:
                 break;
         }

@@ -9,6 +9,7 @@
 #include "macros.h"
 #include "xpm/xpm_files.h"
 #include "road.h"
+#include "car.h"
 
 typedef enum {
   GAME_SUBSTATE_PLAYING,
@@ -16,12 +17,6 @@ typedef enum {
   GAME_FINISHED,
   GAME_EXITED,
 } GameSubstate;
-
-typedef struct Car {
-    int x, y;
-    int speed;
-    Sprite *car_sprite;
-} Car;
 
 /*
 typedef struct {
