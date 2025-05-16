@@ -218,20 +218,16 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                     }
                     game = game_create(carIndex);
                     if (!game) {
-                        printf("Error creating game.\n");
+                        //printf("Error creating game.\n");
                         nextState = QUIT;
                     } else {
-                        printf("Car chosen and game created successfully.\n");
+                        //printf("Car chosen and game created successfully.\n");
                         nextState = GAME;
                     }
                 }
             } else if (chosenCar == CAR_EXITED) {
                 nextState = QUIT;
             }
-            break;
-
-        case SELECT_TRACK:
-            // Handle track selection
             break;
 
         case GAME:
@@ -245,6 +241,16 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             break;
 
         /*
+
+        case LEADERBOARD:
+            leaderboard_process_event(leaderboard, event);
+            LeaderboardSubState currentLeaderboardSubState = leaderboard_get_current_substate(leaderboard);
+            if (currentLeaderboardSubState == LEADERBOARD_MENU) {
+                // mostrar recordes
+            } else if (currentLeaderboardSubState == ???? ) {
+                // voltar ao menu inicial
+            }
+            break;
 
         case GAMEOVER:
             gameover_process_event(gameOver, event);
