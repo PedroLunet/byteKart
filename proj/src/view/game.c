@@ -5,13 +5,10 @@
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
 
-static void drawRoadBackground(Game *this) {
-    draw_road_background();
-}
-
 static void game_draw_internal(GameState *base) {
     Game *this = (Game *)base;
-    drawRoadBackground(this);
+
+    draw_road_background(this->road_sprite1, this->road_sprite2, this->road_y1, this->road_y2);
 
     if (this->playerCar.car_sprite) {
         sprite_draw_xpm(this->playerCar.car_sprite, this->playerCar.x, this->playerCar.y, true);
@@ -46,16 +43,23 @@ static void game_process(GameState *base, EventType event) {
 
 static void game_update(GameState *base) {
     Game *this = (Game *)base;
+
     this->road_y1 += 2;
     this->road_y2 += 2;
-    if (this->road_y1 >= (int)vbe_mode_info.YResolution) this->road_y1 = -this->road_sprite1->height;
-    if (this->road_y2 >= (int)vbe_mode_info.YResolution) this->road_y2 = -this->road_sprite2->height;
+
+    if (this->road_y1 >= (int)vbe_mode_info.YResolution)
+        this->road_y1 = -this->road_sprite1->height;
+
+    if (this->road_y2 >= (int)vbe_mode_info.YResolution)
+        this->road_y2 = -this->road_sprite2->height;
 }
 
 static void game_destroy_internal(GameState *base) {
     Game *this = (Game *)base;
     if (this) {
         sprite_destroy(this->playerCar.car_sprite);
+        sprite_destroy(this->road_sprite1);
+        sprite_destroy(this->road_sprite2);
     }
     free(base);
 }
@@ -78,15 +82,30 @@ Game *game_create(int car_choice) {
     this->playerCar.y = vbe_mode_info.YResolution - 100;
     this->playerCar.speed = 5;
 
-    xpm_map_t car_xpms[4] = { (xpm_map_t)pink_car_xpm,(xpm_map_t)red_car_xpm, (xpm_map_t)orange_car_xpm, (xpm_map_t)blue_car_xpm };
+    xpm_map_t car_xpms[4] = { (xpm_map_t)pink_car_xpm, (xpm_map_t)red_car_xpm, 
+                              (xpm_map_t)orange_car_xpm, (xpm_map_t)blue_car_xpm };
     this->playerCar.car_sprite = sprite_create_xpm(car_xpms[car_choice], 0, 0, 0, 0);
     if (!this->playerCar.car_sprite) {
         free(this);
         return NULL;
     }
 
+    this->road_sprite1 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
+    this->road_sprite2 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
+    if (!this->road_sprite1 || !this->road_sprite2) {
+        sprite_destroy(this->playerCar.car_sprite);
+        if (this->road_sprite1) sprite_destroy(this->road_sprite1);
+        if (this->road_sprite2) sprite_destroy(this->road_sprite2);
+        free(this);
+        return NULL;
+    }
+
+    this->road_y1 = 0;
+    this->road_y2 = -this->road_sprite1->height;
+
     return this;
 }
+
 
 void game_destroy(Game *this) {
     this->base.destroy(&this->base);

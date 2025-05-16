@@ -328,6 +328,10 @@ int (proj_main_loop)(int argc, char *argv[]) {
         }
 
         if (pendingEvent == EVENT_TIMER) {
+            if (current_state == GAME && game){
+                game_update_state(game);
+                game_draw(game);
+            }
             if (swap_buffers() != 0) {
                 printf("Error swapping buffers.\n");
                 return 1;

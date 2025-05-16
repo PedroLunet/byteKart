@@ -19,7 +19,7 @@ typedef enum {
 } GameSubstate;
 
 /*
-typedef struct {
+typedef struct Obstacle {
   int x, y;
   int speed;
   bool active;
