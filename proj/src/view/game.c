@@ -50,7 +50,7 @@ static void game_destroy_internal(GameState *base) {
     free(base);
 }
 
-Game *game_create() {
+Game *game_create(int car_choice) {
     Game *this = (Game *) malloc(sizeof(Game));
     if (this == NULL) {
         return NULL;
@@ -67,7 +67,9 @@ Game *game_create() {
     this->playerCar.x = vbe_mode_info.XResolution / 2 - 30;
     this->playerCar.y = vbe_mode_info.YResolution - 100;
     this->playerCar.speed = 5;
-    this->playerCar.car_sprite = sprite_create_xpm((xpm_map_t) pink_car_xpm, 0, 0, 0, 0);
+
+    xpm_map_t car_xpms[4] = { (xpm_map_t)pink_car_xpm,(xpm_map_t)red_car_xpm, (xpm_map_t)orange_car_xpm, (xpm_map_t)blue_car_xpm };
+    this->playerCar.car_sprite = sprite_create_xpm(car_xpms[car_choice], 0, 0, 0, 0);
     if (!this->playerCar.car_sprite) {
         free(this);
         return NULL;

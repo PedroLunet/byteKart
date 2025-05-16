@@ -43,7 +43,7 @@ typedef struct Game {
 } Game;
 
 // Public Game Class Methods
-Game *game_create();
+Game *game_create(int car_choice);
 void game_destroy(Game *this);
 void game_draw(Game *this);
 void game_process_event(Game *this, EventType event);

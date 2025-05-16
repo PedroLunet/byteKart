@@ -101,13 +101,6 @@ int (initial_setup)() {
         return 1;
     }
 
-    // Initialize the game
-    game = game_create();
-    if (!game) {
-        game_destroy(game);
-        return 1;
-    }
-
     current_state = MENU;
     running = true;
 
@@ -214,13 +207,23 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             CarSelection chosenCar = select_car_get_chosen_level(selectCar);
             if (chosenCar == CAR_SELECTED) {
                 int carIndex = select_car_get_selected_option(selectCar);
-                if (carIndex == 10) {
+                if (carIndex == 4) {
                     select_car_reset_state(selectCar);
                     select_difficulty_reset_state(selectDifficulty);
 				    nextState = SELECT_DIFFICULTY;
                 } else {
-                    // game_set_car(game, carIndex);
-                    nextState = GAME;
+                    if (game) {
+                        game_destroy(game);
+                        game = NULL;
+                    }
+                    game = game_create(carIndex);
+                    if (!game) {
+                        printf("Error creating game.\n");
+                        nextState = QUIT;
+                    } else {
+                        printf("Car chosen and game created successfully.\n");
+                        nextState = GAME;
+                    }
                 }
             } else if (chosenCar == CAR_EXITED) {
                 nextState = QUIT;

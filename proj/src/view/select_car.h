@@ -1,10 +1,16 @@
 #ifndef SELECT_CAR_H
 #define SELECT_CAR_H
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
 #include "model/game_state.h"
 #include "xpm/xpm_files.h"
 #include "view/ui.h"
 #include "macros.h"
+#include "controller/video_card.h"
+#include "controller/mouse.h"
 
 typedef enum {
     CAR_START,
@@ -20,7 +26,6 @@ typedef struct SelectCar {
     UIComponent *backButton;
 } SelectCar;
 
-// Public SelectCar Class Methods
 SelectCar *select_car_create();
 void select_car_destroy(SelectCar *this);
 void select_car_draw(SelectCar *this);
@@ -29,4 +34,4 @@ int select_car_get_selected_option(SelectCar *this);
 CarSelection select_car_get_chosen_level(SelectCar *this);
 void select_car_reset_state(SelectCar *this);
 
-#endif //SELECT_CAR_H
+#endif
