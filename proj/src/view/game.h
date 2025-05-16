@@ -5,50 +5,51 @@
 #include <stdio.h>
 
 #include "model/game_state.h"
+#include "model/player.h"
+#include "model/road.h"
+#include "model/ai_car.h"
 #include "sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
-#include "road.h"
 
 typedef enum {
+  GAME_SUBSTATE_LOADING,
+  GAME_SUBSTATE_COUNTDOWN,
   GAME_SUBSTATE_PLAYING,
-  GAME_SUBSTATE_GAME_OVER,
-  GAME_FINISHED,
-  GAME_EXITED,
-} GameSubstate;
-
-typedef struct Car {
-    int x, y;
-    int speed;
-    Sprite *car_sprite;
-} Car;
-
-/*
-typedef struct {
-  int x, y;
-  int speed;
-  bool active;
-  Sprite *obstacle_sprite;
-} Obstacle;
-*/
+  GAME_SUBSTATE_PAUSED,
+  GAME_SUBSTATE_FINISHED_RACE,
+  GAME_STATE_EXITING,
+  GAME_EXITED
+} GameRunningState;
 
 typedef struct Game {
     GameState base;
-    GameSubstate currentSubstate;
-    Car playerCar;
-    Sprite *road_sprite1;
-    Sprite *road_sprite2;
-    int road_y1;
-    int road_y2;
+    GameRunningState current_running_state;
+
+    Road road_data;
+    Player player;
+    AICar* ai_cars[MAX_AI_CARS];
+    int num_active_ai_cars;
+
+    // Game specific logic variables
+    int current_lap;
+    float race_timer_s;
+    bool race_started;
+
+    // Input state
+    bool player_skid_input_active;
+    int player_turn_input_sign; // -1 for left, 0 for none, 1 for right
+    bool pause_requested;
+
 } Game;
 
 // Public Game Class Methods
-Game *game_create();
+Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *road_data_file, xpm_map_t *road_xpm, xpm_map_t *finish_xpm);
 void game_destroy(Game *this);
 void game_draw(Game *this);
 void game_process_event(Game *this, EventType event);
 void game_update_state(Game *this); // If you have update logic
-GameSubstate game_get_current_substate(Game *this);
+GameRunningState game_get_current_substate(Game *this);
 void game_reset_state(Game *this); // If needed
 
 #endif

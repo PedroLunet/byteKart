@@ -15,8 +15,9 @@ Menu *mainMenu = NULL;
 SelectDifficulty *selectDifficulty = NULL;
 SelectCar *selectCar = NULL;
 Game *game = NULL;
-//GameOver *gameOver = NULL;
 
+int difficulty = 0;
+int selectedCar = 0;
 
 static MainState current_state;
 bool running;
@@ -98,13 +99,6 @@ int (initial_setup)() {
     selectCar = select_car_create();
     if (!selectCar) {
         select_car_destroy(selectCar);
-        return 1;
-    }
-
-    // Initialize the game
-    game = game_create();
-    if (!game) {
-        game_destroy(game);
         return 1;
     }
 
@@ -201,7 +195,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                     select_difficulty_reset_state(selectDifficulty);
                     nextState = MENU;
                 } else {
-                    // game_set_difficulty(game, difficultyIndex);
+                    difficulty = difficultyIndex;
                     nextState = SELECT_CAR;
                 }
             } else if (chosenLevel == DIFFICULTY_EXITED) {
@@ -219,7 +213,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                     select_difficulty_reset_state(selectDifficulty);
 				    nextState = SELECT_DIFFICULTY;
                 } else {
-                    // game_set_car(game, carIndex);
+                    selectedCar = carIndex;
                     nextState = GAME;
                 }
             } else if (chosenCar == CAR_EXITED) {
@@ -232,6 +226,12 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             break;
 
         case GAME:
+            if (game == NULL) {
+                game = game_state_create_playing(difficulty, (xpm_map_t) car_xpm, "road1.dat", (xpm_map_t) road_xpm, (xpm_map_t) finish_xpm);
+                if (!game) {
+                    return 1;
+                }
+            }
             game_process_event(game, event);
             GameSubstate currentGameSubstate = game_get_current_substate(game);
             if (currentGameSubstate == GAME_FINISHED) {
