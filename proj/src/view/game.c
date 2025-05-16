@@ -51,7 +51,7 @@ static void draw_ai_car(AICar *ai, const Player *player_camera_view) {
             return;
 
         }
-        sprite_draw_xpm(ai->sprite, (int)screen_pos.x - ai->sprite->width/2, (int)screen_pos.y - ai->sprite->height/2);
+        sprite_draw_xpm(ai->sprite, (int)screen_pos.x - ai->sprite->width/2, (int)screen_pos.y - ai->sprite->height/2, true);
         printf("Drawing AI Car %d (Visuals TODO)\n", ai->id);
     }
 }
@@ -123,30 +123,36 @@ static void playing_update_internal(GameState *base) {
 
     float delta_time = 1.0f / 60.0f;
 
-    switch(game->current_running_state) {
-        case GAME_RUN_STATE_LOADING:
+    switch(this->current_running_state) {
+        case GAME_SUBSTATE_LOADING:
             // if (assets_loaded()) game->current_running_state = GAME_RUN_STATE_COUNTDOWN;
             break;
-        case GAME_RUN_STATE_COUNTDOWN:
+        case GAME_SUBSTATE_COUNTDOWN:
             // update_countdown_timer(game, delta_time);
             // if (countdown_finished(game)) game->current_running_state = GAME_RUN_STATE_PLAYING;
             break;
-        case GAME_RUN_STATE_PLAYING:
-            player_handle_turn_input(&game->player, game->player_turn_input_sign);
-            player_update(&game->player, &game->road_data, game->player_skid_input_active, delta_time);
+        case GAME_SUBSTATE_PLAYING:
+            player_handle_turn_input(&this->player, this->player_turn_input_sign);
+            player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
 
-            for (int i = 0; i < game->num_active_ai_cars; ++i) {
-                if (game->ai_cars[i]) {
-                    ai_car_update(game->ai_cars[i], &game->road_data, &game->player, NULL, 0, delta_time);
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+                if (this->ai_cars[i]) {
+                    ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
                 }
             }
             // TODO: Collision detection, lap counting, finish conditions
             break;
-        case GAME_RUN_STATE_PAUSED:
+        case GAME_SUBSTATE_PAUSED:
             // No game logic updates
             break;
-        case GAME_RUN_STATE_FINISHED_RACE:
+        case GAME_SUBSTATE_FINISHED_RACE:
             // Maybe some post-race animation or waiting for input
+            break;
+        case GAME_STATE_EXITING:
+            // Cleanup and exit logic
+            break;
+        case GAME_EXITED:
+            // Cleanup and exit logic
             break;
     }
 
@@ -156,11 +162,11 @@ static void playing_destroy_internal(GameState *base) {
     Game *this = (Game *)base;
     if (!this) return;
 
-    road_destroy(&game->road_data);
-    player_destroy(&game->player);
+    road_destroy(&this->road_data);
+    player_destroy(&this->player);
 
     for (int i = 0; i < MAX_AI_CARS; i++) {
-        ai_car_destroy(&game->ai_cars[i]);
+        ai_car_destroy(this->ai_cars[i]);
     }
 
     free(this);
@@ -175,18 +181,18 @@ static void playing_draw_internal(GameState *base) {
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE ||
         this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
 
-        road_draw(&game->road_data, &game->player);
+        // road_draw(&this->road_data);
 
-        for (int i = 0; i < game->num_active_ai_cars; ++i) {
-            if (game->ai_cars[i]) {
-                draw_ai_car(game->ai_cars[i], &game->player);
+        for (int i = 0; i < this->num_active_ai_cars; ++i) {
+            if (this->ai_cars[i]) {
+                draw_ai_car(this->ai_cars[i], &this->player);
             }
         }
-        draw_player_car(&game->player);
+        draw_player_car(&this->player);
     }
 
-    /if (game->current_running_state == GAME_SUBSTATE_PAUSED) { /* Draw Pause Menu Overlay */ }
-    else if (game->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
+    if (this->current_running_state == GAME_SUBSTATE_PAUSED) { /* Draw Pause Menu Overlay */ }
+    else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
 }
 
 Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *road_data_file, xpm_map_t *road_xpm, xpm_map_t *finish_xpm) {
@@ -202,16 +208,17 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
     this->base.update_state = playing_update_internal;
     this->base.destroy = playing_destroy_internal;
 
-    this->currentSubstate = GAME_SUBSTATE_LOADING;
+    this->current_running_state = GAME_SUBSTATE_LOADING;
 
     // Initialize Road
-    if (road_load(&this->road_data, &road_data_file, 200, 0x228B22, &road_xpm, &finish_xpm) != 0) {
+    if (road_load(&this->road_data, road_data_file, 200, 0x228B22, (xpm_map_t) road_xpm, (xpm_map_t) finish_xpm) != 0) {
         printf("Failed to load road data\n");
         base_destroy(&this->base);
         free(this);
         return NULL;
     }
 
+    /*
     // Initialize Player
     Point player_start_pos = this->road_data.start_point;
     float player_initial_angle_rad = 0.0f;
@@ -227,7 +234,8 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
         free(this);
         return NULL;
     }
-
+     */
+    /*
     // Initialize AI Cars
     this->num_active_ai_cars = 0;
     for (int i = 0; i < MAX_AI_CARS; i++) {
@@ -248,7 +256,7 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
             ai_difficulty = AI_DIFFICULTY_HARD;
         }
 
-        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, NULL /* car_ai_blue_xpm */, &this->road_data);
+        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, NULL  car_ai_blue_xpm , &this->road_data);
         if (this->ai_cars[i]) {
             this->num_active_ai_cars++;
         } else {
@@ -266,6 +274,7 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
         free(this);
         return NULL;
     }
+    */
 
     // Initialize Game State
     this->current_running_state = GAME_SUBSTATE_COUNTDOWN;

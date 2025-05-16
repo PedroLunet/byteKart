@@ -5,8 +5,8 @@
 #include <stdio.h>
 
 #include "model/game_state.h"
+#include "view/road.h"
 #include "model/player.h"
-#include "model/road.h"
 #include "model/ai_car.h"
 #include "sprite.h"
 #include "macros.h"
@@ -45,12 +45,12 @@ typedef struct Game {
 
 // Public Game Class Methods
 Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *road_data_file, xpm_map_t *road_xpm, xpm_map_t *finish_xpm);
-void game_destroy(Game *this);
-void game_draw(Game *this);
-void game_process_event(Game *this, EventType event);
-void game_update_state(Game *this); // If you have update logic
-GameRunningState game_get_current_substate(Game *this);
-void game_reset_state(Game *this); // If needed
+void playing_destroy(Game *this);
+void playing_draw(Game *this);
+void playing_process_event(Game *this, EventType event);
+void playing_update_state(Game *this);
+GameRunningState playing_get_current_substate(Game *this);
+void playing_reset_state(Game *this);
 
 #endif
 

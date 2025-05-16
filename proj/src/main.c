@@ -136,7 +136,7 @@ int (restore_system)() {
 
     // Destroy the game object
     if (game) {
-        game_destroy(game);
+        playing_destroy(game);
         game = NULL;
     }
 
@@ -227,15 +227,15 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
 
         case GAME:
             if (game == NULL) {
-                game = game_state_create_playing(difficulty, (xpm_map_t) car_xpm, "road1.dat", (xpm_map_t) road_xpm, (xpm_map_t) finish_xpm);
+                game = game_state_create_playing(difficulty, NULL, "tracks/track_1.dat", NULL, NULL);
                 if (!game) {
                     return 1;
                 }
             }
-            game_process_event(game, event);
-            GameSubstate currentGameSubstate = game_get_current_substate(game);
-            if (currentGameSubstate == GAME_FINISHED) {
-                nextState = GAMEOVER;
+            playing_process_event(game, event);
+            GameRunningState currentGameSubstate = playing_get_current_substate(game);
+            if (currentGameSubstate == GAME_STATE_EXITING) {
+                nextState = QUIT;
             } else if (currentGameSubstate == GAME_EXITED) {
                 nextState = QUIT;
             }

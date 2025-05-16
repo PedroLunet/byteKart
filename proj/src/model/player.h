@@ -7,13 +7,15 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "video_card.h"
+#include "../controller/video_card.h"
 #include "geometry.h"
 #include "macros.h"
 #include "sprite.h"
-#include "road.h"
+#include "view/road.h"
 
-typedef struct {
+struct Road_s;
+
+typedef struct Player_s {
 
     Point viewport_world_top_left;
     int view_width;
@@ -35,11 +37,16 @@ typedef struct {
     Point closest_point_on_track;
     Vector track_tangent_at_pos;
 
+    int current_lap;
+    int total_laps;
+    bool just_crossed_finish_this_frame;
+    int last_meaningful_road_segment_idx;
+
     Sprite* sprite;
 
 } Player;
 
-int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road);
+int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road, xpm_image_t *car_sprite_xpm);
 void player_destroy(Player *player);
 void player_update(Player *player, Road *road, bool skid_input, float delta_time);
 void player_handle_turn_input(Player *player, int turn_direction_sign);

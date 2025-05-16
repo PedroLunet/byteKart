@@ -158,14 +158,14 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
     road->end_point = road->center_points[road->num_center_points - 1];
 
     if (road_texture_xpm) {
-        road->road_texture = sprite_create(road_texture_xpm);
+        road->road_texture = sprite_create_xpm(road_texture_xpm, 0, 0, 0, 0);
         if (!road->road_texture) fprintf(stderr, "Warning: Failed to load road texture.\n");
     } else {
         road->road_texture = NULL;
     }
 
     if (finish_line_xpm) {
-        road->finish_line_sprite = sprite_create(finish_line_xpm);
+        road->finish_line_sprite = sprite_create_xpm(finish_line_xpm, 0, 0, 0, 0);
         if (!road->finish_line_sprite) fprintf(stderr, "Warning: Failed to load finish line sprite.\n");
     } else {
         road->finish_line_sprite = NULL;
@@ -338,3 +338,4 @@ bool road_get_centerline_point(Road *road, int point_index, Point *out_point) {
     *out_point = road->center_points[point_index];
     return true;
 }
+

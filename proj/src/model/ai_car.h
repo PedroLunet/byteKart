@@ -7,7 +7,7 @@
 
 #include "geometry.h"
 #include "sprite.h"
-#include "road.h"
+#include "view/road.h"
 #include "player.h"
 
 typedef enum {
@@ -56,11 +56,16 @@ typedef struct {
 
     float speed_modifier_duration_s;
 
+    int current_lap;
+    int total_laps;
+    bool just_crossed_finish_this_frame;
+    int last_meaningful_road_segment_idx;
+
 } AICar;
 
 AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDifficulty difficulty, const char *const *car_sprite_xpm, Road *road);
 void ai_car_destroy(AICar *this);
-void ai_car_update(AICar *this, Road *road, Player *player, AICar other_ai_cars[], int num_other_ai_cars, float delta_time);
+void ai_car_update(AICar *this, Road *road, Player *player, AICar *other_ai_cars[], int num_other_ai_cars, float delta_time);
 void ai_car_apply_speed_effect(AICar *ai, float modifier, float duration_s);
 void ai_car_handle_hard_collision(AICar *ai, float new_speed);
 

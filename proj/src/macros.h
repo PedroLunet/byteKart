@@ -43,6 +43,7 @@ typedef enum {
 #define TRANSPARENT 0xFFFFFE
 
 // Game
+#define MAX_LAPS 3
 #define MAX_AI_CARS 3
 
 #define PLAYER_TURN_INCREMENT_DEG 6.0f
