@@ -245,31 +245,30 @@ bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_ent
     }
 
     int last_known_idx = *p_entity_current_segment_idx;
+    int N_points = road->num_center_points;
 
-    if (last_known_idx < 0) last_known_idx = 0;
-    if (last_known_idx >= road->num_center_points - 1) last_known_idx = road->num_center_points - 2;
+    if (last_known_idx < 0 || last_known_idx >= N_points) {
+        last_known_idx = (last_known_idx % N_points + N_points) % N_points;
+    }
 
     int search_radius = 5;
     int best_found_idx_in_window = -1;
     float min_dist_sq_in_window = -1.0f;
     Point temp_closest_point;
 
-    int start_search_idx = last_known_idx - search_radius;
-    if (start_search_idx < 0) start_search_idx = 0;
+    for (int i = 0; i < (2 * search_radius + 1); ++i) {
+        int offset = i - search_radius;
+        int segment_to_check_idx = (last_known_idx + offset % N_points + N_points) % N_points;
 
-    int end_search_idx = last_known_idx + search_radius;
-    if (end_search_idx >= road->num_center_points - 1) end_search_idx = road->num_center_points - 2;
+        Point seg_a = road->center_points[segment_to_check_idx];
+        Point seg_b = road->center_points[(segment_to_check_idx + 1) % N_points];
 
-    // Local search window
-    for (int i = start_search_idx; i <= end_search_idx; ++i) {
-        Point seg_a = road->center_points[i];
-        Point seg_b = road->center_points[i+1];
         Point current_segment_closest_p;
         float current_dist_sq = dist_sq_point_segment(*entity_world_pos, seg_a, seg_b, &current_segment_closest_p);
 
         if (best_found_idx_in_window == -1 || current_dist_sq < min_dist_sq_in_window) {
             min_dist_sq_in_window = current_dist_sq;
-            best_found_idx_in_window = i;
+            best_found_idx_in_window = segment_to_check_idx;
             if (out_closest_point_on_centerline) {
                 temp_closest_point = current_segment_closest_p;
             }
@@ -283,7 +282,7 @@ bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_ent
         }
 
         Point p1 = road->center_points[best_found_idx_in_window];
-        Point p2 = road->center_points[best_found_idx_in_window+1];
+        Point p2 = road->center_points[(best_found_idx_in_window + 1) % N_points];
         out_tangent->x = p2.x - p1.x;
         out_tangent->y = p2.y - p1.y;
         vector_init(out_tangent, out_tangent->x, out_tangent->y);
@@ -291,7 +290,12 @@ bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_ent
         return true;
     }
 
-    if (out_tangent) { out_tangent->x = 1; out_tangent->y = 0; vector_init(out_tangent, 1,0); vector_normalize(out_tangent); }
+    if (out_tangent) {
+      out_tangent->x = 1;
+      out_tangent->y = 0;
+      vector_init(out_tangent, 1,0);
+      vector_normalize(out_tangent);
+    }
     return false;
 }
 

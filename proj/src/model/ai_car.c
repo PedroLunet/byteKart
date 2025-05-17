@@ -113,41 +113,41 @@ static void ai_car_apply_movement(AICar *ai, float delta_time) {
 }
 
 static void ai_car_check_lap_completion(AICar *ai, Road *road) {
+    if (!ai || !road || road->num_center_points < 2) return;
 
-    if (road->num_center_points < 2) return;
+    int N_segments = road->num_center_points;
 
-    int segment_before_finish;
-    if (road->num_center_points > 1) {
-        segment_before_finish = (road->num_center_points -1 + road->num_center_points -1) % (road->num_center_points -1);
-        if (road->num_center_points == 2) segment_before_finish = 0;
-    } else {
-        segment_before_finish = 0;
-    }
-    if (road->num_center_points == 1) segment_before_finish = 0;
-
-    int prev_idx_for_lap = ai->last_meaningful_road_segment_idx;
-    int curr_idx_for_lap = ai->current_road_segment_idx;
-
-    bool was_near_end_of_lap = (prev_idx_for_lap > (road->num_center_points - 1) * 0.8f) &&
-                               (prev_idx_for_lap < (road->num_center_points - 1));
-    bool is_at_start_of_lap = (curr_idx_for_lap < (road->num_center_points - 1) * 0.2f);
-
-    if (was_near_end_of_lap && is_at_start_of_lap && prev_idx_for_lap > curr_idx_for_lap) {
-        if (!ai->just_crossed_finish_this_frame) {
-            if (ai->current_lap < ai->total_laps) {
-                ai->current_lap++;
-                printf("AI Car %d on Lap: %d / %d\n", ai->id, ai->current_lap, ai->total_laps);
-            } else if (ai->current_lap == ai->total_laps) {
-                printf("AI Car %d has finished the race!\n", ai->id);
-                // Optionally change AI behavior (e.g., slow down, pull over)
-            }
-            ai->just_crossed_finish_this_frame = true;
-        }
-    } else {
+    if (ai->current_road_segment_idx != FINISH_LINE_SEGMENT_IDX && ai->current_road_segment_idx != ((FINISH_LINE_SEGMENT_IDX - 1 + N_segments) % N_segments) ) {
         ai->just_crossed_finish_this_frame = false;
     }
 
-    ai->last_meaningful_road_segment_idx = ai->current_road_segment_idx;
+    if (ai->just_crossed_finish_this_frame) {
+        return;
+    }
+
+    int prev_segment = ai->last_meaningful_road_segment_idx;
+    int curr_segment = ai->current_road_segment_idx;
+
+    int approach_zone_start_idx = (int)(N_segments * LAP_APPROACH_ZONE_PERCENTAGE);
+    int departure_zone_end_idx = (int)(N_segments * LAP_DEPARTURE_ZONE_PERCENTAGE);
+
+    bool was_in_approach = (prev_segment >= approach_zone_start_idx && prev_segment < N_segments);
+    bool is_in_departure = (curr_segment >= FINISH_LINE_SEGMENT_IDX && curr_segment < departure_zone_end_idx);
+
+    if (was_in_approach && is_in_departure && prev_segment > curr_segment) {
+        if (ai->current_lap <= ai->total_laps) {
+            ai->current_lap++;
+            printf("AI Car %d on Lap: %d / %d\n", ai->id, (ai->current_lap > ai->total_laps ? ai->total_laps : ai->current_lap), ai->total_laps);
+        }
+
+        if (ai->current_lap > ai->total_laps) {
+            printf("AI Car %d has finished the race!\n", ai->id);
+            // Optionally change AI behavior (e.g., slow down, change state to AI_STATE_FINISHED_RACE)
+            // ai->base_speed *= 0.5f;
+            // ai->current_behavior_state = AI_STATE_RECOVERING; // Or a new AI_STATE_FINISHED
+        }
+        ai->just_crossed_finish_this_frame = true; // Mark this crossing event
+    }
 }
 
 AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDifficulty difficulty, const char *const *car_sprite_xpm, Road *road) {
@@ -249,8 +249,7 @@ void ai_car_update(AICar *this, Road *road, Player *player, AICar *other_ai_cars
 
     ai_car_update_effects(this, delta_time);
 
-    road_update_entity_on_track(road, &this->world_position, &this->current_road_segment_idx,
-                                &this->track_tangent_at_pos, &this->closest_point_on_track);
+    road_update_entity_on_track(road, &this->world_position, &this->current_road_segment_idx, &this->track_tangent_at_pos, &this->closest_point_on_track);
     ai_car_perceive_track(this, road);
 
     ai_car_decide_steering(this);
@@ -262,6 +261,7 @@ void ai_car_update(AICar *this, Road *road, Player *player, AICar *other_ai_cars
     ai_car_apply_movement(this, delta_time);
 
     ai_car_check_lap_completion(this, road);
+    this->last_meaningful_road_segment_idx = this->current_road_segment_idx;
 }
 
 

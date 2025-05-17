@@ -69,6 +69,7 @@ static void playing_process_event_internal(GameState *base, EventType event) {
 
     if (event == EVENT_TIMER) {
         this->base.update_state(base);
+        this->base.draw(base);
     } else if (event == EVENT_KEYBOARD) {
         switch (scancode) {
             case LEFT_ARROW:
@@ -131,11 +132,10 @@ static void playing_update_internal(GameState *base) {
             // if (assets_loaded()) this->current_running_state = GAME_RUN_STATE_COUNTDOWN;
             break;
         case GAME_SUBSTATE_COUNTDOWN:
-            if (timer_counter % 120 == 0) {
-                printf("Countdown Timer: %d\n", this->timer_count_down);
-                this->timer_count_down--;
+            if (this->timer_count_down > 0.0f) {
+                this->timer_count_down -= delta_time;
             }
-            if (this->timer_count_down == 0) {
+            if (this->timer_count_down <= 0) {
               this->current_running_state = GAME_SUBSTATE_PLAYING;
             }
             break;
@@ -147,8 +147,7 @@ static void playing_update_internal(GameState *base) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
                     if (timer_counter % 60 == 0) {
-                        printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id,
-                               (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
+                        printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
                     }
                 }
             }
@@ -201,6 +200,15 @@ static void playing_draw_internal(GameState *base) {
             }
         }
         draw_player_car(&this->player);
+    }
+
+    if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
+        int count = (int)this->timer_count_down;
+        if (count > 0 && count <= 3) {
+            printf("Countdown: %d\n", count);
+        } else if (count <= 0) {
+            printf("GO!\n");
+        }
     }
 
     if (this->current_running_state == GAME_SUBSTATE_PAUSED) { /* Draw Pause Menu Overlay */ }
@@ -292,7 +300,7 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
     this->current_lap = 0;
     this->pause_requested = false;
 
-    this->timer_count_down = 3;
+    this->timer_count_down = 3.99f;
 
     return this;
 }
