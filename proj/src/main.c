@@ -102,6 +102,13 @@ int (initial_setup)() {
         return 1;
     }
 
+    // Initialize the game
+    game = game_create();
+    if (!game) {
+        game_destroy(game);
+        return 1;
+    }
+
     current_state = MENU;
     running = true;
 
@@ -208,7 +215,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             CarSelection chosenCar = select_car_get_chosen_level(selectCar);
             if (chosenCar == CAR_SELECTED) {
                 int carIndex = select_car_get_selected_option(selectCar);
-                if (carIndex == 10) {
+                if (carIndex == 4) {
                     select_car_reset_state(selectCar);
                     select_difficulty_reset_state(selectDifficulty);
 				    nextState = SELECT_DIFFICULTY;
@@ -242,6 +249,16 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             break;
 
         /*
+
+        case LEADERBOARD:
+            leaderboard_process_event(leaderboard, event);
+            LeaderboardSubState currentLeaderboardSubState = leaderboard_get_current_substate(leaderboard);
+            if (currentLeaderboardSubState == LEADERBOARD_MENU) {
+                // mostrar recordes
+            } else if (currentLeaderboardSubState == ???? ) {
+                // voltar ao menu inicial
+            }
+            break;
 
         case GAMEOVER:
             gameover_process_event(gameOver, event);

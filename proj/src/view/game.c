@@ -1,4 +1,5 @@
 #include <lcom/lcf.h>
+
 #include "game.h"
 
 extern vbe_mode_info_t vbe_mode_info;
@@ -57,6 +58,44 @@ static void draw_ai_car(AICar *ai, const Player *player_camera_view) {
     }
 }
 
+static void playing_draw_internal(GameState *base) {
+    Game *this = (Game *)base;
+
+    draw_road_background(this->road_sprite1, this->road_sprite2, this->road_y1, this->road_y2);
+
+    if (this->playerCar.car_sprite) {
+        sprite_draw_xpm(this->playerCar.car_sprite, this->playerCar.x, this->playerCar.y, true);
+    }
+
+    if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
+
+    if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
+        this->current_running_state == GAME_SUBSTATE_FINISHED_RACE ||
+        this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
+
+        // road_draw(&this->road_data);
+
+        for (int i = 0; i < this->num_active_ai_cars; ++i) {
+            if (this->ai_cars[i]) {
+                draw_ai_car(this->ai_cars[i], &this->player);
+            }
+        }
+        draw_player_car(&this->player);
+    }
+
+    if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
+        int count = (int)this->timer_count_down;
+        if (count > 0 && count <= 3) {
+            printf("Countdown: %d\n", count);
+        } else if (count <= 0) {
+            printf("GO!\n");
+        }
+    }
+
+    if (this->current_running_state == GAME_SUBSTATE_PAUSED) { /* Draw Pause Menu Overlay */ }
+    else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
+}
+
 static void playing_process_event_internal(GameState *base, EventType event) {
     Game *this = (Game *)base;
     if (!this) return;
@@ -74,6 +113,9 @@ static void playing_process_event_internal(GameState *base, EventType event) {
         switch (scancode) {
             case LEFT_ARROW:
               this->player_turn_input_sign = -1;
+              if (this->playerCar.x > 0) {
+                car_move_left(&this->playerCar, LEFT_BOUNDARY, STEP);
+              }
             break;
             case LEFT_ARROW_BREAK:
               if (this->player_turn_input_sign == -1) {
@@ -82,6 +124,9 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             break;
             case RIGHT_ARROW:
               this->player_turn_input_sign = 1;
+              if (this->playerCar.x > 0) {
+                 car_move_right(&this->playerCar, RIGHT_BOUNDARY, STEP);
+              }
             break;
             case RIGHT_ARROW_BREAK:
               if (this->player_turn_input_sign == 1) {
@@ -110,6 +155,7 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             default:
                 break;
         }
+        base->draw(base);
     } else if (event == EVENT_MOUSE) {
         if (this->current_running_state == GAME_SUBSTATE_PAUSED || this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
           /*
@@ -117,6 +163,7 @@ static void playing_process_event_internal(GameState *base, EventType event) {
                 this->chosenLevel = DIFFICULTY_SELECTED;
             }
            */
+          base->draw(base);
         }
     }
 }
@@ -124,6 +171,15 @@ static void playing_process_event_internal(GameState *base, EventType event) {
 static void playing_update_internal(GameState *base) {
     Game *this = (Game *)base;
     if (!this) return;
+
+    this->road_y1 += 2;
+    this->road_y2 += 2;
+
+    if (this->road_y1 >= (int)vbe_mode_info.YResolution)
+        this->road_y1 = -this->road_sprite1->height;
+
+    if (this->road_y2 >= (int)vbe_mode_info.YResolution)
+        this->road_y2 = -this->road_sprite2->height;
 
     float delta_time = 1.0f / 60.0f;
 
@@ -166,12 +222,15 @@ static void playing_update_internal(GameState *base) {
             // Cleanup and exit logic
             break;
     }
-
 }
 
 static void playing_destroy_internal(GameState *base) {
     Game *this = (Game *)base;
     if (!this) return;
+
+    sprite_destroy(this->playerCar.car_sprite);
+    sprite_destroy(this->road_sprite1);
+    sprite_destroy(this->road_sprite2);
 
     road_destroy(&this->road_data);
     player_destroy(&this->player);
@@ -181,41 +240,10 @@ static void playing_destroy_internal(GameState *base) {
     }
 
     free(this);
+    free(base);
 }
 
-static void playing_draw_internal(GameState *base) {
-    Game *this = (Game *)base;
-
-    if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
-
-    if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
-        this->current_running_state == GAME_SUBSTATE_FINISHED_RACE ||
-        this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
-
-        // road_draw(&this->road_data);
-
-        for (int i = 0; i < this->num_active_ai_cars; ++i) {
-            if (this->ai_cars[i]) {
-                draw_ai_car(this->ai_cars[i], &this->player);
-            }
-        }
-        draw_player_car(&this->player);
-    }
-
-    if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
-        int count = (int)this->timer_count_down;
-        if (count > 0 && count <= 3) {
-            printf("Countdown: %d\n", count);
-        } else if (count <= 0) {
-            printf("GO!\n");
-        }
-    }
-
-    if (this->current_running_state == GAME_SUBSTATE_PAUSED) { /* Draw Pause Menu Overlay */ }
-    else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
-}
-
-Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *road_data_file, xpm_map_t *road_xpm, xpm_map_t *finish_xpm) {
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, xpm_map_t *road_xpm, xpm_map_t *finish_xpm) {
     Game *this = (Game *) malloc(sizeof(Game));
     if (this == NULL) {
         return NULL;
@@ -229,6 +257,31 @@ Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *roa
     this->base.destroy = playing_destroy_internal;
 
     this->current_running_state = GAME_SUBSTATE_LOADING;
+
+    this->playerCar.x = vbe_mode_info.XResolution / 2 - 30;
+    this->playerCar.y = vbe_mode_info.YResolution - 100;
+    this->playerCar.speed = 5;
+
+    xpm_map_t car_xpms[4] = { (xpm_map_t)pink_car_xpm, (xpm_map_t)red_car_xpm,
+                              (xpm_map_t)orange_car_xpm, (xpm_map_t)blue_car_xpm };
+    this->playerCar.car_sprite = sprite_create_xpm(car_xpms[car_choice], 0, 0, 0, 0);
+    if (!this->playerCar.car_sprite) {
+        free(this);
+        return NULL;
+    }
+
+    this->road_sprite1 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
+    this->road_sprite2 = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
+    if (!this->road_sprite1 || !this->road_sprite2) {
+        sprite_destroy(this->playerCar.car_sprite);
+        if (this->road_sprite1) sprite_destroy(this->road_sprite1);
+        if (this->road_sprite2) sprite_destroy(this->road_sprite2);
+        free(this);
+        return NULL;
+    }
+
+    this->road_y1 = 0;
+    this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
     if (road_load(&this->road_data, road_data_file, 200, 0x228B22, (xpm_map_t) road_xpm, (xpm_map_t) finish_xpm) != 0) {
@@ -327,5 +380,6 @@ GameRunningState playing_get_current_substate(Game *this) {
 
 void playing_reset_state(Game *this) {
     this->current_running_state = GAME_SUBSTATE_LOADING;
+    cleanup_road_background();
 }
 

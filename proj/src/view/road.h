@@ -31,7 +31,7 @@ typedef struct Road_s {
     Point end_point;
 } Road;
 
-void draw_road_background();
+void draw_road_background(Sprite *road_sprite1, Sprite *road_sprite2, int road_y1, int road_y2);
 void cleanup_road_background();
 
 int road_calculate_edge_points(Road *road);

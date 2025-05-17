@@ -62,12 +62,12 @@ void init_base_game_state(GameState *state) {
     state->prev_mouse_x = state->mouse_x;
     state->prev_mouse_y = state->mouse_y;
 
-    state->draw = NULL; // To be overridden
-    state->process_event = NULL; // To be overridden
-    state->update_state = NULL; // To be overridden
+    state->draw = NULL; 
+    state->process_event = NULL; 
+    state->update_state = NULL; 
     state->destroy = base_destroy;
     state->handle_mouse_input = base_handle_mouse_input;
-    state->is_mouse_over = NULL; // To be overridden if needed
+    state->is_mouse_over = NULL; 
     state->update_mouse_position = base_update_mouse_position;
     state->draw_mouse = base_draw_mouse;
     state->clear_mouse_area = NULL;

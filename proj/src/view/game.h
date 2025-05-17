@@ -11,6 +11,8 @@
 #include "sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
+#include "road.h"
+#include "car.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,
@@ -31,12 +33,10 @@ typedef struct Game {
     AICar* ai_cars[MAX_AI_CARS];
     int num_active_ai_cars;
 
-    // Game specific logic variables
     int current_lap;
     float race_timer_s;
     bool race_started;
 
-    // Input state
     bool player_skid_input_active;
     int player_turn_input_sign; // -1 for left, 0 for none, 1 for right
     bool pause_requested;

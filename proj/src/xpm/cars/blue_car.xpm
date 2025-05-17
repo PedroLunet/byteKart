@@ -235,7 +235,7 @@ static char *blue_car_xpm[] = {
 "lX c #ABE6ED",
 "zX c #A6D9D5",
 "xX c #DCDCDC",
-"cX c gray84",
+"cX c #C4C8C8",
 "vX c #C4C8C9",
 "bX c #F3F7D5",
 "nX c #CAFAFC",
