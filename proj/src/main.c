@@ -102,13 +102,6 @@ int (initial_setup)() {
         return 1;
     }
 
-    // Initialize the game
-    game = game_create();
-    if (!game) {
-        game_destroy(game);
-        return 1;
-    }
-
     current_state = MENU;
     running = true;
 

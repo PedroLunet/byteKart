@@ -43,10 +43,17 @@ typedef struct Game {
 
     float timer_count_down;
 
+    Car playerCar;
+    Sprite *road_sprite1;
+    Sprite *road_sprite2;
+    int road_y1;
+    int road_y2;
+
+
 } Game;
 
 // Public Game Class Methods
-Game *game_state_create_playing(int difficulty, xpm_map_t *player_xpm, char *road_data_file, xpm_map_t *road_xpm, xpm_map_t *finish_xpm);
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, xpm_map_t *var_road_xpm, xpm_map_t *var_finish_xpm);
 void playing_destroy(Game *this);
 void playing_draw(Game *this);
 void playing_process_event(Game *this, EventType event);

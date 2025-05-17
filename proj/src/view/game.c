@@ -243,7 +243,7 @@ static void playing_destroy_internal(GameState *base) {
     free(base);
 }
 
-Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, xpm_map_t *road_xpm, xpm_map_t *finish_xpm) {
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, xpm_map_t *var_road_xpm, xpm_map_t *var_finish_xpm) {
     Game *this = (Game *) malloc(sizeof(Game));
     if (this == NULL) {
         return NULL;
@@ -284,7 +284,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
-    if (road_load(&this->road_data, road_data_file, 200, 0x228B22, (xpm_map_t) road_xpm, (xpm_map_t) finish_xpm) != 0) {
+    if (road_load(&this->road_data, road_data_file, 200, 0x228B22, (xpm_map_t) var_road_xpm, (xpm_map_t) var_finish_xpm) != 0) {
         printf("Failed to load road data\n");
         base_destroy(&this->base);
         free(this);
@@ -299,7 +299,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
                                          this->road_data.center_points[1].x - this->road_data.center_points[0].x);
     }
 
-    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, player_xpm) != 0) {
+    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, car_xpms[car_choice]) != 0) {
         printf("Failed to initialize player\n");
         road_destroy(&this->road_data);
         base_destroy(&this->base);
