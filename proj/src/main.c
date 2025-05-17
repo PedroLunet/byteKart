@@ -15,8 +15,9 @@ Menu *mainMenu = NULL;
 SelectDifficulty *selectDifficulty = NULL;
 SelectCar *selectCar = NULL;
 Game *game = NULL;
-//GameOver *gameOver = NULL;
 
+int difficulty = 0;
+int selectedCar = 0;
 
 static MainState current_state;
 bool running;
@@ -135,7 +136,7 @@ int (restore_system)() {
 
     // Destroy the game object
     if (game) {
-        game_destroy(game);
+        playing_destroy(game);
         game = NULL;
     }
 
@@ -194,7 +195,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                     select_difficulty_reset_state(selectDifficulty);
                     nextState = MENU;
                 } else {
-                    // game_set_difficulty(game, difficultyIndex);
+                    difficulty = difficultyIndex;
                     nextState = SELECT_CAR;
                 }
             } else if (chosenLevel == DIFFICULTY_EXITED) {
@@ -212,29 +213,29 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                     select_difficulty_reset_state(selectDifficulty);
 				    nextState = SELECT_DIFFICULTY;
                 } else {
-                    if (game) {
-                        game_destroy(game);
-                        game = NULL;
-                    }
-                    game = game_create(carIndex);
-                    if (!game) {
-                        //printf("Error creating game.\n");
-                        nextState = QUIT;
-                    } else {
-                        //printf("Car chosen and game created successfully.\n");
-                        nextState = GAME;
-                    }
+                    selectedCar = carIndex;
+                    nextState = GAME;
                 }
             } else if (chosenCar == CAR_EXITED) {
                 nextState = QUIT;
             }
             break;
 
+        case SELECT_TRACK:
+            // Handle track selection
+            break;
+
         case GAME:
-            game_process_event(game, event);
-            GameSubstate currentGameSubstate = game_get_current_substate(game);
-            if (currentGameSubstate == GAME_FINISHED) {
-                nextState = GAMEOVER;
+            if (game == NULL) {
+                game = game_state_create_playing(difficulty, NULL, TRACK_1_FILENAME, NULL, NULL);
+                if (!game) {
+                    return 1;
+                }
+            }
+            playing_process_event(game, event);
+            GameRunningState currentGameSubstate = playing_get_current_substate(game);
+            if (currentGameSubstate == GAME_STATE_EXITING) {
+                nextState = QUIT;
             } else if (currentGameSubstate == GAME_EXITED) {
                 nextState = QUIT;
             }
@@ -303,6 +304,7 @@ int (proj_main_loop)(int argc, char *argv[]) {
                 case HARDWARE:
 
                     if (msg.m_notify.interrupts & irq_set_timer) {
+                        timer_int_handler();
                         pendingEvent = EVENT_TIMER;
                     }
 
@@ -328,10 +330,6 @@ int (proj_main_loop)(int argc, char *argv[]) {
         }
 
         if (pendingEvent == EVENT_TIMER) {
-            if (current_state == GAME && game){
-                game_update_state(game);
-                game_draw(game);
-            }
             if (swap_buffers() != 0) {
                 printf("Error swapping buffers.\n");
                 return 1;
