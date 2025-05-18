@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "sprite.h"
+#include "sprites/sprite.h"
 #include "model/geometry.h"
 #include "xpm/xpm_files.h"
 

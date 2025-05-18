@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "../sprite.h"
-#include "../fonts/font.h"
+#include "../../sprites/sprite.h"
+#include "../../fonts/font.h"
 #include "text_renderer.h"
-#include "../controller/video_card.h"
+#include "../../controller/video_card.h"
 
 typedef struct UIComponent UIComponent;
 

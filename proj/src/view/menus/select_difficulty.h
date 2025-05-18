@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #include "model/game_state.h"
-#include "view/ui.h"
+#include "view/utils/ui.h"
 #include "macros.h"
 #include "controller/video_card.h"
 #include "controller/mouse.h"

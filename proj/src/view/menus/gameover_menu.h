@@ -3,15 +3,15 @@
 
 #include <stdint.h>
 #include "model/game_state.h"
-#include "sprite.h"
+#include "sprites/sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
 #include "macros.h"
 #include "controller/video_card.h"
 #include "controller/mouse.h"
 #include "fonts/font.h"
-#include "view/ui.h"
-#include "view/ui_utils.h"
+#include "view/utils/ui.h"
+#include "view/utils/ui_utils.h"
 
 typedef enum {
   GAMEOVER_MENU,

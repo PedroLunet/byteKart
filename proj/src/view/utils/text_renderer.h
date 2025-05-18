@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #include <stdbool.h>
-#include "../fonts/font.h"
-#include "../sprite.h"
+#include "../../fonts/font.h"
+#include "../../sprites/sprite.h"
 #include "controller/video_card.h"
 
 

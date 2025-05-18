@@ -1,10 +1,5 @@
 #include <lcom/lcf.h>
 #include "font.h"
-#include "sprite.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 char *get_token(char *line, int index, char delimiter) {
     char *token = NULL;

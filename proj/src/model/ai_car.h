@@ -6,8 +6,8 @@
 #include <stdio.h>
 
 #include "geometry.h"
-#include "sprite.h"
-#include "view/road.h"
+#include "sprites/sprite.h"
+#include "view/game/road.h"
 #include "player.h"
 
 typedef enum {

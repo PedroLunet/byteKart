@@ -10,8 +10,8 @@
 #include "../controller/video_card.h"
 #include "geometry.h"
 #include "macros.h"
-#include "sprite.h"
-#include "view/road.h"
+#include "sprites/sprite.h"
+#include "view/game/road.h"
 
 struct Road_s;
 
