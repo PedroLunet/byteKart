@@ -1,8 +1,5 @@
 #include <lcom/lcf.h>
 
-#include <stdint.h>
-#include <stdio.h>
-
 #include "main.h"
 
 extern vbe_mode_info_t vbe_mode_info;

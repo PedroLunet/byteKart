@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "controller/video_card.h"
+#include "macros.h"
 
 typedef struct {
     uint32_t *map;

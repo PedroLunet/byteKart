@@ -2,6 +2,9 @@
 #define MAIN_H
 
 #include <stdint.h>
+
+#include <stdint.h>
+#include <stdio.h>
 #include <stdio.h>
 
 #include "controller/video_card.h"

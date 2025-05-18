@@ -1,6 +1,5 @@
 #include <lcom/lcf.h>
 #include "sprite.h"
-#include "macros.h"
 
 Sprite *sprite_create_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed) {
     Sprite *this = (Sprite *)malloc(sizeof(Sprite));
