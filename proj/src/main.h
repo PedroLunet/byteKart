@@ -23,6 +23,7 @@
 #include "view/menus/select_difficulty.h"
 #include "view/menus/select_car.h"
 #include "view/game/game.h"
+#include "view/menus/pause_menu.h"
 
 #include "view/menus/gameover_menu.h"
 

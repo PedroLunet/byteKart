@@ -11,7 +11,7 @@ PROG=proj
 
 
 
-SRCS = main.c sprite.c font.c text_renderer.c timer.c utils.c video_card.c kbc.c anim_sprite.c mouse.c ui.c game_state.c menu.c select_difficulty.c select_car.c geometry.c player.c ai_car.c game.c road.c gameover_menu.c car.c ui_utils.c
+SRCS = main.c sprite.c font.c text_renderer.c timer.c utils.c video_card.c kbc.c anim_sprite.c mouse.c ui.c game_state.c menu.c select_difficulty.c select_car.c geometry.c player.c ai_car.c game.c road.c gameover_menu.c car.c ui_utils.c pause_menu.c
 CFLAGS += -pedantic -D_LCOM_OPTIMIZED_ -O2
 
 DPADD += ${LIBLCF}

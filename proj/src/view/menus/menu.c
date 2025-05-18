@@ -48,7 +48,6 @@ static void menu_process(GameState *base, EventType event) {
             }
         }
     }
-
      if (this->selectedOption != prevSelected) {
         base->draw(base);
     }

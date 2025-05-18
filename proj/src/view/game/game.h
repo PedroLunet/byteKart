@@ -13,6 +13,7 @@
 #include "xpm/xpm_files.h"
 #include "road.h"
 #include "car.h"
+#include "view/menus/pause_menu.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,
