@@ -175,15 +175,6 @@ static void playing_update_internal(GameState *base) {
     Game *this = (Game *)base;
     if (!this) return;
 
-    this->road_y1 += 2;
-    this->road_y2 += 2;
-
-    if (this->road_y1 >= (int)vbe_mode_info.YResolution)
-        this->road_y1 = -this->road_sprite1->height;
-
-    if (this->road_y2 >= (int)vbe_mode_info.YResolution)
-        this->road_y2 = -this->road_sprite2->height;
-
     float delta_time = 1.0f / 60.0f;
 
     switch(this->current_running_state) {
@@ -225,7 +216,11 @@ static void playing_update_internal(GameState *base) {
                             text_data->width = temp_x;
                             text_data->height = max_height;
                         }
-                        text_data->pixel_data = malloc(text_data->width * text_data->height * sizeof(uint32_t));
+                        if (load_text(text_data->text, 0, 0, text_data->color, text_data->font, text_data->pixel_data, text_data->width) != 0) {
+                            fprintf(stderr, "Error loading countdown text: %s\n", text_data->text);
+                        }
+                        countdownTextComponent->x = vbe_mode_info.XResolution / 2 - text_data->width / 2;
+                        countdownTextComponent->y = vbe_mode_info.YResolution / 2 - text_data->height / 2;
                     }
                 }
             }
@@ -238,6 +233,15 @@ static void playing_update_internal(GameState *base) {
             }
             break;
         case GAME_SUBSTATE_PLAYING:
+            this->road_y1 += 2;
+            this->road_y2 += 2;
+
+            if (this->road_y1 >= (int)vbe_mode_info.YResolution)
+                this->road_y1 = -this->road_sprite1->height;
+
+            if (this->road_y2 >= (int)vbe_mode_info.YResolution)
+                this->road_y2 = -this->road_sprite2->height;
+
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
             player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
 
@@ -402,15 +406,14 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
 
     this->timer_count_down = 3.99f;
 
-    if (gameFont) {
-        countdownTextComponent = create_text_component("3", gameFont, 0xFFFFFF); 
-        if (countdownTextComponent && countdownTextComponent->data) {
-            TextElementData *data = (TextElementData *)countdownTextComponent->data;
-            countdownTextComponent->x = vbe_mode_info.XResolution / 2 - data->width / 2;
-            countdownTextComponent->y = vbe_mode_info.YResolution / 2 - data->height / 2;
-        }
-    }
 
+    countdownTextComponent = create_text_component("3", gameFont, 0xFFFFFF); 
+    if (countdownTextComponent && countdownTextComponent->data) {
+        TextElementData *data = (TextElementData *)countdownTextComponent->data;
+        countdownTextComponent->x = vbe_mode_info.XResolution / 2 - data->width / 2;
+        countdownTextComponent->y = vbe_mode_info.YResolution / 2 - data->height / 2;
+    }
+    
     return this;
 }
 
