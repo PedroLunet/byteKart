@@ -171,6 +171,58 @@ static void playing_process_event_internal(GameState *base, EventType event) {
     }
 }
 
+static void update_countdown(Game *this, float delta_time) {
+    if (this->timer_count_down > 0.0f) {
+        this->timer_count_down -= delta_time;
+        if (countdownTextComponent) {
+            char countdown_str[5];
+            int count = (int)this->timer_count_down;
+            if (count > 0 && count <= 3) {
+                sprintf(countdown_str, "%d", count);
+            } else if (count <= 0) {
+                sprintf(countdown_str, "GO!");
+            } else {
+                countdown_str[0] = '\0';
+            }
+            TextElementData *text_data = (TextElementData *)countdownTextComponent->data;
+            if (text_data && strcmp(text_data->text, countdown_str) != 0) {
+                free(text_data->text);
+                text_data->text = strdup(countdown_str);
+                free(text_data->pixel_data);
+                text_data->width = 0;
+                text_data->height = 0;
+                if (text_data->text && text_data->font) {
+                    int temp_x = 0;
+                    int max_height = 0;
+                    for (int i = 0; text_data->text[i] != '\0'; i++) {
+                        GlyphData glyphData;
+                        if (font_get_glyph_data(text_data->font, text_data->text[i], &glyphData)) {
+                            temp_x += glyphData.xadvance;
+                            if (glyphData.height > max_height) {
+                                max_height = glyphData.height;
+                            }
+                        }
+                    }
+                    text_data->width = temp_x;
+                    text_data->height = max_height;
+                }
+                if (load_text(text_data->text, 0, 0, text_data->color, text_data->font, text_data->pixel_data, text_data->width) != 0) {
+                    fprintf(stderr, "Error loading countdown text: %s\n", text_data->text);
+                }
+                countdownTextComponent->x = vbe_mode_info.XResolution / 2 - text_data->width / 2;
+                countdownTextComponent->y = vbe_mode_info.YResolution / 2 - text_data->height / 2;
+            }
+        }
+    }
+    if (this->timer_count_down <= 0) {
+        this->current_running_state = GAME_SUBSTATE_PLAYING;
+        if (countdownTextComponent) {
+            destroy_ui_component(countdownTextComponent);
+            countdownTextComponent = NULL;
+        }
+    }
+}
+
 static void playing_update_internal(GameState *base) {
     Game *this = (Game *)base;
     if (!this) return;
@@ -182,55 +234,7 @@ static void playing_update_internal(GameState *base) {
             // if (assets_loaded()) this->current_running_state = GAME_RUN_STATE_COUNTDOWN;
             break;
         case GAME_SUBSTATE_COUNTDOWN:
-            if (this->timer_count_down > 0.0f) {
-                this->timer_count_down -= delta_time;
-                if (countdownTextComponent) {
-                    char countdown_str[5];
-                    int count = (int)this->timer_count_down;
-                    if (count > 0 && count <= 3) {
-                        sprintf(countdown_str, "%d", count);
-                    } else if (count <= 0) {
-                        sprintf(countdown_str, "GO!");
-                    } else {
-                        countdown_str[0] = '\0';
-                    }
-                    TextElementData *text_data = (TextElementData *)countdownTextComponent->data;
-                    if (text_data && strcmp(text_data->text, countdown_str) != 0) {
-                        free(text_data->text);
-                        text_data->text = strdup(countdown_str);
-                        free(text_data->pixel_data);
-                        text_data->width = 0;
-                        text_data->height = 0;
-                        if (text_data->text && text_data->font) {
-                            int temp_x = 0;
-                            int max_height = 0;
-                            for (int i = 0; text_data->text[i] != '\0'; i++) {
-                                GlyphData glyphData;
-                                if (font_get_glyph_data(text_data->font, text_data->text[i], &glyphData)) {
-                                    temp_x += glyphData.xadvance;
-                                    if (glyphData.height > max_height) {
-                                        max_height = glyphData.height;
-                                    }
-                                }
-                            }
-                            text_data->width = temp_x;
-                            text_data->height = max_height;
-                        }
-                        if (load_text(text_data->text, 0, 0, text_data->color, text_data->font, text_data->pixel_data, text_data->width) != 0) {
-                            fprintf(stderr, "Error loading countdown text: %s\n", text_data->text);
-                        }
-                        countdownTextComponent->x = vbe_mode_info.XResolution / 2 - text_data->width / 2;
-                        countdownTextComponent->y = vbe_mode_info.YResolution / 2 - text_data->height / 2;
-                    }
-                }
-            }
-            if (this->timer_count_down <= 0) {
-                this->current_running_state = GAME_SUBSTATE_PLAYING;
-                if (countdownTextComponent) {
-                    destroy_ui_component(countdownTextComponent);
-                    countdownTextComponent = NULL;
-                }
-            }
+            update_countdown(this, delta_time);
             break;
         case GAME_SUBSTATE_PLAYING:
             this->road_y1 += 2;
