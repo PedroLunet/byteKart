@@ -228,6 +228,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 if (!game) {
                     return 1;
                 }
+                playing_draw(game);
             }
             playing_process_event(game, event);
             GameRunningState currentGameSubstate = playing_get_current_substate(game);

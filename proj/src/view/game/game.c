@@ -5,6 +5,8 @@
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
 extern int timer_counter;
+static UIComponent *countdownTextComponent = NULL;
+extern Font *gameFont;
 
 static void transform_world_to_screen(const Player *player_camera_view, Point world_p, Point *screen_p) {
     if (!player_camera_view || !screen_p) return;
@@ -61,18 +63,18 @@ static void draw_ai_car(AICar *ai, const Player *player_camera_view) {
 static void playing_draw_internal(GameState *base) {
     Game *this = (Game *)base;
 
-    draw_road_background(this->road_sprite1, this->road_sprite2, this->road_y1, this->road_y2);
-
-    if (this->playerCar.car_sprite) {
-        sprite_draw_xpm(this->playerCar.car_sprite, this->playerCar.x, this->playerCar.y, true);
-    }
-
     if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
 
     if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE ||
         this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
+        
+        draw_road_background(this->road_sprite1, this->road_sprite2, this->road_y1, this->road_y2);
 
+    }
+
+    if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
+        this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
         // road_draw(&this->road_data);
 
         for (int i = 0; i < this->num_active_ai_cars; ++i) {
@@ -83,7 +85,8 @@ static void playing_draw_internal(GameState *base) {
         draw_player_car(&this->player);
     }
 
-    if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
+    if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN && countdownTextComponent) {
+        draw_ui_component(countdownTextComponent);
         int count = (int)this->timer_count_down;
         if (count > 0 && count <= 3) {
             printf("Countdown: %d\n", count);
@@ -190,9 +193,48 @@ static void playing_update_internal(GameState *base) {
         case GAME_SUBSTATE_COUNTDOWN:
             if (this->timer_count_down > 0.0f) {
                 this->timer_count_down -= delta_time;
+                if (countdownTextComponent) {
+                    char countdown_str[5];
+                    int count = (int)this->timer_count_down;
+                    if (count > 0 && count <= 3) {
+                        sprintf(countdown_str, "%d", count);
+                    } else if (count <= 0) {
+                        sprintf(countdown_str, "GO!");
+                    } else {
+                        countdown_str[0] = '\0';
+                    }
+                    TextElementData *text_data = (TextElementData *)countdownTextComponent->data;
+                    if (text_data && strcmp(text_data->text, countdown_str) != 0) {
+                        free(text_data->text);
+                        text_data->text = strdup(countdown_str);
+                        free(text_data->pixel_data);
+                        text_data->width = 0;
+                        text_data->height = 0;
+                        if (text_data->text && text_data->font) {
+                            int temp_x = 0;
+                            int max_height = 0;
+                            for (int i = 0; text_data->text[i] != '\0'; i++) {
+                                GlyphData glyphData;
+                                if (font_get_glyph_data(text_data->font, text_data->text[i], &glyphData)) {
+                                    temp_x += glyphData.xadvance;
+                                    if (glyphData.height > max_height) {
+                                        max_height = glyphData.height;
+                                    }
+                                }
+                            }
+                            text_data->width = temp_x;
+                            text_data->height = max_height;
+                        }
+                        text_data->pixel_data = malloc(text_data->width * text_data->height * sizeof(uint32_t));
+                    }
+                }
             }
             if (this->timer_count_down <= 0) {
-              this->current_running_state = GAME_SUBSTATE_PLAYING;
+                this->current_running_state = GAME_SUBSTATE_PLAYING;
+                if (countdownTextComponent) {
+                    destroy_ui_component(countdownTextComponent);
+                    countdownTextComponent = NULL;
+                }
             }
             break;
         case GAME_SUBSTATE_PLAYING:
@@ -237,6 +279,11 @@ static void playing_destroy_internal(GameState *base) {
 
     for (int i = 0; i < MAX_AI_CARS; i++) {
         ai_car_destroy(this->ai_cars[i]);
+    }
+
+    if (countdownTextComponent) {
+        destroy_ui_component(countdownTextComponent);
+        countdownTextComponent = NULL;
     }
 
     free(this);
@@ -354,6 +401,15 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->pause_requested = false;
 
     this->timer_count_down = 3.99f;
+
+    if (gameFont) {
+        countdownTextComponent = create_text_component("3", gameFont, 0xFFFFFF); 
+        if (countdownTextComponent && countdownTextComponent->data) {
+            TextElementData *data = (TextElementData *)countdownTextComponent->data;
+            countdownTextComponent->x = vbe_mode_info.XResolution / 2 - data->width / 2;
+            countdownTextComponent->y = vbe_mode_info.YResolution / 2 - data->height / 2;
+        }
+    }
 
     return this;
 }
