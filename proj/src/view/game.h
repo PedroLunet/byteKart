@@ -8,6 +8,7 @@
 #include "view/road.h"
 #include "model/player.h"
 #include "model/ai_car.h"
+#include "view/renderer.h"
 #include "sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
@@ -34,6 +35,7 @@ typedef struct Game {
     int num_active_ai_cars;
 
     int current_lap;
+    int total_laps;
     float race_timer_s;
     bool race_started;
 
