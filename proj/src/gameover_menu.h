@@ -11,6 +11,7 @@
 #include "controller/mouse.h"
 #include "fonts/font.h"
 #include "view/ui.h"
+#include "view/ui_utils.h"
 
 typedef enum {
   GAMEOVER_MENU,
