@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #include "model/game_state.h"
-#include "view/road.h"
+#include "road.h"
 #include "model/player.h"
 #include "model/ai_car.h"
 #include "sprite.h"

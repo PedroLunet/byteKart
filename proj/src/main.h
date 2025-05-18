@@ -19,12 +19,12 @@
 #include "xpm/xpm_files.h"
 
 #include "model/game_state.h"
-#include "menu.h"
-#include "view/select_difficulty.h"
-#include "view/select_car.h"
-#include "view/game.h"
+#include "view/menus/menu.h"
+#include "view/menus/select_difficulty.h"
+#include "view/menus/select_car.h"
+#include "view/game/game.h"
 
-#include "gameover_menu.h"
+#include "view/menus/gameover_menu.h"
 
 typedef enum {
   MENU,
