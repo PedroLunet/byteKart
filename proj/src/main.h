@@ -13,7 +13,7 @@
 #include "controller/kbc.h"
 #include "controller/mouse.h"
 #include "lcom/timer.h"
-#include "sprite.h"
+#include "sprites/sprite.h"
 #include "macros.h"
 #include "fonts/font.h"
 #include "xpm/xpm_files.h"

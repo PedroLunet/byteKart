@@ -2,7 +2,7 @@
 #define CAR_H
 
 #include "macros.h"
-#include "sprite.h"
+#include "sprites/sprite.h"
 
 #define STEP 10
 

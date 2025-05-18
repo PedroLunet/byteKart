@@ -1,9 +1,12 @@
 #ifndef FONT_H_
 #define FONT_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "sprite.h"
+#include "sprites/sprite.h"
 #include "macros.h"
 
 typedef struct GlyphData {

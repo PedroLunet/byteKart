@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "macros.h"
-#include "sprite.h"
+#include "sprites/sprite.h"
 
 struct GameState;
 

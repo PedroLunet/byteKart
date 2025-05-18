@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 #include "../../fonts/font.h"
-#include "../../sprite.h"
+#include "../../sprites/sprite.h"
 #include "controller/video_card.h"
 
 

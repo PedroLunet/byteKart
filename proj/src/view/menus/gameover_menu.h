@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "model/game_state.h"
-#include "sprite.h"
+#include "sprites/sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
 #include "macros.h"

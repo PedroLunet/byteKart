@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include "geometry.h"
-#include "sprite.h"
+#include "sprites/sprite.h"
 #include "view/game/road.h"
 #include "player.h"
 

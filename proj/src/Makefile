@@ -7,6 +7,8 @@ PROG=proj
 .PATH: ${.CURDIR}/view/utils/
 .PATH: ${.CURDIR}/model/
 .PATH: ${.CURDIR}/fonts/
+.PATH: ${.CURDIR}/sprites/
+
 
 
 SRCS = main.c sprite.c font.c text_renderer.c timer.c utils.c video_card.c kbc.c anim_sprite.c mouse.c ui.c game_state.c menu.c select_difficulty.c select_car.c geometry.c player.c ai_car.c game.c road.c gameover_menu.c car.c ui_utils.c

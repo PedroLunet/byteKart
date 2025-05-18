@@ -8,7 +8,7 @@
 #include "road.h"
 #include "model/player.h"
 #include "model/ai_car.h"
-#include "sprite.h"
+#include "sprites/sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
 #include "road.h"
