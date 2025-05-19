@@ -66,6 +66,7 @@ static void playing_draw_internal(GameState *base) {
     if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
 
     if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
+        this->current_running_state == GAME_SUBSTATE_PAUSED ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE ||
         this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
         
@@ -74,6 +75,7 @@ static void playing_draw_internal(GameState *base) {
     }
 
     if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
+        this->current_running_state == GAME_SUBSTATE_PAUSED ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
         // road_draw(&this->road_data);
 
@@ -95,7 +97,9 @@ static void playing_draw_internal(GameState *base) {
         }
     }
 
-    if (this->current_running_state == GAME_SUBSTATE_PAUSED) { /* Draw Pause Menu Overlay */ }
+    if (this->current_running_state == GAME_SUBSTATE_PAUSED) {
+        // Not drawing pause menu yet
+    }
     else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
 }
 
@@ -103,71 +107,69 @@ static void playing_process_event_internal(GameState *base, EventType event) {
     Game *this = (Game *)base;
     if (!this) return;
 
-    /*
-    if (this->current_running_state == GAME_SUBSTATE_PAUSED || this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
-        return;
-    }
-     */
-
     if (event == EVENT_TIMER) {
         this->base.update_state(base);
         this->base.draw(base);
     } else if (event == EVENT_KEYBOARD) {
-        switch (scancode) {
-            case LEFT_ARROW:
-              this->player_turn_input_sign = -1;
-              if (this->playerCar.x > 0) {
-                car_move_left(&this->playerCar, LEFT_BOUNDARY, STEP);
-              }
-            break;
-            case LEFT_ARROW_BREAK:
-              if (this->player_turn_input_sign == -1) {
-                this->player_turn_input_sign = 0;
-              }
-            break;
-            case RIGHT_ARROW:
-              this->player_turn_input_sign = 1;
-              if (this->playerCar.x > 0) {
-                 car_move_right(&this->playerCar, RIGHT_BOUNDARY, STEP);
-              }
-            break;
-            case RIGHT_ARROW_BREAK:
-              if (this->player_turn_input_sign == 1) {
-                this->player_turn_input_sign = 0;
-              }
-            break;
-            case SPACEBAR:
-              this->player_skid_input_active = true;
-            break;
-            case SPACEBAR_BREAK:
-              this->player_skid_input_active = false;
-            break;
-            case P_KEY:
-              if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
-                  this->current_running_state = GAME_SUBSTATE_PAUSED;
-                  this->pause_requested = true;
-              }
-              if (this->current_running_state == GAME_SUBSTATE_PAUSED) {
-                  this->current_running_state = GAME_SUBSTATE_PLAYING;
-                  this->pause_requested = false;
-              }
-            break;
-            case ESC_BREAKCODE:
-                this->current_running_state = GAME_EXITED;
-            break;
-            default:
-                break;
+        if (scancode == P_KEY) {
+            if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
+                this->current_running_state = GAME_SUBSTATE_PAUSED;
+                this->pause_requested = true;
+                printf("Game paused\n");
+            } else if (this->current_running_state == GAME_SUBSTATE_PAUSED) {
+                this->current_running_state = GAME_SUBSTATE_PLAYING;
+                this->pause_requested = false;
+                printf("Game resumed\n");
+            }
+            base->draw(base);
+            return;
         }
-        base->draw(base);
+
+        if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
+            switch (scancode) {
+                case LEFT_ARROW:
+                  this->player_turn_input_sign = -1;
+                  if (this->playerCar.x > 0) {
+                    car_move_left(&this->playerCar, LEFT_BOUNDARY, STEP);
+                  }
+                break;
+                case LEFT_ARROW_BREAK:
+                  if (this->player_turn_input_sign == -1) {
+                    this->player_turn_input_sign = 0;
+                  }
+                break;
+                case RIGHT_ARROW:
+                  this->player_turn_input_sign = 1;
+                  if (this->playerCar.x > 0) {
+                     car_move_right(&this->playerCar, RIGHT_BOUNDARY, STEP);
+                  }
+                break;
+                case RIGHT_ARROW_BREAK:
+                  if (this->player_turn_input_sign == 1) {
+                    this->player_turn_input_sign = 0;
+                  }
+                break;
+                case SPACEBAR:
+                  this->player_skid_input_active = true;
+                break;
+                case SPACEBAR_BREAK:
+                  this->player_skid_input_active = false;
+                break;
+                default:
+                    break;
+            }
+            base->draw(base);
+        }
     } else if (event == EVENT_MOUSE) {
+        // Still missing pause menu and mouse handling for it
         if (this->current_running_state == GAME_SUBSTATE_PAUSED || this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
           /*
             if (base->handle_mouse_input(base, (void (*)(GameState *))select_difficulty_clean_dirty_mouse_internal, select_difficulty_is_mouse_over, &this->selectedOption)) {
                 this->chosenLevel = DIFFICULTY_SELECTED;
             }
            */
-          base->draw(base);
         }
+        base->draw(base);
     }
 }
 
@@ -260,7 +262,6 @@ static void playing_update_internal(GameState *base) {
             // TODO: Collision detection, lap counting, finish conditions
             break;
         case GAME_SUBSTATE_PAUSED:
-            // No game logic updates
             break;
         case GAME_SUBSTATE_FINISHED_RACE:
             // Maybe some post-race animation or waiting for input
