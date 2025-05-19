@@ -42,7 +42,7 @@ static void menu_process(GameState *base, EventType event) {
             if (this->selectedOption == 0) {
                 this->currentSubstate = MENU_FINISHED_PLAY;
             } else if (this->selectedOption == 1) {
-                this->currentSubstate = MENU_MAIN; 
+                this->currentSubstate = MENU_FINISHED_LEADERBOARD; 
             } else if (this->selectedOption == 2) {
                 this->currentSubstate = MENU_FINISHED_QUIT;
             }

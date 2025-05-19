@@ -188,6 +188,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 nextState = SELECT_DIFFICULTY;
             } else if (currentMenuSubstate == MENU_FINISHED_LEADERBOARD) {
                 nextState = LEADERBOARD;
+                leaderboard_draw(leaderboard);
             } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
                 nextState = QUIT;
             } else if (currentMenuSubstate == MENU_EXITED) {
@@ -255,7 +256,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             leaderboard_process_event(leaderboard, event);
             LeaderboardSubstate currentLeaderboardSubState = leaderboard_get_current_substate(leaderboard);
             if (currentLeaderboardSubState == LEADERBOARD_MENU) {
-                // mostrar recordes
+
             } else if (currentLeaderboardSubState == LEADERBOARD_BACK_TO_MENU) {
                 nextState = MENU;
             }

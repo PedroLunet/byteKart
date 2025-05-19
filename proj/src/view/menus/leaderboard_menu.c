@@ -23,7 +23,6 @@ static void leaderboard_draw_internal(GameState *base) {
     }
 }
 
-/*
 static void leaderboard_clean_dirty_mouse_internal(GameState *base) {
     Leaderboard *this = (Leaderboard *)base;
     if (this->uiRoot) {
@@ -33,10 +32,27 @@ static void leaderboard_clean_dirty_mouse_internal(GameState *base) {
         draw_dirty_area(this->backButton, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
     }
 }
-*/
 
-// TODO: is_mouse_hover
-// TODO: leaderboard_process
+static bool leaderboard_is_mouse_over(GameState *base, int mouse_x, int mouse_y, void *data) {
+    Leaderboard *this = (Leaderboard *)base;
+    if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
+        ContainerData *backButtonData = (ContainerData *)this->backButton->data;
+        if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
+            mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void leaderboard_process(GameState *base, EventType event) {
+    Leaderboard *this = (Leaderboard *)base;
+    if (event == EVENT_MOUSE) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))leaderboard_clean_dirty_mouse_internal, leaderboard_is_mouse_over, &this->backButton)) {
+            this->currentSubstate = LEADERBOARD_BACK_TO_MENU;
+        }
+    }
+}
 
 static void leaderboard_destroy_internal(GameState *base) {
     Leaderboard *this = (Leaderboard *)base;
@@ -52,12 +68,14 @@ Leaderboard *leaderboard_create() {
     Leaderboard *this = (Leaderboard *)malloc(sizeof(Leaderboard));
     if (!this) return NULL;
 
+    this->currentSubstate = LEADERBOARD_MENU;
+
     // Initialize base GameState
     init_base_game_state(&this->base);
     this->base.draw = (void (*)(GameState *)) leaderboard_draw_internal;
-    //this->base.process_event = 
+    this->base.process_event = leaderboard_process;
     this->base.destroy = leaderboard_destroy_internal;
-    //this->base.is_mouse_over = leaderboard_is_mouse_over;
+    this->base.is_mouse_over = leaderboard_is_mouse_over;
     this->uiRoot = NULL;
 
     // Create UI Components
@@ -102,6 +120,9 @@ Leaderboard *leaderboard_create() {
     add_child_to_container_component(backButton, backText);
 
     perform_container_layout(backButton);
+    add_child_to_container_component(leaderboardContainer, backButton);
+    perform_container_layout(leaderboardContainer);
+
     this->backButton = backButton;
 
     return this;
