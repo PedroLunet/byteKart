@@ -12,6 +12,7 @@ Menu *mainMenu = NULL;
 SelectDifficulty *selectDifficulty = NULL;
 SelectCar *selectCar = NULL;
 Game *game = NULL;
+Leaderboard *leaderboard = NULL;
 
 int difficulty = 0;
 int selectedCar = 0;
@@ -99,6 +100,12 @@ int (initial_setup)() {
         return 1;
     }
 
+    leaderboard = leaderboard_create();
+    if (!leaderboard) {
+        leaderboard_destroy(leaderboard);
+        return 1;
+    }
+
     current_state = MENU;
     running = true;
 
@@ -135,6 +142,11 @@ int (restore_system)() {
     if (game) {
         playing_destroy(game);
         game = NULL;
+    }
+
+    if (leaderboard) {
+        leaderboard_destroy(leaderboard);
+        leaderboard = NULL;
     }
 
     // unsubscribe timer interrupts
@@ -239,17 +251,17 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             }
             break;
 
-        /*
-
         case LEADERBOARD:
             leaderboard_process_event(leaderboard, event);
-            LeaderboardSubState currentLeaderboardSubState = leaderboard_get_current_substate(leaderboard);
+            LeaderboardSubstate currentLeaderboardSubState = leaderboard_get_current_substate(leaderboard);
             if (currentLeaderboardSubState == LEADERBOARD_MENU) {
                 // mostrar recordes
-            } else if (currentLeaderboardSubState == ???? ) {
-                // voltar ao menu inicial
+            } else if (currentLeaderboardSubState == LEADERBOARD_BACK_TO_MENU) {
+                nextState = MENU;
             }
             break;
+        
+        /*
 
         case GAMEOVER:
             gameover_process_event(gameOver, event);

@@ -18,6 +18,8 @@
     "type_traits": "c",
     "menu.h": "c",
     "xpm_files.h": "c",
-    "select_car.h": "c"
+    "select_car.h": "c",
+    "player.h": "c",
+    "select_difficulty.h": "c"
   },
 }

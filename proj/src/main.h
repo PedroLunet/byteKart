@@ -24,8 +24,8 @@
 #include "view/menus/select_car.h"
 #include "view/game/game.h"
 #include "view/menus/pause_menu.h"
-
 #include "view/menus/gameover_menu.h"
+#include "view/menus/leaderboard_menu.h"
 
 typedef enum {
   MENU,

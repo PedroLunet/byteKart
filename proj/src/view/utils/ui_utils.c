@@ -2,6 +2,7 @@
 
 #include "ui_utils.h"
 
+// Função genérica para criar opções de menu
 UIComponent *create_menu_option(const char *text, Font *font, int width, int height, UIComponent *parent) {
   UIComponent *container = create_container_component(0, 0, width, height);
   if (!container) return NULL;
@@ -22,6 +23,8 @@ UIComponent *create_menu_option(const char *text, Font *font, int width, int hei
   return container;
 }
 
+
+// Função genérica para verificar se o rato está dar hover
 bool is_mouse_over_menu_options(GameState *base, int mouse_x, int mouse_y, UIComponent **options, size_t num_options, int *selected_option, uint32_t default_color, uint32_t hover_color) {
 
   *selected_option = -1;
