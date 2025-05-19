@@ -18,7 +18,7 @@ static void playing_draw_internal(GameState *base) {
         this->current_running_state == GAME_SUBSTATE_PAUSED ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
 
-        renderer_draw_road(&this->road_data, &this->player);
+        renderer_draw_road(&this->road_data, &this->player, this->road_y1);
 
         for (int i = 0; i < this->num_active_ai_cars; ++i) {
             if (this->ai_cars[i]) {
@@ -141,6 +141,9 @@ static void playing_update_internal(GameState *base) {
         case GAME_SUBSTATE_PLAYING:
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
             player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
+            if (timer_counter % 60 == 0) {
+                printf("Player Position: (%d, %d)\n", (int)this->player.world_position_car_center.x, (int)this->player.world_position_car_center.y);
+            }
 
             this->current_lap = this->player.current_lap;
 
@@ -148,7 +151,7 @@ static void playing_update_internal(GameState *base) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
                     if (timer_counter % 60 == 0) {
-                        printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
+                        // printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
                     }
                 }
             }
@@ -194,7 +197,7 @@ static void playing_destroy_internal(GameState *base) {
     free(base);
 }
 
-Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, xpm_map_t *var_road_xpm, xpm_map_t *var_finish_xpm) {
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file) {
     Game *this = (Game *) malloc(sizeof(Game));
     if (this == NULL) {
         return NULL;
@@ -244,7 +247,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
-    if (road_load(&this->road_data, road_data_file, 700, 0x228B22, (xpm_map_t) var_road_xpm, (xpm_map_t) var_finish_xpm) != 0) {
+    if (road_load(&this->road_data, road_data_file, 700, 0x8EC940, road_surface_file) != 0) {
         printf("Failed to load road data\n");
         base_destroy(&this->base);
         free(this);
@@ -339,6 +342,5 @@ GameRunningState playing_get_current_substate(Game *this) {
 
 void playing_reset_state(Game *this) {
     this->current_running_state = GAME_SUBSTATE_LOADING;
-    cleanup_road_background();
 }
 

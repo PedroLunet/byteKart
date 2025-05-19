@@ -3,15 +3,6 @@
 
 extern vbe_mode_info_t vbe_mode_info;
 
-void draw_road_background(Sprite *road_sprite1, Sprite *road_sprite2, int road_y1, int road_y2) {
-    if (!road_sprite1 || !road_sprite2) return;
-    sprite_draw_xpm(road_sprite1, 0, road_y1, false);
-    sprite_draw_xpm(road_sprite2, 0, road_y2, false);
-}
-
-void cleanup_road_background() {
-}
-
 int road_calculate_edge_points(Road *road) {
     if (!road || !road->center_points || road->num_center_points < 2) {
         return 1;
@@ -69,21 +60,19 @@ void road_destroy(Road *road) {
     free(road->right_edge_points);
     road->right_edge_points = NULL;
 
-    if (road->road_texture) {
-        sprite_destroy(road->road_texture);
-        road->road_texture = NULL;
-    }
-    if (road->finish_line_sprite) {
-        sprite_destroy(road->finish_line_sprite);
-        road->finish_line_sprite = NULL;
+    if (road->prerendered_track_image) {
+        free(road->prerendered_track_image->map);
+        free(road->prerendered_track_image);
+        road->prerendered_track_image = NULL;
     }
 }
 
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *const *road_texture_xpm, const char *const *finish_line_xpm) {
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file) {
     if (!road || !filename) {
         return 1;
     }
 
+    road_destroy(road);
     memset(road, 0, sizeof(Road));
 
     FILE *file = fopen(filename, "rb");
@@ -98,7 +87,6 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
         fclose(file);
         return 3;
     }
-
     if (road->num_center_points < 2) {
         printf("Track file must contain at least 2 points.\n");
         fclose(file);
@@ -129,7 +117,6 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
         road->center_points[i].x = (float)temp_point_from_file.x;
         road->center_points[i].y = (float)temp_point_from_file.y;
     }
-
     fclose(file);
 
     // Set road properties
@@ -147,32 +134,10 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
     road->start_point = road->center_points[0];
     road->end_point = road->center_points[road->num_center_points - 1];
 
-    if (road_texture_xpm) {
-        road->road_texture = sprite_create_xpm(road_texture_xpm, 0, 0, 0, 0);
-        if (!road->road_texture) fprintf(stderr, "Warning: Failed to load road texture.\n");
-    } else {
-        road->road_texture = NULL;
-    }
-
-    if (finish_line_xpm) {
-        road->finish_line_sprite = sprite_create_xpm(finish_line_xpm, 0, 0, 0, 0);
-        if (!road->finish_line_sprite) fprintf(stderr, "Warning: Failed to load finish line sprite.\n");
-    } else {
-        road->finish_line_sprite = NULL;
-    }
-
-    // Position and orient finish line
-    if (road->num_center_points >= 2) {
-        road->finish_line_position = road->end_point;
-        Vector last_segment_dir;
-        last_segment_dir.x = road->center_points[road->num_center_points-1].x - road->center_points[road->num_center_points-2].x;
-        last_segment_dir.y = road->center_points[road->num_center_points-1].y - road->center_points[road->num_center_points-2].y;
-        vector_normalize(&last_segment_dir);
-        road->finish_line_direction.x = -last_segment_dir.y; // Normal
-        road->finish_line_direction.y = last_segment_dir.x;
-        vector_init(&road->finish_line_direction, road->finish_line_direction.x, road->finish_line_direction.y);
-        vector_normalize(&road->finish_line_direction);
-    }
+    road->road_texture_tile = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
+    road->finish_line_sprite = NULL;
+    road->finish_line_position = road->center_points[road->num_center_points - 1];
+    road->finish_line_direction.x = road->center_points[road->num_center_points - 1].x - road->center_points[road->num_center_points - 2].x;
 
     return 0;
 }

@@ -14,6 +14,7 @@ typedef enum {
 
 // Tracks
 #define TRACK_1_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.dat"
+#define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_1_surface.bin"
 
 // Fonts
 #define MAX_FONT_GLYPHS 382
