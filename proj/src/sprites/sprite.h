@@ -21,6 +21,7 @@ Sprite *sprite_create_xpm(xpm_map_t pic, int x, int y, int xspeed, int yspeed);
 void sprite_destroy(Sprite *this);
 int sprite_draw_xpm(Sprite *this, int x, int y, bool has_transparent);
 int sprite_draw_partial_xpm(Sprite *this, int x, int y, int width, int height, bool has_transparent);
+int sprite_draw_rotated_around_local_pivot( Sprite *sprite, int screen_pivot_x, int screen_pivot_y, int local_pivot_x, int local_pivot_y, float cos_a, float sin_a, bool has_transparent);
 
 // Getters and Setters (if needed)
 int sprite_get_width(Sprite *this);

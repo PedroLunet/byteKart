@@ -237,7 +237,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
 
         case GAME:
             if (game == NULL) {
-                game = game_state_create_playing(difficulty, selectedCar, TRACK_1_FILENAME, NULL, NULL);
+                game = game_state_create_playing(difficulty, selectedCar, TRACK_1_FILENAME, TRACK_1_SURFACE_FILENAME);
                 if (!game) {
                     return 1;
                 }

@@ -9,6 +9,9 @@
 #include "sprites/sprite.h"
 #include "model/geometry.h"
 #include "xpm/xpm_files.h"
+#include "view/utils/ui.h"
+#include "../loadingUI.h"
+
 
 struct Player_s;
 
@@ -22,10 +25,8 @@ typedef struct Road_s {
     int road_width;
     uint32_t background_color;
 
-    Sprite *road_texture;
-    Sprite *finish_line_sprite;
-    Point finish_line_position;
-    Vector finish_line_direction;
+    Sprite *prerendered_track_image;
+    Point world_origin_of_track_image;
 
     Point start_point;
     Point end_point;
@@ -35,7 +36,7 @@ void draw_road_background(Sprite *road_sprite1, Sprite *road_sprite2, int road_y
 void cleanup_road_background();
 
 int road_calculate_edge_points(Road *road);
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *const *road_texture_xpm, const char *const *finish_line_xpm);
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, LoadingUI *loading_ui);
 void road_destroy(Road *road);
 void road_draw(Road *road);
 bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_entity_current_segment_idx, Vector *out_tangent, Point *out_closest_point_on_centerline);
