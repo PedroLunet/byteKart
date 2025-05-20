@@ -69,41 +69,81 @@ int sprite_draw_partial_xpm(Sprite *this, int x, int y, int width, int height, b
     return 0;
 }
 
-int sprite_draw_rotated_xpm(Sprite *sprite, int center_screen_x, int center_screen_y, float cos_a, float sin_a, bool has_transparent) {
-    if (!sprite || !sprite->map) return 1;
+int sprite_draw_rotated_around_local_pivot(
+    Sprite *sprite,
+    int screen_pivot_x, int screen_pivot_y,
+    int local_pivot_x, int local_pivot_y,
+    float cos_a, float sin_a,
+    bool has_transparent
+) {
+    if (!sprite || !sprite->map || sprite->width == 0 || sprite->height == 0) return 1;
 
-    float sprite_half_width = sprite->width / 2.0f;
-    float sprite_half_height = sprite->height / 2.0f;
+    /*
+    (void)cos_a; // Mark as unused for this simplified version
+    (void)sin_a; // Mark as unused for this simplified version
 
-    // Bounding box calculation uses the passed cos_a and sin_a
-    float corners_x_rel[4], corners_y_rel[4];
-    float world_corners_x[4], world_corners_y[4];
+    // Calculate the screen coordinates of the sprite's top-left corner
+    // such that its (local_pivot_x, local_pivot_y) aligns with (screen_pivot_x, screen_pivot_y)
+    int draw_top_left_x = local_pivot_x - screen_pivot_x;
+    int draw_top_left_y = local_pivot_y - screen_pivot_y;
 
-    corners_x_rel[0] = -sprite_half_width; corners_y_rel[0] = -sprite_half_height;
-    corners_x_rel[1] =  sprite_half_width; corners_y_rel[1] = -sprite_half_height;
-    corners_x_rel[2] =  sprite_half_width; corners_y_rel[2] =  sprite_half_height;
-    corners_x_rel[3] = -sprite_half_width; corners_y_rel[3] =  sprite_half_height;
+    uint16_t hres = get_hres();
+    uint16_t vres = get_vres();
+    uint32_t transparent_color_val = sprite->map[sprite->width * sprite->height - 1];
 
-    float min_screen_x_bb_rel =  1e9; float max_screen_x_bb_rel = -1e9;
-    float min_screen_y_bb_rel =  1e9; float max_screen_y_bb_rel = -1e9;
+    // Iterate through the sprite's pixels
+    for (int sprite_y_offset = draw_top_left_y; sprite_y_offset < draw_top_left_y + sprite->height; ++sprite_y_offset) {
+        for (int sprite_x_offset = draw_top_left_x; sprite_x_offset < draw_top_left_x + sprite->width; ++sprite_x_offset) {
+
+            // Current screen pixel to draw
+            int current_screen_x = sprite_x_offset - draw_top_left_x;
+            int current_screen_y = sprite_y_offset - draw_top_left_y;
+
+            // Basic screen clipping
+            if (current_screen_x < 0 || current_screen_x >= hres ||
+                current_screen_y < 0 || current_screen_y >= vres) {
+                continue;
+                }
+
+            uint32_t color = sprite->map[sprite_y_offset * sprite->width + sprite_x_offset];
+
+            if (has_transparent && color == transparent_color_val) {
+                continue;
+            }
+            vg_draw_pixel(current_screen_x, current_screen_y, color);
+        }
+    }
+    return 0;
+     */
+
+    float sprite_width_f = (float)sprite->width;
+    float sprite_height_f = (float)sprite->height;
+
+    float corners_rel_pivot_x[4], corners_rel_pivot_y[4];
+    corners_rel_pivot_x[0] = 0.0f - local_pivot_x;             corners_rel_pivot_y[0] = 0.0f - local_pivot_y;
+    corners_rel_pivot_x[1] = sprite_width_f - local_pivot_x;   corners_rel_pivot_y[1] = 0.0f - local_pivot_y;
+    corners_rel_pivot_x[2] = sprite_width_f - local_pivot_x;   corners_rel_pivot_y[2] = sprite_height_f - local_pivot_y;
+    corners_rel_pivot_x[3] = 0.0f - local_pivot_x;             corners_rel_pivot_y[3] = sprite_height_f - local_pivot_y;
+
+    float min_rot_x_rel_pivot = 1e9, max_rot_x_rel_pivot = -1e9;
+    float min_rot_y_rel_pivot = 1e9, max_rot_y_rel_pivot = -1e9;
 
     for (int i = 0; i < 4; ++i) {
-        world_corners_x[i] = corners_x_rel[i] * cos_a - corners_y_rel[i] * sin_a;
-        world_corners_y[i] = corners_x_rel[i] * sin_a + corners_y_rel[i] * cos_a;
-
-        if (world_corners_x[i] < min_screen_x_bb_rel) min_screen_x_bb_rel = world_corners_x[i];
-        if (world_corners_x[i] > max_screen_x_bb_rel) max_screen_x_bb_rel = world_corners_x[i];
-        if (world_corners_y[i] < min_screen_y_bb_rel) min_screen_y_bb_rel = world_corners_y[i];
-        if (world_corners_y[i] > max_screen_y_bb_rel) max_screen_y_bb_rel = world_corners_y[i];
+        float rotated_x = corners_rel_pivot_x[i] * cos_a - corners_rel_pivot_y[i] * sin_a;
+        float rotated_y = corners_rel_pivot_x[i] * sin_a + corners_rel_pivot_y[i] * cos_a;
+        if (rotated_x < min_rot_x_rel_pivot) min_rot_x_rel_pivot = rotated_x;
+        if (rotated_x > max_rot_x_rel_pivot) max_rot_x_rel_pivot = rotated_x;
+        if (rotated_y < min_rot_y_rel_pivot) min_rot_y_rel_pivot = rotated_y;
+        if (rotated_y > max_rot_y_rel_pivot) max_rot_y_rel_pivot = rotated_y;
     }
 
     uint16_t hres = get_hres();
     uint16_t vres = get_vres();
 
-    int start_draw_x = (int)floorf(center_screen_x + min_screen_x_bb_rel);
-    int end_draw_x   = (int)ceilf(center_screen_x + max_screen_x_bb_rel);
-    int start_draw_y = (int)floorf(center_screen_y + min_screen_y_bb_rel);
-    int end_draw_y   = (int)ceilf(center_screen_y + max_screen_y_bb_rel);
+    int start_draw_x = (int)floorf(screen_pivot_x + min_rot_x_rel_pivot);
+    int end_draw_x   = (int)ceilf(screen_pivot_x + max_rot_x_rel_pivot);
+    int start_draw_y = (int)floorf(screen_pivot_y + min_rot_y_rel_pivot);
+    int end_draw_y   = (int)ceilf(screen_pivot_y + max_rot_y_rel_pivot);
 
     if (start_draw_x < 0) start_draw_x = 0;
     if (end_draw_x > hres) end_draw_x = hres;
@@ -112,26 +152,27 @@ int sprite_draw_rotated_xpm(Sprite *sprite, int center_screen_x, int center_scre
 
     uint32_t transparent_color_val = sprite->map[sprite->width * sprite->height - 1];
 
-    for (int sy = start_draw_y; sy < end_draw_y; ++sy) {
-        float dy_screen = (float)sy - (float)center_screen_y;
+    float dtex_x_dsx = cos_a;
+    float dtex_y_dsx = -sin_a;
 
-        float base_dx_screen = (float)start_draw_x - (float)center_screen_x;
-        // Pre-calculate for the start of the row, using passed cos_a and sin_a
-        float current_tex_x_center_rel = base_dx_screen * cos_a + dy_screen * sin_a;
-        float current_tex_y_center_rel = -base_dx_screen * sin_a + dy_screen * cos_a;
+    for (int sy = start_draw_y; sy < end_draw_y; ++sy) {
+        float rel_sy_to_pivot = (float)sy - (float)screen_pivot_y;
+
+        float rel_sx_to_pivot_start = (float)start_draw_x - (float)screen_pivot_x;
+
+        float current_tex_x_unrotated_rel_pivot_start = rel_sx_to_pivot_start * cos_a + rel_sy_to_pivot * sin_a;
+        float current_tex_y_unrotated_rel_pivot_start = -rel_sx_to_pivot_start * sin_a + rel_sy_to_pivot * cos_a;
 
         for (int sx = start_draw_x; sx < end_draw_x; ++sx) {
-            if (sx > start_draw_x) {
-                current_tex_x_center_rel += cos_a;
-                current_tex_y_center_rel -= sin_a;
-            }
+            float delta = (float)(sx - start_draw_x);
+            float current_tex_x_unrotated_rel_pivot = current_tex_x_unrotated_rel_pivot_start + delta * dtex_x_dsx;
+            float current_tex_y_unrotated_rel_pivot = current_tex_y_unrotated_rel_pivot_start + delta * dtex_y_dsx;
 
-            int tex_x = (int)roundf(current_tex_x_center_rel + sprite_half_width);
-            int tex_y = (int)roundf(current_tex_y_center_rel + sprite_half_height);
+            int tex_x = (int)roundf(current_tex_x_unrotated_rel_pivot + local_pivot_x);
+            int tex_y = (int)roundf(current_tex_y_unrotated_rel_pivot + local_pivot_y);
 
             if (tex_x >= 0 && tex_x < sprite->width && tex_y >= 0 && tex_y < sprite->height) {
                 uint32_t color = sprite->map[tex_y * sprite->width + tex_x];
-
                 if (has_transparent && color == transparent_color_val) {
                     continue;
                 }

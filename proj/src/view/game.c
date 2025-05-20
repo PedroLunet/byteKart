@@ -5,6 +5,7 @@
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
 extern int timer_counter;
+extern Font *gameFont;
 
 static void playing_draw_internal(GameState *base) {
     Game *this = (Game *)base;
@@ -18,7 +19,7 @@ static void playing_draw_internal(GameState *base) {
         this->current_running_state == GAME_SUBSTATE_PAUSED ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
 
-        renderer_draw_road(&this->road_data, &this->player, this->road_y1);
+        renderer_draw_road(&this->road_data, &this->player);
 
         for (int i = 0; i < this->num_active_ai_cars; ++i) {
             if (this->ai_cars[i]) {
@@ -33,9 +34,11 @@ static void playing_draw_internal(GameState *base) {
     if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
 
     if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
-        int count = (int)this->timer_count_down;
-        if (count > 0 && count <= 3) {
-            printf("Countdown: %d\n", count);
+        int count = this->timer_count_down;
+        if (count > 0.0f && count <= 3.0f) {
+          if (count % 1 == 0) {
+             printf("Countdown: %d\n", (int)count);
+          }
         } else if (count <= 0) {
             printf("GO!\n");
         }
@@ -212,6 +215,9 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->base.destroy = playing_destroy_internal;
 
     this->current_running_state = GAME_SUBSTATE_LOADING;
+  	LoadingUI *loading_ui = loading_ui_create(gameFont, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
+	draw_ui_component(loading_ui->components[0]);
+    swap_buffer_loading_ui();
 
     // Initialize Renderer
     if (renderer_init() != 0) {
@@ -247,7 +253,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
-    if (road_load(&this->road_data, road_data_file, 700, 0x8EC940, road_surface_file) != 0) {
+    if (road_load(&this->road_data, road_data_file, 700, 0x8EC940, road_surface_file, loading_ui) != 0) {
         printf("Failed to load road data\n");
         base_destroy(&this->base);
         free(this);

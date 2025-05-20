@@ -61,13 +61,12 @@ void road_destroy(Road *road) {
     road->right_edge_points = NULL;
 
     if (road->prerendered_track_image) {
-        free(road->prerendered_track_image->map);
-        free(road->prerendered_track_image);
+        sprite_destroy(road->prerendered_track_image);
         road->prerendered_track_image = NULL;
     }
 }
 
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file) {
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, LoadingUI *loading_ui) {
     if (!road || !filename) {
         return 1;
     }
@@ -119,6 +118,77 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
     }
     fclose(file);
 
+    printf("Road: Attempting to load pre-rendered track surface from: %s\n", prerendered_track_bin_file);
+    FILE *surface_file = fopen(prerendered_track_bin_file, "rb");
+    if (!surface_file) {
+        printf("road_load: Failed to open track surface file '%s'.\n", prerendered_track_bin_file);
+        road->prerendered_track_image = NULL;
+    } else {
+        int width = 0, height = 0, file_bpp = 0;
+        if (fread(&width, sizeof(int), 1, surface_file) != 1 ||
+            fread(&height, sizeof(int), 1, surface_file) != 1 ||
+            fread(&file_bpp, sizeof(int), 1, surface_file) != 1) {
+            printf("road_load: Error reading header from track surface file '%s'.\n", prerendered_track_bin_file);
+            road->prerendered_track_image = NULL;
+        } else {
+            printf("Road: Track surface header: %dx%d, %d bytes/pixel\n", width, height, file_bpp);
+            if (width <= 0 || height <= 0 || (file_bpp != 3 && file_bpp != 4)) {
+                printf("road_load: Invalid dimensions or bpp in track surface file.\n");
+                road->prerendered_track_image = NULL;
+            } else {
+                road->prerendered_track_image = (Sprite*)malloc(sizeof(Sprite));
+                if (!road->prerendered_track_image) {
+                    printf("road_load: Failed to allocate memory for track image sprite.\n");
+                } else {
+                    memset(road->prerendered_track_image, 0, sizeof(Sprite));
+                    road->prerendered_track_image->width = width;
+                    road->prerendered_track_image->height = height;
+                    if (file_bpp != 4) {
+                         printf("Warning: Track surface binary bpp (%d) doesn't match expected 4 bytes for uint32_t map. Pixel data might be misinterpreted.\n", file_bpp);
+                    }
+
+                    size_t map_data_size = (size_t)width * height * file_bpp;
+                    road->prerendered_track_image->map = (uint32_t*)malloc(map_data_size);
+
+                    if (!road->prerendered_track_image->map) {
+                        printf("road_load: Failed to allocate memory for track image pixel data.\n");
+                        free(road->prerendered_track_image);
+                        road->prerendered_track_image = NULL;
+                    } else {
+						size_t bytes_read = 0;
+                        int count = 1;
+						while (bytes_read < map_data_size) {
+    						size_t to_read = map_data_size / 12;
+    						if (bytes_read + to_read > map_data_size)
+        						to_read = map_data_size - bytes_read;
+
+    							size_t just_read = fread(
+        						((uint8_t*)road->prerendered_track_image->map) + bytes_read,
+       							1, to_read, surface_file
+    						);
+   							if (just_read != to_read) {
+        						break;
+    						}
+    						bytes_read += just_read;
+
+    						draw_ui_component(loading_ui->components[count]);
+                            count++;
+                            if (count >= 3) {
+                                count = 0;
+                            }
+                            swap_buffer_loading_ui();
+						}
+                    }
+                }
+            }
+        }
+        fclose(surface_file);
+    }
+    road->prerendered_track_image->x = 0;
+    road->prerendered_track_image->y = 0;
+    road->world_origin_of_track_image.x = 0.0f;
+    road->world_origin_of_track_image.y = 0.0f;
+
     // Set road properties
     road->road_width = road_width_param;
     road->background_color = default_bg_color;
@@ -133,11 +203,6 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
 
     road->start_point = road->center_points[0];
     road->end_point = road->center_points[road->num_center_points - 1];
-
-    road->road_texture_tile = sprite_create_xpm((xpm_map_t) road_xpm, 0, 0, 0, 0);
-    road->finish_line_sprite = NULL;
-    road->finish_line_position = road->center_points[road->num_center_points - 1];
-    road->finish_line_direction.x = road->center_points[road->num_center_points - 1].x - road->center_points[road->num_center_points - 2].x;
 
     return 0;
 }

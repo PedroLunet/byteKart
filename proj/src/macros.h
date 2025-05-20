@@ -14,7 +14,7 @@ typedef enum {
 
 // Tracks
 #define TRACK_1_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.dat"
-#define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_1_surface.bin"
+#define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_surface.bin"
 
 // Fonts
 #define MAX_FONT_GLYPHS 382
@@ -61,7 +61,7 @@ typedef enum {
 #define PLAYER_TURN_INCREMENT_DEG 6.0f
 #define PLAYER_TURN_INCREMENT_RAD (PLAYER_TURN_INCREMENT_DEG * (M_PI / 180.0f))
 
-#define PLAYER_BASE_SPEED 250.0f
+#define PLAYER_BASE_SPEED 450.0f
 
 #define PLAYER_ACCELERATION 100.0f
 #define PLAYER_DECELERATION 80.0f

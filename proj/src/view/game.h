@@ -6,14 +6,17 @@
 
 #include "model/game_state.h"
 #include "view/road.h"
+#include "view/renderer.h"
+#include "view/ui.h"
 #include "model/player.h"
 #include "model/ai_car.h"
-#include "view/renderer.h"
 #include "sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
 #include "road.h"
 #include "car.h"
+#include "view/renderer.h"
+#include "view/loadingUI.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,
@@ -50,7 +53,6 @@ typedef struct Game {
     Sprite *road_sprite2;
     int road_y1;
     int road_y2;
-
 
 } Game;
 

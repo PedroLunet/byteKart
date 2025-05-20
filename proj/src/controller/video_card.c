@@ -282,13 +282,10 @@ int (vg_draw_rounded_rectangle)(uint16_t x, uint16_t y, uint16_t width, uint16_t
     return 1;
   }
 
-  // Draw the main rectangle (excluding corners)
   if (vg_draw_rectangle(x + radius, y, width - 2 * radius, height, color) != 0) return 1;
   if (vg_draw_rectangle(x, y + radius, radius, height - 2 * radius, color) != 0) return 1;
   if (vg_draw_rectangle(x + width - radius, y + radius, radius, height - 2 * radius, color) != 0) return 1;
 
-  // Approximate the rounded corners (more precise method)
-  // Top-left corner
   for (int i = 0; i <= radius; i++) {
     for (int j = 0; j <= radius; j++) {
       if (i * i + j * j <= radius * radius) {
@@ -334,17 +331,15 @@ int vg_draw_rounded_rectangle_section(uint16_t x, uint16_t y, uint16_t width, ui
         return 1;
     }
 
-    // Calculate the boundaries of the entire rounded rectangle
     uint16_t rect_x1 = x;
     uint16_t rect_y1 = y;
-    uint16_t rect_x2 = x + width - 1; // Inclusive
-    uint16_t rect_y2 = y + height - 1; // Inclusive
+    uint16_t rect_x2 = x + width - 1;
+    uint16_t rect_y2 = y + height - 1;
 
-    // Calculate the boundaries of the section
     uint16_t section_x1 = section_x;
     uint16_t section_y1 = section_y;
-    uint16_t section_x2 = section_x + section_width - 1; // Inclusive
-    uint16_t section_y2 = section_y + section_height - 1; // Inclusive
+    uint16_t section_x2 = section_x + section_width - 1;
+    uint16_t section_y2 = section_y + section_height - 1;
 
     // Calculate the intersection of the rectangle and the section
     uint16_t draw_x1 = (section_x1 > rect_x1) ? section_x1 : rect_x1;
@@ -352,15 +347,12 @@ int vg_draw_rounded_rectangle_section(uint16_t x, uint16_t y, uint16_t width, ui
     uint16_t draw_x2 = (section_x2 < rect_x2) ? section_x2 : rect_x2;
     uint16_t draw_y2 = (section_y2 < rect_y2) ? section_y2 : rect_y2;
 
-    // If there is no intersection, return
     if (draw_x1 > draw_x2 || draw_y1 > draw_y2) {
-        return 0; // Nothing to draw
+        return 0;
     }
 
-    // Draw the rectangular parts of the section
     for (uint16_t draw_x = draw_x1; draw_x <= draw_x2; draw_x++) {
         for (uint16_t draw_y = draw_y1; draw_y <= draw_y2; draw_y++) {
-            // Check if the pixel is within the rounded rectangle's boundaries
              if ((draw_x >= x + radius && draw_x < x + width - radius) ||
                 (draw_y >= y + radius && draw_y < y + height - radius) ||
                 (draw_x >= x && draw_x < x + radius && draw_y >= y && draw_y < y + radius &&
