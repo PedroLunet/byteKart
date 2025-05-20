@@ -259,6 +259,8 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
 
             } else if (currentLeaderboardSubState == LEADERBOARD_BACK_TO_MENU) {
                 nextState = MENU;
+                leaderboard_reset_state(leaderboard);
+                menu_reset_state(mainMenu);
             }
             break;
         

@@ -35,10 +35,13 @@ static void leaderboard_clean_dirty_mouse_internal(GameState *base) {
 
 static bool leaderboard_is_mouse_over(GameState *base, int mouse_x, int mouse_y, void *data) {
     Leaderboard *this = (Leaderboard *)base;
+    int *selected = (int *)data;
+    *selected = -1;
     if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
         ContainerData *backButtonData = (ContainerData *)this->backButton->data;
         if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
             mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
+                *selected = 0;
             return true;
         }
     }
@@ -47,9 +50,12 @@ static bool leaderboard_is_mouse_over(GameState *base, int mouse_x, int mouse_y,
 
 static void leaderboard_process(GameState *base, EventType event) {
     Leaderboard *this = (Leaderboard *)base;
+    int selected = -1;
     if (event == EVENT_MOUSE) {
-        if (base->handle_mouse_input(base, (void (*)(GameState *))leaderboard_clean_dirty_mouse_internal, leaderboard_is_mouse_over, &this->backButton)) {
-            this->currentSubstate = LEADERBOARD_BACK_TO_MENU;
+        if (base->handle_mouse_input(base, (void (*)(GameState *))leaderboard_clean_dirty_mouse_internal, leaderboard_is_mouse_over, &selected)) {
+            if (selected == 0) {
+                this->currentSubstate = LEADERBOARD_BACK_TO_MENU;
+            }
         }
     }
 }
@@ -118,9 +124,8 @@ Leaderboard *leaderboard_create() {
         return NULL;
     }
     add_child_to_container_component(backButton, backText);
-
     perform_container_layout(backButton);
-    add_child_to_container_component(leaderboardContainer, backButton);
+
     perform_container_layout(leaderboardContainer);
 
     this->backButton = backButton;
