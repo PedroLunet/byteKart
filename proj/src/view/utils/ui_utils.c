@@ -44,3 +44,26 @@ bool is_mouse_over_menu_options(GameState *base, int mouse_x, int mouse_y, UICom
   return false;
 }
 
+// Função genérica para criar back button
+UIComponent *create_back_button(Font *font) {
+    UIComponent *backButton = create_container_component(30, 30, 40, 40);
+    if (!backButton) return NULL;
+
+    set_container_layout(backButton, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(backButton, 0x00BB00);
+    set_container_hover_color(backButton, 0x00DD00);
+    set_container_border_radius(backButton, 15);
+    set_container_border(backButton, 2, 0x00DD00);
+
+    UIComponent *backText = create_text_component("<", font, 0xFFFFFF);
+    if (!backText) {
+        destroy_ui_component(backButton);
+        return NULL;
+    }
+    add_child_to_container_component(backButton, backText);
+    perform_container_layout(backButton);
+
+    return backButton;
+}
+
+

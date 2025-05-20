@@ -17,7 +17,6 @@ static UIComponent *easyOption = NULL;
 static UIComponent *mediumOption = NULL;
 static UIComponent *hardOption = NULL;
 static UIComponent *backButton = NULL;
-static UIComponent *backText = NULL;
 
 static UIComponent *containers[3];
 
@@ -276,29 +275,16 @@ SelectDifficulty *select_difficulty_create() {
     perform_container_layout(hardContainer);
 
     perform_container_layout(optionsRowContainer);
-    perform_container_layout(difficultyContainer);
 
     // Create the back button
-    backButton = create_container_component(30, 30, 40, 40);
+    backButton = create_back_button(gameFont);
     if (!backButton) {
         destroy_ui_component(difficultyContainer);
         free(this);
         return NULL;
     }
-    set_container_layout(backButton, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(backButton, 0x00BB00);
-    set_container_hover_color(backButton, 0x00DD00);
-    set_container_border_radius(backButton, 15);
-    set_container_border(backButton, 2, 0x00DD00);
-    backText = create_text_component("<", gameFont, 0xFFFFFF);
-    if (!backText) {
-        destroy_ui_component(difficultyContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(backButton, backText);
 
-    perform_container_layout(backButton);
+    perform_container_layout(difficultyContainer);
     this->backButton = backButton;
 
     containers[0] = easyContainer;

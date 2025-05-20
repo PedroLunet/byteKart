@@ -10,8 +10,6 @@ extern Font *gameFont;
 
 static UIComponent *leaderboardText = NULL;
 static UIComponent *backButton = NULL;
-static UIComponent *backText = NULL;
-
 
 static void leaderboard_draw_internal(GameState *base) {
     Leaderboard *this = (Leaderboard *)base;
@@ -106,27 +104,15 @@ Leaderboard *leaderboard_create() {
     add_child_to_container_component(leaderboardContainer, leaderboardText);
 
     // Create the back button
-    backButton = create_container_component(30, 30, 40, 40);
+    backButton = create_back_button(gameFont);
     if (!backButton) {
         destroy_ui_component(leaderboardContainer);
         free(this);
         return NULL;
     }
-    set_container_layout(backButton, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(backButton, 0x00BB00);
-    set_container_hover_color(backButton, 0x00DD00);
-    set_container_border_radius(backButton, 15);
-    set_container_border(backButton, 2, 0x00DD00);
-    backText = create_text_component("<", gameFont, 0xFFFFFF);
-    if (!backText) {
-        destroy_ui_component(leaderboardContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(backButton, backText);
-
+    
     // Create leaderboard box
-    UIComponent *leaderboardBox = create_container_component(0, 0, 300, 400); 
+    UIComponent *leaderboardBox = create_container_component(0, 0, 400, 400); 
     if (!leaderboardBox) {
         destroy_ui_component(leaderboardContainer);
         free(this);
@@ -134,7 +120,7 @@ Leaderboard *leaderboard_create() {
     }
     set_container_layout(leaderboardBox, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_START);
     set_container_background_color(leaderboardBox, 0x222222);
-    set_container_padding(leaderboardBox, 0, 20, 20, 20);
+    set_container_padding(leaderboardBox, 0, 40, 40, 40);
     set_container_border_radius(leaderboardBox, 20);
     set_container_border(leaderboardBox, 4, 0xAA0000);
     set_container_hover_color(leaderboardBox, 0xAA0000);
@@ -145,7 +131,7 @@ Leaderboard *leaderboard_create() {
 
     //header
     UIComponent *headerRow = create_container_component(0, 0, 280, 40);
-    set_container_layout(headerRow, LAYOUT_ROW, ALIGN_START, JUSTIFY_SPACE_BETWEEN);
+    set_container_layout(headerRow, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_SPACE_BETWEEN);
     set_container_background_color(headerRow, 0x222222);
     set_container_gap(headerRow, 10);
 
@@ -207,8 +193,7 @@ Leaderboard *leaderboard_create() {
     perform_container_layout(backButton);
 
     perform_container_layout(leaderboardContainer);
-
-    this->backButton = backButton;
+    this->backButton = backButton;    
 
     return this;
 }

@@ -11,6 +11,7 @@
 #include "controller/video_card.h"
 #include "controller/mouse.h"
 #include "xpm/xpm_files.h"
+#include "view/utils/ui_utils.h"
 
 typedef enum {
     DIFFICULTY_START,
