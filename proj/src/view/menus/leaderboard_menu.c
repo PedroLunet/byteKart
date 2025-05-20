@@ -134,11 +134,32 @@ Leaderboard *leaderboard_create() {
     }
     set_container_layout(leaderboardBox, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_START);
     set_container_background_color(leaderboardBox, 0x222222);
-    set_container_padding(leaderboardBox, 20, 20, 20, 20);
+    set_container_padding(leaderboardBox, 0, 20, 20, 20);
     set_container_border_radius(leaderboardBox, 20);
     set_container_border(leaderboardBox, 4, 0xAA0000);
     set_container_hover_color(leaderboardBox, 0xAA0000);
-    set_container_gap(leaderboardBox, 10);
+    set_container_gap(leaderboardBox, 0);
+
+    perform_container_layout(leaderboardBox);
+
+
+    //header
+    UIComponent *headerRow = create_container_component(0, 0, 280, 40);
+    set_container_layout(headerRow, LAYOUT_ROW, ALIGN_START, JUSTIFY_SPACE_BETWEEN);
+    set_container_background_color(headerRow, 0x222222);
+    set_container_gap(headerRow, 10);
+
+    UIComponent *rankHeader = create_text_component("Rank", gameFont, 0xFFCC00);
+    UIComponent *nameHeader = create_text_component("Name", gameFont, 0xFFCC00);
+    UIComponent *scoreHeader = create_text_component("Score", gameFont, 0xFFCC00);
+
+    add_child_to_container_component(headerRow, rankHeader);
+    add_child_to_container_component(headerRow, nameHeader);
+    add_child_to_container_component(headerRow, scoreHeader);
+    
+    add_child_to_container_component(leaderboardBox, headerRow);
+    perform_container_layout(headerRow);
+
 
 
     // Exemplo
@@ -152,18 +173,37 @@ Leaderboard *leaderboard_create() {
     const int num_entries = sizeof(entries) / sizeof(entries[0]);
 
     for (int i = 0; i < num_entries; i++) {
-        UIComponent *entryText = create_text_component(entries[i], gameFont, 0xFFFFFF);
-        if (!entryText) {
-            destroy_ui_component(leaderboardContainer);
-            free(this);
-            return NULL;
-        }
-        add_child_to_container_component(leaderboardBox, entryText);
+        UIComponent *row = create_container_component(0, 0, 280, 40);
+        set_container_layout(row, LAYOUT_ROW, ALIGN_START, JUSTIFY_SPACE_BETWEEN);
+        set_container_background_color(row, 0x222222);
+        set_container_gap(row, 10);
+        
+        int rank;
+        char name[32];
+        int score;
+        sscanf(entries[i], "%d. %31s - %d", &rank, name, &score);
+    
+        char rank_str[4];
+        sprintf(rank_str, "%d.", rank);
+        UIComponent *rankText = create_text_component(rank_str, gameFont, 0xFFFFFF);
+    
+        UIComponent *nameText = create_text_component(name, gameFont, 0xFFFFFF);
+    
+        char score_str[12];
+        sprintf(score_str, "%d", score);
+        UIComponent *scoreText = create_text_component(score_str, gameFont, 0xFFFFFF);
+    
+        add_child_to_container_component(row, rankText);
+        add_child_to_container_component(row, nameText);
+        add_child_to_container_component(row, scoreText);
+    
+        add_child_to_container_component(leaderboardBox, row);
     }
-
-    add_child_to_container_component(leaderboardContainer, leaderboardBox);
     
 
+    add_child_to_container_component(leaderboardContainer, leaderboardBox);
+    perform_container_layout(leaderboardBox);
+    
     perform_container_layout(backButton);
 
     perform_container_layout(leaderboardContainer);
