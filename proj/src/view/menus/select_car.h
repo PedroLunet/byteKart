@@ -11,6 +11,7 @@
 #include "macros.h"
 #include "controller/video_card.h"
 #include "controller/mouse.h"
+#include "view/utils/ui_utils.h"
 
 typedef enum {
     CAR_START,
