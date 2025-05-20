@@ -124,6 +124,46 @@ Leaderboard *leaderboard_create() {
         return NULL;
     }
     add_child_to_container_component(backButton, backText);
+
+    // Create leaderboard box
+    UIComponent *leaderboardBox = create_container_component(0, 0, 300, 400); 
+    if (!leaderboardBox) {
+        destroy_ui_component(leaderboardContainer);
+        free(this);
+        return NULL;
+    }
+    set_container_layout(leaderboardBox, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_START);
+    set_container_background_color(leaderboardBox, 0x222222);
+    set_container_padding(leaderboardBox, 20, 20, 20, 20);
+    set_container_border_radius(leaderboardBox, 20);
+    set_container_border(leaderboardBox, 4, 0xAA0000);
+    set_container_hover_color(leaderboardBox, 0xAA0000);
+    set_container_gap(leaderboardBox, 10);
+
+
+    // Exemplo
+    const char *entries[] = {
+        "1. Alice - 1500",
+        "2. Bob - 1300",
+        "3. Clara - 1100",
+        "4. David - 900",
+        "5. Eva - 750"
+    };
+    const int num_entries = sizeof(entries) / sizeof(entries[0]);
+
+    for (int i = 0; i < num_entries; i++) {
+        UIComponent *entryText = create_text_component(entries[i], gameFont, 0xFFFFFF);
+        if (!entryText) {
+            destroy_ui_component(leaderboardContainer);
+            free(this);
+            return NULL;
+        }
+        add_child_to_container_component(leaderboardBox, entryText);
+    }
+
+    add_child_to_container_component(leaderboardContainer, leaderboardBox);
+    
+
     perform_container_layout(backButton);
 
     perform_container_layout(leaderboardContainer);
