@@ -66,4 +66,13 @@ UIComponent *create_back_button(Font *font) {
     return backButton;
 }
 
-
+// Função genérica para criar títulos
+UIComponent *create_title_text(const char *text, Font *font, uint32_t color, UIComponent *parent) {
+    UIComponent *titleText = create_text_component(text, font, color);
+    if (!titleText) {
+        destroy_ui_component(parent);
+        return NULL;
+    }
+    add_child_to_container_component(parent, titleText);
+    return titleText;
+}

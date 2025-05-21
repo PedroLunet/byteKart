@@ -182,16 +182,8 @@ SelectDifficulty *select_difficulty_create() {
     set_container_gap(difficultyContainer, 30);
     this->uiRoot = difficultyContainer;
 
-
     // Create the title text component
-    titleText = create_text_component("Select Difficulty", gameFont, 0xFFFFFF);
-    if (!titleText) {
-        destroy_ui_component(difficultyContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(difficultyContainer, titleText);
-
+    titleText = create_title_text("Select Difficulty", gameFont, 0xFFFFFF, difficultyContainer);
 
     // Create a container for the difficulty options in a row
     optionsRowContainer = create_container_component(0, 0, 0, 0);

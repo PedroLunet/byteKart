@@ -89,13 +89,7 @@ Menu *menu_create() {
     set_container_gap(menuContainer, 30);
     this->uiRoot = menuContainer;
 
-    titleText = create_text_component("Byte Kart", gameFont, 0xFFFFFF);
-    if (!titleText) {
-        destroy_ui_component(menuContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(menuContainer, titleText);
+    titleText = create_title_text("Byte Kart", gameFont, 0xFFFFFF, menuContainer);
 
     // Play option
     playContainer = create_menu_option("Play", gameFont, 200, 50, menuContainer);

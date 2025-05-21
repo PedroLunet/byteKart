@@ -91,14 +91,8 @@ GameOver *gameover_menu_create() {
     set_container_gap(mainContainer, 30);
     this->uiRoot = mainContainer;
 
-    gameoverText = create_text_component("Game Over!", gameFont, 0xFFFFFF);
-    if (!gameoverText) {
-        destroy_ui_component(mainContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(mainContainer, gameoverText);
-
+    gameoverText = create_title_text("Game Over!", gameFont, 0xFFFFFF, mainContainer);
+    
     // Restart option
     restartContainer = create_menu_option("Restart", gameFont, 200, 50, mainContainer);
         if (!restartContainer) {

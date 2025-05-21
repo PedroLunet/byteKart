@@ -153,14 +153,7 @@ SelectCar *select_car_create() {
 
 
     // Create the title text component
-    titleText = create_text_component("Select your car", gameFont, 0xFFFFFF);
-    if (!titleText) {
-        destroy_ui_component(carContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(carContainer, titleText);
-
+    titleText = create_title_text("Select your car", gameFont, 0xFFFFFF, carContainer);
 
     // Create a container for the car options in a row
     optionsRowContainer = create_container_component(0, 0, 0, 0);

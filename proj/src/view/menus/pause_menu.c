@@ -85,13 +85,7 @@ Pause *pause_menu_create() {
     set_container_gap(pauseContainer, 30);
     this->uiRoot = pauseContainer;
 
-    pauseText = create_text_component("Game Paused", gameFont, 0xFFFFFF);
-    if (!pauseText) {
-        destroy_ui_component(pauseContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(pauseContainer, pauseText);
+    pauseText = create_title_text("Game Paused", gameFont, 0xFFFFFF, pauseContainer);
 
     // Resume option
     resumeContainer = create_menu_option("Resume", gameFont, 200, 50, pauseContainer);

@@ -95,13 +95,7 @@ Leaderboard *leaderboard_create() {
     this->uiRoot = leaderboardContainer;
 
     // Create the title text component
-    leaderboardText = create_text_component("Leaderboard", gameFont, 0xFFFFFF);
-    if (!leaderboardText) {
-        destroy_ui_component(leaderboardContainer);
-        free(this);
-        return NULL;
-    }
-    add_child_to_container_component(leaderboardContainer, leaderboardText);
+    leaderboardText = create_title_text("Leaderboard", gameFont, 0xFFFFFF, leaderboardContainer);
 
     // Create the back button
     backButton = create_back_button(gameFont);
