@@ -139,18 +139,9 @@ SelectCar *select_car_create() {
     this->uiRoot = NULL;
     this->backButton = NULL;
 
-    // Create UI Components
-    UIComponent *carContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
-    if (!carContainer) {
-        free(this);
-        return NULL;
-    }
-    set_container_layout(carContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(carContainer, 0x111111);
-    set_container_padding(carContainer, 0, 0, 60, 60);
-    set_container_gap(carContainer, 30);
+    // Main Container
+    UIComponent *carContainer = create_main_container(NULL, 30, 0, 0, 60, 60);
     this->uiRoot = carContainer;
-
 
     // Create the title text component
     titleText = create_title_text("Select your car", gameFont, 0xFFFFFF, carContainer);
@@ -224,12 +215,7 @@ SelectCar *select_car_create() {
     perform_container_layout(optionsRowContainer);
 
     // Create the back button
-    backButton = create_back_button(gameFont);
-    if (!backButton) {
-        destroy_ui_component(carContainer);
-        free(this);
-        return NULL;
-    }
+    backButton = create_back_button(gameFont, carContainer);
     
     perform_container_layout(carContainer);
     this->backButton = backButton;

@@ -74,35 +74,19 @@ Pause *pause_menu_create() {
     this->currentPauseSubstate = PAUSE_MENU;
     this->uiRoot = NULL;
 
-    // Pause Text
-    pauseContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
-    if (!pauseContainer) {
-        free(this);
-        return NULL;
-    }
-    set_container_layout(pauseContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(pauseContainer, 0x111111);
-    set_container_gap(pauseContainer, 30);
+    // Main Container
+    pauseContainer = create_main_container(NULL, 30, 0, 0, 0, 0);;
     this->uiRoot = pauseContainer;
 
+    // Title
     pauseText = create_title_text("Game Paused", gameFont, 0xFFFFFF, pauseContainer);
 
     // Resume option
     resumeContainer = create_menu_option("Resume", gameFont, 200, 50, pauseContainer);
-        if (!resumeContainer) {
-            destroy_ui_component(pauseContainer);
-            free(this);
-            return NULL;
-        }
     pauseOptions[0] = resumeContainer;
 
     // Back to main menu option
     mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, pauseContainer);
-    if (!mainMenuContainer) {
-        destroy_ui_component(pauseContainer);
-        free(this);
-        return NULL;
-    }
     pauseOptions[1] = mainMenuContainer;
 
     perform_container_layout(pauseContainer);

@@ -170,16 +170,8 @@ SelectDifficulty *select_difficulty_create() {
     this->chosenLevel = DIFFICULTY_START;
     this->uiRoot = NULL;
 
-    // Create UI Components
-    UIComponent *difficultyContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
-    if (!difficultyContainer) {
-        free(this);
-        return NULL;
-    }
-    set_container_layout(difficultyContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(difficultyContainer, 0x111111);
-    set_container_padding(difficultyContainer, 60, 60, 60, 60);
-    set_container_gap(difficultyContainer, 30);
+    // Main Container
+    UIComponent *difficultyContainer = create_main_container(NULL, 30, 60, 60, 60, 60);
     this->uiRoot = difficultyContainer;
 
     // Create the title text component
@@ -269,12 +261,7 @@ SelectDifficulty *select_difficulty_create() {
     perform_container_layout(optionsRowContainer);
 
     // Create the back button
-    backButton = create_back_button(gameFont);
-    if (!backButton) {
-        destroy_ui_component(difficultyContainer);
-        free(this);
-        return NULL;
-    }
+    backButton = create_back_button(gameFont, difficultyContainer);
 
     perform_container_layout(difficultyContainer);
     this->backButton = backButton;

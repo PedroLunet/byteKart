@@ -77,45 +77,24 @@ Menu *menu_create() {
     this->currentSubstate = MENU_MAIN;
     this->uiRoot = NULL;
 
-    // Title 
-    menuContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
-    if (!menuContainer) {
-        free(this);
-        return NULL;
-    }
-    set_container_layout(menuContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    // Main Container
     Sprite *backgroundSprite = sprite_create_xpm((xpm_map_t) main_background, 0, 0, 0, 0);
-    set_container_background_image(menuContainer, backgroundSprite);
-    set_container_gap(menuContainer, 30);
+    menuContainer = create_main_container(backgroundSprite, 30, 0, 0, 0, 0);
     this->uiRoot = menuContainer;
 
+    // Title
     titleText = create_title_text("Byte Kart", gameFont, 0xFFFFFF, menuContainer);
 
     // Play option
     playContainer = create_menu_option("Play", gameFont, 200, 50, menuContainer);
-    if (!playContainer) {
-        destroy_ui_component(menuContainer);
-        free(this);
-        return NULL;
-    }
     menuOptions[0] = playContainer;
 
     // Leaderboard option
     leaderboardContainer = create_menu_option("Leaderboard", gameFont, 200, 50, menuContainer);
-    if (!leaderboardContainer) {
-        destroy_ui_component(menuContainer);
-        free(this);
-        return NULL;
-    }
     menuOptions[1] = leaderboardContainer;
 
     // Quit option
     quitContainer = create_menu_option("Quit", gameFont, 200, 50, menuContainer);
-    if (!quitContainer) {
-        destroy_ui_component(menuContainer);
-        free(this);
-        return NULL;
-    }
     menuOptions[2] = quitContainer;
 
     perform_container_layout(menuContainer);

@@ -81,43 +81,22 @@ GameOver *gameover_menu_create() {
     this->uiRoot = NULL;
 
     // Game Over Text
-    mainContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
-    if (!mainContainer) {
-        free(this);
-        return NULL;
-    }
-    set_container_layout(mainContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(mainContainer, 0x111111);
-    set_container_gap(mainContainer, 30);
+    mainContainer = create_main_container(NULL, 30, 0, 0, 0, 0);
     this->uiRoot = mainContainer;
 
+    // Title 
     gameoverText = create_title_text("Game Over!", gameFont, 0xFFFFFF, mainContainer);
-    
+
     // Restart option
     restartContainer = create_menu_option("Restart", gameFont, 200, 50, mainContainer);
-        if (!restartContainer) {
-            destroy_ui_component(mainContainer);
-            free(this);
-            return NULL;
-        }
     gameoverOptions[0] = restartContainer;
 
     // Back to main menu option
     mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, mainContainer);
-    if (!mainMenuContainer) {
-        destroy_ui_component(mainContainer);
-        free(this);
-        return NULL;
-    }
     gameoverOptions[1] = mainMenuContainer;
 
     // Quit option
     quitContainer = create_menu_option("Quit", gameFont, 200, 50, mainContainer);
-    if (!quitContainer) {
-        destroy_ui_component(mainContainer);
-        free(this);
-        return NULL;
-    }
     gameoverOptions[2] = quitContainer;
 
     perform_container_layout(mainContainer);

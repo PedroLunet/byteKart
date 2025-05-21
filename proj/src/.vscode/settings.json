@@ -20,6 +20,8 @@
     "xpm_files.h": "c",
     "select_car.h": "c",
     "player.h": "c",
-    "select_difficulty.h": "c"
+    "select_difficulty.h": "c",
+    "__split_buffer": "c",
+    "vector": "c"
   },
 }

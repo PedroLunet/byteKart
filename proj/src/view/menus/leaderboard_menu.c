@@ -82,28 +82,15 @@ Leaderboard *leaderboard_create() {
     this->base.is_mouse_over = leaderboard_is_mouse_over;
     this->uiRoot = NULL;
 
-    // Create UI Components
-    UIComponent *leaderboardContainer = create_container_component(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
-    if (!leaderboardContainer) {
-        free(this);
-        return NULL;
-    }
-    set_container_layout(leaderboardContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(leaderboardContainer, 0x111111);
-    set_container_padding(leaderboardContainer, 60, 60, 60, 60);
-    set_container_gap(leaderboardContainer, 30);
+    // Main Container
+    UIComponent *leaderboardContainer = create_main_container(NULL, 30, 60, 60, 60, 60);
     this->uiRoot = leaderboardContainer;
 
     // Create the title text component
     leaderboardText = create_title_text("Leaderboard", gameFont, 0xFFFFFF, leaderboardContainer);
 
     // Create the back button
-    backButton = create_back_button(gameFont);
-    if (!backButton) {
-        destroy_ui_component(leaderboardContainer);
-        free(this);
-        return NULL;
-    }
+    backButton = create_back_button(gameFont, leaderboardContainer);
     
     // Create leaderboard box
     UIComponent *leaderboardBox = create_container_component(0, 0, 400, 400); 
