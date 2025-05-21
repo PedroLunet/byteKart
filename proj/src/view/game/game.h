@@ -6,7 +6,7 @@
 
 #include "model/game_state.h"
 #include "road.h"
-#include "view/renderer.h"
+#include "view/utils/renderer.h"
 #include "view/utils/ui.h"
 #include "model/player.h"
 #include "model/ai_car.h"
@@ -15,7 +15,7 @@
 #include "xpm/xpm_files.h"
 #include "road.h"
 #include "car.h"
-#include "view/loadingUI.h"
+#include "view/utils/loadingUI.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,

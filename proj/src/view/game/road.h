@@ -10,7 +10,7 @@
 #include "model/geometry.h"
 #include "xpm/xpm_files.h"
 #include "view/utils/ui.h"
-#include "../loadingUI.h"
+#include "view/utils/loadingUI.h"
 
 
 struct Player_s;
