@@ -68,7 +68,8 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             this->base.draw(base); 
         } 
         else if (pauseState == PAUSE_MAIN_MENU) {
-            this->current_running_state = GAME_STATE_EXITING;
+            printf("Returning to main menu from pause menu\n");
+            this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
             pause_menu_destroy(this->pauseMenu);
             this->pauseMenu = NULL;
         }
@@ -249,6 +250,8 @@ static void playing_update_internal(GameState *base) {
             break;
         case GAME_SUBSTATE_FINISHED_RACE:
             // Maybe some post-race animation or waiting for input
+            break;
+        case GAME_SUBSTATE_BACK_TO_MENU:
             break;
         case GAME_STATE_EXITING:
             // Cleanup and exit logic
