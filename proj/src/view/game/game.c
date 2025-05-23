@@ -14,10 +14,16 @@ static void playing_draw_internal(GameState *base) {
     // Clear the screen
     renderer_clear_buffer(this->road_data.background_color);
 
-    // Draw game elements
+    if (this->current_running_state == GAME_SUBSTATE_PAUSED) {
+        if (this->pauseMenu) {
+            vg_draw_rectangle(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution, 0x80000000);
+            pause_draw(this->pauseMenu);
+        }
+        return;
+    }
+
     if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
         this->current_running_state == GAME_SUBSTATE_COUNTDOWN ||
-        this->current_running_state == GAME_SUBSTATE_PAUSED ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
 
         renderer_draw_road(&this->road_data, &this->player);
@@ -44,16 +50,30 @@ static void playing_draw_internal(GameState *base) {
             printf("GO!\n");
         }
     }
-
-    if (this->current_running_state == GAME_SUBSTATE_PAUSED) {
-        // Not drawing pause menu yet
-    }
     else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
 }
 
 static void playing_process_event_internal(GameState *base, EventType event) {
     Game *this = (Game *)base;
     if (!this) return;
+
+    if (this->current_running_state == GAME_SUBSTATE_PAUSED && this->pauseMenu) {
+        pause_process_event(this->pauseMenu, event);
+        PauseSubstate pauseState = pause_get_current_substate(this->pauseMenu);
+        if (pauseState == PAUSE_RESUME) {
+            this->current_running_state = GAME_SUBSTATE_PLAYING;
+            this->pause_requested = false;
+            pause_menu_destroy(this->pauseMenu);
+            this->pauseMenu = NULL;
+            this->base.draw(base); 
+        } 
+        else if (pauseState == PAUSE_MAIN_MENU) {
+            this->current_running_state = GAME_STATE_EXITING;
+            pause_menu_destroy(this->pauseMenu);
+            this->pauseMenu = NULL;
+        }
+        return;
+    }
 
     if (event == EVENT_TIMER) {
         this->base.update_state(base);
@@ -90,12 +110,21 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             break;
             case P_KEY:
               if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
+                  if (!this->pauseMenu) {
+                      this->pauseMenu = pause_menu_create();
+                  }
                   this->current_running_state = GAME_SUBSTATE_PAUSED;
                   this->pause_requested = true;
+                  this->base.draw(base);
               }
-              if (this->current_running_state == GAME_SUBSTATE_PAUSED) {
+              else if (this->current_running_state == GAME_SUBSTATE_PAUSED) {
                   this->current_running_state = GAME_SUBSTATE_PLAYING;
                   this->pause_requested = false;
+                  if (this->pauseMenu) {
+                      pause_menu_destroy(this->pauseMenu);
+                      this->pauseMenu = NULL;
+                  }
+                  this->base.draw(base); 
               }
             break;
             case ESC_BREAKCODE:
@@ -249,6 +278,11 @@ static void playing_destroy_internal(GameState *base) {
         destroy_ui_component(countdownTextComponent);
         countdownTextComponent = NULL;
     }
+    
+    if (this->pauseMenu) {
+        pause_menu_destroy(this->pauseMenu);
+        this->pauseMenu = NULL;
+    }
 
     free(this);
     free(base);
@@ -376,6 +410,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->player_turn_input_sign = 0;
     this->current_lap = 0;
     this->pause_requested = false;
+    this->pauseMenu = NULL;
 
     this->timer_count_down = 3.99f;
 
