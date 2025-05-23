@@ -237,6 +237,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
 
         case GAME:
             if (game == NULL) {
+                printf("Creating new game with difficulty %d and car %d\n", difficulty, selectedCar);
                 game = game_state_create_playing(difficulty, selectedCar, TRACK_1_FILENAME, TRACK_1_SURFACE_FILENAME);
                 if (!game) {
                     return 1;
@@ -249,6 +250,17 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 nextState = QUIT;
             } else if (currentGameSubstate == GAME_EXITED) {
                 nextState = QUIT;
+            } else if (currentGameSubstate == GAME_SUBSTATE_BACK_TO_MENU) {
+                // Clean up the game state completely
+                printf("Cleaning up game state and returning to main menu\n");
+                playing_destroy(game);
+                game = NULL;
+                
+                select_difficulty_reset_state(selectDifficulty);
+                select_car_reset_state(selectCar);
+                
+                nextState = MENU;
+                menu_reset_state(mainMenu);
             }
             break;
 

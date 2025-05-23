@@ -98,7 +98,6 @@ void pause_menu_destroy(Pause *this) {
 }
 
 void pause_draw(Pause *this) {
-  this->base.clear_mouse_area(&this->base);
   this->base.draw(&this->base);
   this->base.draw_mouse(&this->base);
 }

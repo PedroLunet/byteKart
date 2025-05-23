@@ -9,7 +9,7 @@ PROG=proj
 .PATH: ${.CURDIR}/fonts/
 .PATH: ${.CURDIR}/sprites/
 
-SRCS = main.c sprite.c font.c text_renderer.c timer.c utils.c video_card.c kbc.c anim_sprite.c mouse.c ui.c ui_utils.c loadingUI.c game_state.c menu.c select_difficulty.c select_car.c geometry.c player.c ai_car.c renderer.c game.c road.c gameover_menu.c car.c leaderboard_menu.c
+SRCS = main.c sprite.c font.c text_renderer.c timer.c utils.c video_card.c kbc.c anim_sprite.c mouse.c ui.c ui_utils.c loadingUI.c game_state.c menu.c select_difficulty.c select_car.c geometry.c player.c ai_car.c renderer.c game.c road.c gameover_menu.c car.c leaderboard_menu.c pause_menu.c
 CFLAGS += -pedantic -D_LCOM_OPTIMIZED_ -O2
 
 DPADD += ${LIBLCF}

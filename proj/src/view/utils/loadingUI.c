@@ -1,5 +1,5 @@
 #include <lcom/lcf.h>
-#include "LoadingUI.h"
+#include "loadingUI.h"
 
 LoadingUI *loading_ui_create(Font *font, uint16_t width, uint16_t height) {
     LoadingUI *ui = malloc(sizeof(LoadingUI));
