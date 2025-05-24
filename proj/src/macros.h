@@ -76,9 +76,9 @@ typedef enum {
 #define AI_ACCELERATION 100.0f
 #define AI_DECELERATION 80.0f
 
-#define AI_EASY_LOOKAHEAD 180.0f // 0.8s
-#define AI_MEDIUM_LOOKAHEAD 250.0f // 1.0s
-#define AI_HARD_LOOKAHEAD 340.0f // 1.2s
+#define AI_EASY_LOOKAHEAD 336.0f // 0.8s
+#define AI_MEDIUM_LOOKAHEAD 450.0f // 1.0s
+#define AI_HARD_LOOKAHEAD 540.0f // 1.2s
 
 #define AI_MAX_STEERING_RATE_RAD_PER_SEC (M_PI / 2.0f)
 

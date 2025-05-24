@@ -77,105 +77,50 @@ int sprite_draw_rotated_around_local_pivot(
 ) {
     if (!sprite || !sprite->map || sprite->width == 0 || sprite->height == 0) return 1;
 
-    /*
-    (void)cos_a; // Mark as unused for this simplified version
-    (void)sin_a; // Mark as unused for this simplified version
-
-    // Calculate the screen coordinates of the sprite's top-left corner
-    // such that its (local_pivot_x, local_pivot_y) aligns with (screen_pivot_x, screen_pivot_y)
-    int draw_top_left_x = local_pivot_x - screen_pivot_x;
-    int draw_top_left_y = local_pivot_y - screen_pivot_y;
-
-    uint16_t hres = get_hres();
-    uint16_t vres = get_vres();
-    uint32_t transparent_color_val = sprite->map[sprite->width * sprite->height - 1];
-
-    // Iterate through the sprite's pixels
-    for (int sprite_y_offset = draw_top_left_y; sprite_y_offset < draw_top_left_y + sprite->height; ++sprite_y_offset) {
-        for (int sprite_x_offset = draw_top_left_x; sprite_x_offset < draw_top_left_x + sprite->width; ++sprite_x_offset) {
-
-            // Current screen pixel to draw
-            int current_screen_x = sprite_x_offset - draw_top_left_x;
-            int current_screen_y = sprite_y_offset - draw_top_left_y;
-
-            // Basic screen clipping
-            if (current_screen_x < 0 || current_screen_x >= hres ||
-                current_screen_y < 0 || current_screen_y >= vres) {
-                continue;
-                }
-
-            uint32_t color = sprite->map[sprite_y_offset * sprite->width + sprite_x_offset];
-
-            if (has_transparent && color == transparent_color_val) {
-                continue;
-            }
-            vg_draw_pixel(current_screen_x, current_screen_y, color);
-        }
-    }
-    return 0;
-     */
-
     float sprite_width_f = (float)sprite->width;
     float sprite_height_f = (float)sprite->height;
 
-    float corners_rel_pivot_x[4], corners_rel_pivot_y[4];
-    corners_rel_pivot_x[0] = 0.0f - local_pivot_x;             corners_rel_pivot_y[0] = 0.0f - local_pivot_y;
-    corners_rel_pivot_x[1] = sprite_width_f - local_pivot_x;   corners_rel_pivot_y[1] = 0.0f - local_pivot_y;
-    corners_rel_pivot_x[2] = sprite_width_f - local_pivot_x;   corners_rel_pivot_y[2] = sprite_height_f - local_pivot_y;
-    corners_rel_pivot_x[3] = 0.0f - local_pivot_x;             corners_rel_pivot_y[3] = sprite_height_f - local_pivot_y;
+    float corners_rel_pivot_x[4] = { -local_pivot_x, sprite_width_f - local_pivot_x, sprite_width_f - local_pivot_x, -local_pivot_x };
+    float corners_rel_pivot_y[4] = { -local_pivot_y, -local_pivot_y, sprite_height_f - local_pivot_y, sprite_height_f - local_pivot_y };
 
-    float min_rot_x_rel_pivot = 1e9, max_rot_x_rel_pivot = -1e9;
-    float min_rot_y_rel_pivot = 1e9, max_rot_y_rel_pivot = -1e9;
-
+    float min_rot_x = 1e9f, max_rot_x = -1e9f, min_rot_y = 1e9f, max_rot_y = -1e9f;
     for (int i = 0; i < 4; ++i) {
-        float rotated_x = corners_rel_pivot_x[i] * cos_a - corners_rel_pivot_y[i] * sin_a;
-        float rotated_y = corners_rel_pivot_x[i] * sin_a + corners_rel_pivot_y[i] * cos_a;
-        if (rotated_x < min_rot_x_rel_pivot) min_rot_x_rel_pivot = rotated_x;
-        if (rotated_x > max_rot_x_rel_pivot) max_rot_x_rel_pivot = rotated_x;
-        if (rotated_y < min_rot_y_rel_pivot) min_rot_y_rel_pivot = rotated_y;
-        if (rotated_y > max_rot_y_rel_pivot) max_rot_y_rel_pivot = rotated_y;
+        float rx = corners_rel_pivot_x[i] * cos_a - corners_rel_pivot_y[i] * sin_a;
+        float ry = corners_rel_pivot_x[i] * sin_a + corners_rel_pivot_y[i] * cos_a;
+        if (rx < min_rot_x) min_rot_x = rx;
+        if (rx > max_rot_x) max_rot_x = rx;
+        if (ry < min_rot_y) min_rot_y = ry;
+        if (ry > max_rot_y) max_rot_y = ry;
     }
 
     uint16_t hres = get_hres();
     uint16_t vres = get_vres();
 
-    int start_draw_x = (int)floorf(screen_pivot_x + min_rot_x_rel_pivot);
-    int end_draw_x   = (int)ceilf(screen_pivot_x + max_rot_x_rel_pivot);
-    int start_draw_y = (int)floorf(screen_pivot_y + min_rot_y_rel_pivot);
-    int end_draw_y   = (int)ceilf(screen_pivot_y + max_rot_y_rel_pivot);
+    int start_x = screen_pivot_x + (int)min_rot_x;
+    int end_x   = screen_pivot_x + (int)max_rot_x + 1;
+    int start_y = screen_pivot_y + (int)min_rot_y;
+    int end_y   = screen_pivot_y + (int)max_rot_y + 1;
 
-    if (start_draw_x < 0) start_draw_x = 0;
-    if (end_draw_x > hres) end_draw_x = hres;
-    if (start_draw_y < 0) start_draw_y = 0;
-    if (end_draw_y > vres) end_draw_y = vres;
+    if (start_x < 0) start_x = 0;
+    if (end_x > hres) end_x = hres;
+    if (start_y < 0) start_y = 0;
+    if (end_y > vres) end_y = vres;
 
-    uint32_t transparent_color_val = sprite->map[sprite->width * sprite->height - 1];
+    uint32_t transparent = sprite->map[sprite->width * sprite->height - 1];
 
-    float dtex_x_dsx = cos_a;
-    float dtex_y_dsx = -sin_a;
-
-    for (int sy = start_draw_y; sy < end_draw_y; ++sy) {
-        float rel_sy_to_pivot = (float)sy - (float)screen_pivot_y;
-
-        float rel_sx_to_pivot_start = (float)start_draw_x - (float)screen_pivot_x;
-
-        float current_tex_x_unrotated_rel_pivot_start = rel_sx_to_pivot_start * cos_a + rel_sy_to_pivot * sin_a;
-        float current_tex_y_unrotated_rel_pivot_start = -rel_sx_to_pivot_start * sin_a + rel_sy_to_pivot * cos_a;
-
-        for (int sx = start_draw_x; sx < end_draw_x; ++sx) {
-            float delta = (float)(sx - start_draw_x);
-            float current_tex_x_unrotated_rel_pivot = current_tex_x_unrotated_rel_pivot_start + delta * dtex_x_dsx;
-            float current_tex_y_unrotated_rel_pivot = current_tex_y_unrotated_rel_pivot_start + delta * dtex_y_dsx;
-
-            int tex_x = (int)roundf(current_tex_x_unrotated_rel_pivot + local_pivot_x);
-            int tex_y = (int)roundf(current_tex_y_unrotated_rel_pivot + local_pivot_y);
+    for (int sy = start_y; sy < end_y; ++sy) {
+        float rel_sy = (float)sy - (float)screen_pivot_y;
+        for (int sx = start_x; sx < end_x; ++sx) {
+            float rel_sx = (float)sx - (float)screen_pivot_x;
+            float tex_x_f = rel_sx * cos_a + rel_sy * sin_a + local_pivot_x;
+            float tex_y_f = -rel_sx * sin_a + rel_sy * cos_a + local_pivot_y;
+            int tex_x = (int)(tex_x_f + 0.5f);
+            int tex_y = (int)(tex_y_f + 0.5f);
 
             if (tex_x >= 0 && tex_x < sprite->width && tex_y >= 0 && tex_y < sprite->height) {
                 uint32_t color = sprite->map[tex_y * sprite->width + tex_x];
-                if (has_transparent && color == transparent_color_val) {
-                    continue;
-                }
-                vg_draw_pixel(sx, sy, color);
+                if (!has_transparent || color != transparent)
+                    vg_draw_pixel(sx, sy, color);
             }
         }
     }

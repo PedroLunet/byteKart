@@ -242,6 +242,7 @@ AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDiffic
 
     Sprite *car_sprite = sprite_create_xpm(car_sprite_xpm, start_pos.x, start_pos.y, 0, 0);
     ai->sprite = car_sprite;
+    printf("AI Car %d created with sprite at position (%.2f, %.2f)\n", id, start_pos.x, start_pos.y);
 
     ai->current_lap = 0;
     ai->total_laps = MAX_LAPS;

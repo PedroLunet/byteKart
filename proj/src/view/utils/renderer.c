@@ -135,30 +135,23 @@ void renderer_draw_player_car(const Player *player, bool skid_input, int player_
 void renderer_draw_ai_car(const AICar *ai_car, const Player *player_view) {
     if (!ai_car || !player_view) return;
 
-    Point_i screen_pos;
-    renderer_transform_world_to_screen(player_view, ai_car->world_position, &screen_pos);
-
     if (ai_car->sprite) {
-        float rough_sprite_radius = (ai_car->sprite->width + ai_car->sprite->height) / 4.0f;
-        if (screen_pos.x + rough_sprite_radius < 0 || screen_pos.x - rough_sprite_radius > s_screen_width ||
-            screen_pos.y + rough_sprite_radius < 0 || screen_pos.y - rough_sprite_radius > s_screen_height) {
-            return;
-        }
+        Point_i screen_position;
+        renderer_transform_world_to_screen(player_view, ai_car->world_position, &screen_position);
 
-        float cos_ai_angle = ai_car->forward_direction.x;
-        float sin_ai_angle = ai_car->forward_direction.y;
-
-        float cos_render = sin_ai_angle;
-        float sin_render = -cos_ai_angle;
+        float rel_x =  ai_car->forward_direction.x * player_view->forward_direction.x +
+                       ai_car->forward_direction.y * player_view->forward_direction.y;
+        float rel_y = -ai_car->forward_direction.x * player_view->forward_direction.y +
+                        ai_car->forward_direction.y * player_view->forward_direction.x;
 
         int sprite_pivot_x = ai_car->sprite->width / 2;
         int sprite_pivot_y = ai_car->sprite->height / 2;
 
         sprite_draw_rotated_around_local_pivot(
             (Sprite*)ai_car->sprite,
-            screen_pos.x, screen_pos.y,
-            cos_render, sin_render,
+            screen_position.x, screen_position.y,
             sprite_pivot_x, sprite_pivot_y,
+            rel_x, -rel_y,
             true
         );
     }

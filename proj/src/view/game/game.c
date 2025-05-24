@@ -336,7 +336,11 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
 
     // Initialize AI Cars
     this->num_active_ai_cars = 0;
+    int ai_xpm_idx = 0;
     for (int i = 0; i < MAX_AI_CARS; i++) {
+
+        while (ai_xpm_idx == car_choice) ai_xpm_idx++;
+
         Point ai_start_pos = this->road_data.start_point;
         ai_start_pos.x -= (i + 1) * 30.0f;
         ai_start_pos.y += (i % 2 == 0 ? -1 : 1) * 20.0f;
@@ -354,7 +358,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
             ai_difficulty = AI_DIFFICULTY_HARD;
         }
 
-        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, NULL, &this->road_data);
+        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, car_xpms[ai_xpm_idx], &this->road_data);
         if (this->ai_cars[i]) {
             this->num_active_ai_cars++;
         } else {
@@ -363,6 +367,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
                 ai_car_destroy(this->ai_cars[j]);
             }
         }
+        ai_xpm_idx++;
     }
     if (this->num_active_ai_cars == 0 && MAX_AI_CARS > 0) {
         fprintf(stderr, "game_state_create_playing: No AI cars created.\n");
