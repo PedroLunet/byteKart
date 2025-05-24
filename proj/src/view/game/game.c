@@ -206,7 +206,7 @@ static void playing_update_internal(GameState *base) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
                     if (timer_counter % 60 == 0) {
-                        printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
+                        // printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
                     }
                 }
             }
