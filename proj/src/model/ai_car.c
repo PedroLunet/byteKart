@@ -1,6 +1,8 @@
 #include <lcom/lcf.h>
 #include "ai_car.h"
 
+extern int timer_counter;
+
 static void ai_car_update_effects(AICar *ai, float delta_time) {
     if (ai->speed_modifier_duration_s > 0) {
         ai->speed_modifier_duration_s -= delta_time;
@@ -133,6 +135,14 @@ static void ai_car_check_lap_completion(AICar *ai, Road *road) {
 
     bool was_in_approach = (prev_segment >= approach_zone_start_idx && prev_segment < N_segments);
     bool is_in_departure = (curr_segment >= FINISH_LINE_SEGMENT_IDX && curr_segment < departure_zone_end_idx);
+
+    if (timer_counter % 60 == 0) {
+        printf("AI LapChk: PrevS=%d, CurrS=%d, ApprStart=%d, DepEnd=%d, WasAppr=%d, IsDep=%d, CrossedFlag=%d\n",
+                prev_segment, curr_segment,
+                approach_zone_start_idx, departure_zone_end_idx,
+                was_in_approach, is_in_departure,
+                ai->just_crossed_finish_this_frame);
+    }
 
     if (was_in_approach && is_in_departure && prev_segment > curr_segment) {
         if (ai->current_lap <= ai->total_laps) {

@@ -10,6 +10,8 @@
 #include "view/game/road.h"
 #include "player.h"
 
+#include "lcom/timer.h"
+
 typedef enum {
     AI_DIFFICULTY_EASY,
     AI_DIFFICULTY_MEDIUM,

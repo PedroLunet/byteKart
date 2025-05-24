@@ -27,7 +27,7 @@ static void playing_draw_internal(GameState *base) {
                 renderer_draw_ai_car(this->ai_cars[i], &this->player);
             }
         }
-        renderer_draw_player_car(&this->player);
+        renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
         // TODO: Draw HUD (laps, speed, timer)
     }
@@ -84,9 +84,11 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             break;
             case SPACEBAR:
               this->player_skid_input_active = true;
+              this->player_skid_input_sign = (this->player_turn_input_sign == 0) ? 0 : this->player_turn_input_sign;
             break;
             case SPACEBAR_BREAK:
               this->player_skid_input_active = false;
+              this->player_skid_input_sign = 0;
             break;
             case P_KEY:
               if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
@@ -204,13 +206,13 @@ static void playing_update_internal(GameState *base) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
                     if (timer_counter % 60 == 0) {
-                        // printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
+                        printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
                     }
                 }
             }
             // TODO: Collision detection, lap counting, finish conditions
 
-            if (this->current_lap > this->player.total_laps) {
+            if (this->current_lap > this->total_laps) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
                 printf("Player finished all laps!\n");
             }
@@ -284,6 +286,8 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->playerCar.x = vbe_mode_info.XResolution / 2 - 30;
     this->playerCar.y = vbe_mode_info.YResolution - 100;
     this->playerCar.speed = 5;
+    this->precomputed_cos_skid = cos(PLAYER_SKID_ANGLE);
+    this->precomputed_sin_skid = sin(PLAYER_SKID_ANGLE);
 
     xpm_map_t car_xpms[4] = { (xpm_map_t)pink_car_xpm, (xpm_map_t)red_car_xpm,
                               (xpm_map_t)orange_car_xpm, (xpm_map_t)blue_car_xpm };
@@ -374,6 +378,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->timer_count_down = 3.99f;
     this->player_skid_input_active = false;
     this->player_turn_input_sign = 0;
+    this->total_laps = MAX_LAPS;
     this->current_lap = 0;
     this->pause_requested = false;
 

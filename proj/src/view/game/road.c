@@ -263,7 +263,7 @@ bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_ent
         last_known_idx = (last_known_idx % N_points + N_points) % N_points;
     }
 
-    int search_radius = 5;
+    int search_radius = 100;
     int best_found_idx_in_window = -1;
     float min_dist_sq_in_window = -1.0f;
     Point temp_closest_point;
