@@ -119,7 +119,8 @@ static void ai_car_check_lap_completion(AICar *ai, Road *road) {
 
     int N_segments = road->num_center_points;
 
-    if (ai->current_road_segment_idx != FINISH_LINE_SEGMENT_IDX && ai->current_road_segment_idx != ((FINISH_LINE_SEGMENT_IDX - 1 + N_segments) % N_segments) ) {
+    if (ai->current_road_segment_idx != FINISH_LINE_SEGMENT_IDX &&
+        ai->current_road_segment_idx != ((FINISH_LINE_SEGMENT_IDX - 1 + N_segments) % N_segments)) {
         ai->just_crossed_finish_this_frame = false;
     }
 
@@ -130,23 +131,29 @@ static void ai_car_check_lap_completion(AICar *ai, Road *road) {
     int prev_segment = ai->last_meaningful_road_segment_idx;
     int curr_segment = ai->current_road_segment_idx;
 
-    int approach_zone_start_idx = (int)(N_segments * LAP_APPROACH_ZONE_PERCENTAGE);
-    int departure_zone_end_idx = (int)(N_segments * LAP_DEPARTURE_ZONE_PERCENTAGE);
+    int approach_zone_start_idx = (FINISH_LINE_SEGMENT_IDX + (int)((float)N_segments * LAP_APPROACH_ZONE_PERCENTAGE)) % N_segments;
+    int departure_zone_end_idx  = (FINISH_LINE_SEGMENT_IDX + (int)((float)N_segments * LAP_DEPARTURE_ZONE_PERCENTAGE)) % N_segments;
 
-    bool was_in_approach = (prev_segment >= approach_zone_start_idx && prev_segment < N_segments);
-    bool is_in_departure = (curr_segment >= FINISH_LINE_SEGMENT_IDX && curr_segment < departure_zone_end_idx);
+    bool was_in_approach = (
+        (approach_zone_start_idx <= FINISH_LINE_SEGMENT_IDX)
+            ? (prev_segment >= approach_zone_start_idx && prev_segment < FINISH_LINE_SEGMENT_IDX)
+            : (prev_segment >= approach_zone_start_idx || prev_segment < FINISH_LINE_SEGMENT_IDX)
+    );
 
-    if (timer_counter % 60 == 0) {
-      /*
-        printf("AI LapChk: PrevS=%d, CurrS=%d, ApprStart=%d, DepEnd=%d, WasAppr=%d, IsDep=%d, CrossedFlag=%d\n",
-                prev_segment, curr_segment,
-                approach_zone_start_idx, departure_zone_end_idx,
-                was_in_approach, is_in_departure,
-                ai->just_crossed_finish_this_frame);
-       */
-    }
+    bool is_in_departure = (
+        (FINISH_LINE_SEGMENT_IDX <= departure_zone_end_idx)
+            ? (curr_segment >= FINISH_LINE_SEGMENT_IDX && curr_segment < departure_zone_end_idx)
+            : (curr_segment >= FINISH_LINE_SEGMENT_IDX || curr_segment < departure_zone_end_idx)
+    );
 
-    if (was_in_approach && is_in_departure && prev_segment > curr_segment) {
+    bool crossed_finish = (
+        (prev_segment < FINISH_LINE_SEGMENT_IDX && curr_segment >= FINISH_LINE_SEGMENT_IDX) ||
+        (prev_segment > curr_segment && (
+            curr_segment >= FINISH_LINE_SEGMENT_IDX || prev_segment < FINISH_LINE_SEGMENT_IDX
+        ))
+    );
+
+    if (was_in_approach && is_in_departure && crossed_finish) {
         if (ai->current_lap <= ai->total_laps) {
             ai->current_lap++;
             printf("AI Car %d on Lap: %d / %d\n", ai->id, (ai->current_lap > ai->total_laps ? ai->total_laps : ai->current_lap), ai->total_laps);
@@ -154,11 +161,8 @@ static void ai_car_check_lap_completion(AICar *ai, Road *road) {
 
         if (ai->current_lap > ai->total_laps) {
             printf("AI Car %d has finished the race!\n", ai->id);
-            // Optionally change AI behavior (e.g., slow down, change state to AI_STATE_FINISHED_RACE)
-            // ai->base_speed *= 0.5f;
-            // ai->current_behavior_state = AI_STATE_RECOVERING; // Or a new AI_STATE_FINISHED
         }
-        ai->just_crossed_finish_this_frame = true; // Mark this crossing event
+        ai->just_crossed_finish_this_frame = true;
     }
 }
 
