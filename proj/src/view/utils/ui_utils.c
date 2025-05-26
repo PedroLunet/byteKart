@@ -110,3 +110,19 @@ UIComponent *create_main_container(Sprite *background, int gap, int top_pad, int
     return mainContainer;
 }
 
+// Função genérica para criar opções em linha
+UIComponent *create_row_options(int gap, int layout, UIComponent *parent) {
+    UIComponent *optionsRowContainer = create_container_component(0, 0, 0, 0);
+    if (!optionsRowContainer) {
+        destroy_ui_component(parent);
+        return NULL;
+    }
+
+    set_container_layout(optionsRowContainer, layout, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_gap(optionsRowContainer, gap);
+    set_container_background_color(optionsRowContainer, 0x111111);
+    add_child_to_container_component(parent, optionsRowContainer);
+
+    return optionsRowContainer;
+}
+

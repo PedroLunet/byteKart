@@ -149,16 +149,7 @@ SelectCar *select_car_create() {
     titleText = create_title_text("Select your car", gameFont, 0xFFFFFF, carContainer);
 
     // Create a container for the car options in a row
-    optionsRowContainer = create_container_component(0, 0, 0, 0);
-    if (!optionsRowContainer) {
-        destroy_ui_component(carContainer);
-        free(this);
-        return NULL;
-    }
-    set_container_layout(optionsRowContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_gap(optionsRowContainer, 20);
-    set_container_background_color(optionsRowContainer, 0x111111);
-    add_child_to_container_component(carContainer, optionsRowContainer);
+    optionsRowContainer = create_row_options(20, LAYOUT_COLUMN, carContainer);
 
         // Create the first row of car options
         firstRowOptions = create_container_component(0, 0, 0, 0);
