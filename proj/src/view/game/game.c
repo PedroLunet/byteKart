@@ -182,6 +182,16 @@ static void update_countdown(Game *this, float delta_time) {
                     text_data->width = temp_x;
                     text_data->height = max_height;
                 }
+                
+                text_data->pixel_data = malloc(text_data->width * text_data->height * sizeof(uint32_t));
+                if (text_data->pixel_data == NULL) {
+                    fprintf(stderr, "Error allocating memory for countdown text pixel data\n");
+                    return;
+                }
+                for (int i = 0; i < text_data->width * text_data->height; i++) {
+                    text_data->pixel_data[i] = 0x00000000; 
+                }
+                
                 if (load_text(text_data->text, 0, 0, text_data->color, text_data->font, text_data->pixel_data, text_data->width) != 0) {
                     fprintf(stderr, "Error loading countdown text: %s\n", text_data->text);
                 }
