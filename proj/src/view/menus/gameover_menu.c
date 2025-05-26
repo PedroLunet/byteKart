@@ -22,14 +22,14 @@ static void gameover_draw_internal(GameState *base) {
   }
 }
 
-/*
+
 static void gameover_clean_dirty_mouse_internal(GameState *base) {
     GameOver *this = (GameOver *)base;
     if (this->uiRoot) {
         draw_dirty_area(this->uiRoot, base->prev_mouse_x, base->prev_mouse_y, base->prev_cursor_width, base->prev_cursor_height);
     }
 }
-*/
+
 
 static bool gameover_is_mouse_over_option(GameState *base, int mouse_x, int mouse_y, void *data) {
     int *selected_option = (int *)data;
@@ -40,7 +40,7 @@ static void gameover_process(GameState *base, EventType event) {
     GameOver *this = (GameOver *)base;
     int prevSelected = this->selectedOption;
     if (event == EVENT_MOUSE) {
-        if (base->handle_mouse_input(base, (void (*)(GameState *))gameover_draw, gameover_is_mouse_over_option, &this->selectedOption)) {
+        if (base->handle_mouse_input(base, (void (*)(GameState *))gameover_clean_dirty_mouse_internal, gameover_is_mouse_over_option, &this->selectedOption)) {
             if (this->selectedOption == 0) {
                 this->currentGameOverSubstate = GAMEOVER_RESTART;
             } else if (this->selectedOption == 1) {
