@@ -12,6 +12,8 @@
 #include "cars/orange_car.xpm"
 #include "cars/pink_car.xpm"
 #include "cars/red_car.xpm"
+#include "cars/black_car.xpm"
+#include "cars/green_car.xpm"
 #include "fonts/font_2_0.xpm"
 #include "game/byte-kart.xpm"
 

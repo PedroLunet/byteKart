@@ -44,11 +44,15 @@ typedef struct Game {
     bool race_started;
 
     bool player_skid_input_active;
+    int player_skid_input_sign; // -1 for left, 0 for none, 1 for right
     int player_turn_input_sign; // -1 for left, 0 for none, 1 for right
     bool pause_requested;
     Pause *pauseMenu;
 
     float timer_count_down;
+
+    float precomputed_cos_skid;
+    float precomputed_sin_skid;
 
     Car playerCar;
     Sprite *road_sprite1;

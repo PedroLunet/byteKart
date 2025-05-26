@@ -112,53 +112,46 @@ void renderer_draw_road(const Road *road, const Player *player_view) {
     }
 }
 
-void renderer_draw_player_car(const Player *player) {
+void renderer_draw_player_car(const Player *player, bool skid_input, int player_skid_input_sign, float cos_skid, float sin_skid) {
     if (!player) return;
     int screen_center_x = s_screen_width / 2;
     int screen_center_y = s_screen_height / 2;
 
     if (player->sprite) {
-
-        float cos_player_angle = 0;
-        float sin_player_angle = 1;
-
-        float cos_render = sin_player_angle;
-        float sin_render = -cos_player_angle;
+        float cos_tilt = 1.0f;
+        float sin_tilt = 0.0f;
+        if (skid_input) {
+            cos_tilt = cos_skid;
+            sin_tilt = -sin_skid * player_skid_input_sign;
+        }
 
         int sprite_pivot_x = player->sprite->width / 2;
     	int sprite_pivot_y = player->sprite->height / 2;
 
-        sprite_draw_rotated_around_local_pivot(player->sprite, screen_center_x, screen_center_y, sprite_pivot_x, sprite_pivot_y, cos_render, sin_render, true);
+        sprite_draw_rotated_around_local_pivot(player->sprite, screen_center_x, screen_center_y, sprite_pivot_x, sprite_pivot_y, cos_tilt, sin_tilt, true);
     }
 }
 
 void renderer_draw_ai_car(const AICar *ai_car, const Player *player_view) {
     if (!ai_car || !player_view) return;
 
-    Point_i screen_pos;
-    renderer_transform_world_to_screen(player_view, ai_car->world_position, &screen_pos);
-
     if (ai_car->sprite) {
-        float rough_sprite_radius = (ai_car->sprite->width + ai_car->sprite->height) / 4.0f;
-        if (screen_pos.x + rough_sprite_radius < 0 || screen_pos.x - rough_sprite_radius > s_screen_width ||
-            screen_pos.y + rough_sprite_radius < 0 || screen_pos.y - rough_sprite_radius > s_screen_height) {
-            return;
-        }
+        Point_i screen_position;
+        renderer_transform_world_to_screen(player_view, ai_car->world_position, &screen_position);
 
-        float cos_ai_angle = ai_car->forward_direction.x;
-        float sin_ai_angle = ai_car->forward_direction.y;
-
-        float cos_render = sin_ai_angle;
-        float sin_render = -cos_ai_angle;
+        float rel_x =  ai_car->forward_direction.x * player_view->forward_direction.x +
+                       ai_car->forward_direction.y * player_view->forward_direction.y;
+        float rel_y = -ai_car->forward_direction.x * player_view->forward_direction.y +
+                        ai_car->forward_direction.y * player_view->forward_direction.x;
 
         int sprite_pivot_x = ai_car->sprite->width / 2;
         int sprite_pivot_y = ai_car->sprite->height / 2;
 
         sprite_draw_rotated_around_local_pivot(
             (Sprite*)ai_car->sprite,
-            screen_pos.x, screen_pos.y,
-            cos_render, sin_render,
+            screen_position.x, screen_position.y,
             sprite_pivot_x, sprite_pivot_y,
+            rel_x, -rel_y,
             true
         );
     }

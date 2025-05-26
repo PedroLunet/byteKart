@@ -28,7 +28,7 @@ static void player_update_effects(Player *player, float delta_time) {
 static void player_update_speed_and_velocity_mk(Player *player, bool skid_input, float delta_time) {
     float target_speed_now = player->base_speed * player->current_speed_modifier;
 
-    if (skid_input) {
+    if (skid_input && player->current_speed > 350.0f) {
         player->current_speed -= player->skid_deceleration_value * delta_time;
     } else {
         if (player->current_speed < target_speed_now) {
@@ -60,16 +60,17 @@ static void player_apply_world_movement(Player *player, float delta_time) {
 }
 
 static void player_check_lap_completion(Player *player, Road *road) {
-    if (!player || !road) {
+    if (!player || !road || road->num_center_points < 2) {
         return;
     }
 
     int N_segments = road->num_center_points;
+
     int prev_segment_for_lap = player->last_meaningful_road_segment_idx;
     int current_segment = player->current_road_segment_idx;
 
-    int segment_before_finish_line = (FINISH_LINE_SEGMENT_IDX - 1 + N_segments) % N_segments;
-    if (current_segment != FINISH_LINE_SEGMENT_IDX && current_segment != segment_before_finish_line) {
+    int segment_just_before_finish = (FINISH_LINE_SEGMENT_IDX - 1 + N_segments) % N_segments;
+    if (current_segment != FINISH_LINE_SEGMENT_IDX && current_segment != segment_just_before_finish) {
         player->just_crossed_finish_this_frame = false;
     }
 
@@ -77,29 +78,38 @@ static void player_check_lap_completion(Player *player, Road *road) {
         return;
     }
 
-    int approach_zone_start_idx = (int)(N_segments * LAP_APPROACH_ZONE_PERCENTAGE);
-    int departure_zone_end_idx = (int)(N_segments * LAP_DEPARTURE_ZONE_PERCENTAGE);
-    if (departure_zone_end_idx <= FINISH_LINE_SEGMENT_IDX) {
-        departure_zone_end_idx = FINISH_LINE_SEGMENT_IDX + 1;
-    }
-     if (departure_zone_end_idx > N_segments) departure_zone_end_idx = N_segments;
+    int approach_zone_start_idx = (FINISH_LINE_SEGMENT_IDX + (int)((float)N_segments * LAP_APPROACH_ZONE_PERCENTAGE)) % N_segments;
+    int departure_zone_end_idx  = (FINISH_LINE_SEGMENT_IDX + (int)((float)N_segments * LAP_DEPARTURE_ZONE_PERCENTAGE)) % N_segments;
 
-    bool was_in_approach_zone = (prev_segment_for_lap >= approach_zone_start_idx && prev_segment_for_lap < N_segments);
-    bool is_in_departure_zone = (current_segment >= FINISH_LINE_SEGMENT_IDX && current_segment < departure_zone_end_idx);
+    bool was_in_approach_zone = (
+        (approach_zone_start_idx <= FINISH_LINE_SEGMENT_IDX)
+            ? (prev_segment_for_lap >= approach_zone_start_idx && prev_segment_for_lap < FINISH_LINE_SEGMENT_IDX)
+            : (prev_segment_for_lap >= approach_zone_start_idx || prev_segment_for_lap < FINISH_LINE_SEGMENT_IDX)
+    );
 
-    if (was_in_approach_zone && is_in_departure_zone && prev_segment_for_lap > current_segment) {
+    bool is_in_departure_zone = (
+        (FINISH_LINE_SEGMENT_IDX <= departure_zone_end_idx)
+            ? (current_segment >= FINISH_LINE_SEGMENT_IDX && current_segment < departure_zone_end_idx)
+            : (current_segment >= FINISH_LINE_SEGMENT_IDX || current_segment < departure_zone_end_idx)
+    );
+
+    bool crossed_finish = (
+        (prev_segment_for_lap < FINISH_LINE_SEGMENT_IDX && current_segment >= FINISH_LINE_SEGMENT_IDX) ||
+        (prev_segment_for_lap > current_segment && (
+            current_segment >= FINISH_LINE_SEGMENT_IDX || prev_segment_for_lap < FINISH_LINE_SEGMENT_IDX
+        ))
+    );
+
+    if (was_in_approach_zone && is_in_departure_zone && crossed_finish) {
         if (player->current_lap <= player->total_laps) {
             player->current_lap++;
 
             int display_lap = player->current_lap;
             if (player->current_lap > player->total_laps) {
                 display_lap = player->total_laps;
-            }
-
-            if (player->current_lap <= player->total_laps) {
-                printf("Player on Lap: %d / %d\n", display_lap, player->total_laps);
+                printf("Player has finished the race! (Completed Lap %d/%d)\n", display_lap, player->total_laps);
             } else {
-                printf("Player has finished the race! (Completed Lap %d/%d)\n", player->total_laps, player->total_laps);
+                printf("Player on Lap: %d / %d\n", display_lap, player->total_laps);
             }
         }
         player->just_crossed_finish_this_frame = true;
@@ -173,6 +183,9 @@ int player_create(Player *player, Point initial_car_center_world, float initial_
     player->just_crossed_finish_this_frame = false;
     player->last_meaningful_road_segment_idx = (road->num_center_points > 1) ? (road->num_center_points - 2) : 0;
 
+    player->hitbox_half_width = player->sprite->width / 2.0f;
+    player->hitbox_half_height = player->sprite->height / 2.0f;
+
     return 0;
 }
 
@@ -210,14 +223,13 @@ void player_update(Player *player, Road *road, bool skid_input, float delta_time
 
     player_update_effects(player, delta_time);
 
-    road_update_entity_on_track(road, &player->world_position_car_center,
-                                &player->current_road_segment_idx,
-                                &player->track_tangent_at_pos,
-                                &player->closest_point_on_track);
+    road_update_entity_on_track(road, &player->world_position_car_center, &player->current_road_segment_idx, &player->track_tangent_at_pos, &player->closest_point_on_track);
 
     player_update_speed_and_velocity_mk(player, skid_input, delta_time);
 
     player_apply_world_movement(player, delta_time);
+
+    obb_update(&player->obb, player->world_position_car_center, player->forward_direction, player->hitbox_half_width, player->hitbox_half_height);
 
     player_check_lap_completion(player, road);
 

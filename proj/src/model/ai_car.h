@@ -9,6 +9,9 @@
 #include "sprites/sprite.h"
 #include "view/game/road.h"
 #include "player.h"
+#include "model/obb.h"
+
+#include "lcom/timer.h"
 
 typedef enum {
     AI_DIFFICULTY_EASY,
@@ -60,6 +63,10 @@ typedef struct {
     int total_laps;
     bool just_crossed_finish_this_frame;
     int last_meaningful_road_segment_idx;
+
+    OBB obb;
+	float hitbox_half_width;
+  	float hitbox_half_height;
 
 } AICar;
 

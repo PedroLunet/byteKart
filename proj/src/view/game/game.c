@@ -7,6 +7,7 @@ extern uint8_t scancode;
 extern int timer_counter;
 static UIComponent *countdownTextComponent = NULL;
 extern Font *gameFont;
+extern const xpm_map_t car_choices[6];
 
 static void playing_draw_internal(GameState *base) {
     Game *this = (Game *)base;
@@ -33,7 +34,7 @@ static void playing_draw_internal(GameState *base) {
                 renderer_draw_ai_car(this->ai_cars[i], &this->player);
             }
         }
-        renderer_draw_player_car(&this->player);
+        renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
         // TODO: Draw HUD (laps, speed, timer)
     }
@@ -105,9 +106,11 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             break;
             case SPACEBAR:
               this->player_skid_input_active = true;
+              this->player_skid_input_sign = (this->player_turn_input_sign == 0) ? 0 : this->player_turn_input_sign;
             break;
             case SPACEBAR_BREAK:
               this->player_skid_input_active = false;
+              this->player_skid_input_sign = 0;
             break;
             case P_KEY:
               if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
@@ -235,7 +238,7 @@ static void playing_update_internal(GameState *base) {
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
             player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
             if (timer_counter % 60 == 0) {
-                printf("Player Position: (%d, %d)\n", (int)this->player.world_position_car_center.x, (int)this->player.world_position_car_center.y);
+                // printf("Player Position: (%d, %d)\n", (int)this->player.world_position_car_center.x, (int)this->player.world_position_car_center.y);
             }
 
             this->current_lap = this->player.current_lap;
@@ -249,8 +252,54 @@ static void playing_update_internal(GameState *base) {
                 }
             }
             // TODO: Collision detection, lap counting, finish conditions
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+        		if (this->ai_cars[i]) {
+            		if (obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb)) {
+                		printf("Collision: Player vs AI Car %d\n", this->ai_cars[i]->id);
+                		// TODO: Handle Player vs. AI collision response
+                		// E.g., player_handle_hard_collision(&game->player, game->player.current_speed * 0.5f);
+               			// E.g., ai_car_handle_hard_collision(game->ai_cars[i], game->ai_cars[i]->current_speed * 0.5f);
+            		}
+        		}
+    		}
 
-            if (this->current_lap > this->player.total_laps) {
+    		// AI vs. AI Cars
+    		for (int i = 0; i < this->num_active_ai_cars; ++i) {
+        		if (!this->ai_cars[i]) continue;
+        		for (int j = i + 1; j < this->num_active_ai_cars; ++j) {
+           			if (!this->ai_cars[j]) continue;
+            		if (obb_check_collision_obb_vs_obb(&this->ai_cars[i]->obb, &this->ai_cars[j]->obb)) {
+                		// printf("Collision: AI Car %d vs AI Car %d\n", this->ai_cars[i]->id, this->ai_cars[j]->id);
+                		// TODO: Handle AI vs. AI collision response
+            		}
+        		}
+    		}
+
+        	int player_seg_idx = this->player.current_road_segment_idx;
+   			int search_radius_edges = 10;
+    		int N_road_points = this->road_data.num_center_points;
+
+        	for (int i = 0; i < (2 * search_radius_edges + 1); ++i) {
+            	int offset = i - search_radius_edges;
+            	int seg_to_check = (player_seg_idx + offset % N_road_points + N_road_points) % N_road_points;
+            	int next_seg_to_check = (seg_to_check + 1) % N_road_points;
+
+            	Point p0_left = this->road_data.left_edge_points[seg_to_check];
+            	Point p1_left = this->road_data.left_edge_points[next_seg_to_check];
+            	if (obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_left, p1_left)) {
+                	// printf("Collision: Player vs Left Track Edge (segment %d)\n", seg_to_check);
+                	// TODO: Handle Player vs. Left Edge collision response
+            	}
+
+            	Point p0_right = this->road_data.right_edge_points[seg_to_check];
+            	Point p1_right = this->road_data.right_edge_points[next_seg_to_check];
+            	if (obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_right, p1_right)) {
+                	// printf("Collision: Player vs Right Track Edge (segment %d)\n", seg_to_check);
+                	// TODO: Handle Player vs. Right Edge collision response
+            	}
+        	}
+
+            if (this->current_lap > this->total_laps) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
                 printf("Player finished all laps!\n");
             }
@@ -331,10 +380,10 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->playerCar.x = vbe_mode_info.XResolution / 2 - 30;
     this->playerCar.y = vbe_mode_info.YResolution - 100;
     this->playerCar.speed = 5;
+    this->precomputed_cos_skid = cos(PLAYER_SKID_ANGLE);
+    this->precomputed_sin_skid = sin(PLAYER_SKID_ANGLE);
 
-    xpm_map_t car_xpms[4] = { (xpm_map_t)pink_car_xpm, (xpm_map_t)red_car_xpm,
-                              (xpm_map_t)orange_car_xpm, (xpm_map_t)blue_car_xpm };
-    this->playerCar.car_sprite = sprite_create_xpm(car_xpms[car_choice], 0, 0, 0, 0);
+    this->playerCar.car_sprite = sprite_create_xpm(car_choices[car_choice], 0, 0, 0, 0);
     if (!this->playerCar.car_sprite) {
         free(this);
         return NULL;
@@ -354,7 +403,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
-    if (road_load(&this->road_data, road_data_file, 700, 0x8EC940, road_surface_file, loading_ui) != 0) {
+    if (road_load(&this->road_data, road_data_file, 1200, 0x8EC940, road_surface_file, loading_ui) != 0) {
         printf("Failed to load road data\n");
         base_destroy(&this->base);
         free(this);
@@ -362,14 +411,16 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     }
 
     // Initialize Player
-    Point player_start_pos = this->road_data.start_point;
+    int creating_car_index = 0;
+    Point player_start_pos = road_get_start_point(&this->road_data, creating_car_index);
+    creating_car_index++;
     float player_initial_angle_rad = 0.0f;
     if (this->road_data.num_center_points > 1) {
         player_initial_angle_rad = atan2(this->road_data.center_points[1].y - this->road_data.center_points[0].y,
                                          this->road_data.center_points[1].x - this->road_data.center_points[0].x);
     }
 
-    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, car_xpms[car_choice]) != 0) {
+    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, car_choices[car_choice]) != 0) {
         printf("Failed to initialize player\n");
         road_destroy(&this->road_data);
         base_destroy(&this->base);
@@ -379,10 +430,14 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
 
     // Initialize AI Cars
     this->num_active_ai_cars = 0;
+    int ai_xpm_idx = 0;
     for (int i = 0; i < MAX_AI_CARS; i++) {
-        Point ai_start_pos = this->road_data.start_point;
-        ai_start_pos.x -= (i + 1) * 30.0f;
-        ai_start_pos.y += (i % 2 == 0 ? -1 : 1) * 20.0f;
+
+        while (ai_xpm_idx == car_choice) ai_xpm_idx++;
+        ai_xpm_idx %= 6;
+
+        Point ai_start_pos = road_get_start_point(&this->road_data, creating_car_index);
+        creating_car_index++;
 
         Vector ai_initial_dir_vec;
         ai_initial_dir_vec.x = cos(player_initial_angle_rad);
@@ -397,7 +452,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
             ai_difficulty = AI_DIFFICULTY_HARD;
         }
 
-        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, NULL, &this->road_data);
+        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, car_choices[ai_xpm_idx], &this->road_data);
         if (this->ai_cars[i]) {
             this->num_active_ai_cars++;
         } else {
@@ -406,6 +461,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
                 ai_car_destroy(this->ai_cars[j]);
             }
         }
+        ai_xpm_idx++;
     }
     if (this->num_active_ai_cars == 0 && MAX_AI_CARS > 0) {
         fprintf(stderr, "game_state_create_playing: No AI cars created.\n");
@@ -421,6 +477,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->timer_count_down = 3.99f;
     this->player_skid_input_active = false;
     this->player_turn_input_sign = 0;
+    this->total_laps = MAX_LAPS;
     this->current_lap = 0;
     this->pause_requested = false;
     this->pauseMenu = NULL;
