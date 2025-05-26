@@ -13,7 +13,7 @@ void vector_init(Vector *vector, float x, float y) {
     vector->magnitude = sqrtf(x * x + y * y);
 }
 
-float vector_dot_product(Vector *v1, Vector *v2) {
+float vector_dot_product(const Vector *v1, const Vector *v2) {
     return (v1->x * v2->x + v1->y * v2->y);
 }
 

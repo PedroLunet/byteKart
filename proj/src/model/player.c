@@ -183,6 +183,9 @@ int player_create(Player *player, Point initial_car_center_world, float initial_
     player->just_crossed_finish_this_frame = false;
     player->last_meaningful_road_segment_idx = (road->num_center_points > 1) ? (road->num_center_points - 2) : 0;
 
+    player->hitbox_half_width = player->sprite->width / 2.0f;
+    player->hitbox_half_height = player->sprite->height / 2.0f;
+
     return 0;
 }
 
@@ -220,14 +223,13 @@ void player_update(Player *player, Road *road, bool skid_input, float delta_time
 
     player_update_effects(player, delta_time);
 
-    road_update_entity_on_track(road, &player->world_position_car_center,
-                                &player->current_road_segment_idx,
-                                &player->track_tangent_at_pos,
-                                &player->closest_point_on_track);
+    road_update_entity_on_track(road, &player->world_position_car_center, &player->current_road_segment_idx, &player->track_tangent_at_pos, &player->closest_point_on_track);
 
     player_update_speed_and_velocity_mk(player, skid_input, delta_time);
 
     player_apply_world_movement(player, delta_time);
+
+    obb_update(&player->obb, player->world_position_car_center, player->forward_direction, player->hitbox_half_width, player->hitbox_half_height);
 
     player_check_lap_completion(player, road);
 

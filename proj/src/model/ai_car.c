@@ -236,18 +236,20 @@ AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDiffic
         }
         vector_init(&ai->track_tangent_at_pos, ai->track_tangent_at_pos.x, ai->track_tangent_at_pos.y);
         vector_normalize(&ai->track_tangent_at_pos);
-        fprintf(stderr, "Warning: AI car %d created off-track, defaulting to start.\n", id);
+        printf("Warning: AI car %d created off-track, defaulting to start.\n", id);
     }
     ai->target_track_point = ai->closest_point_on_track;
 
     Sprite *car_sprite = sprite_create_xpm(car_sprite_xpm, start_pos.x, start_pos.y, 0, 0);
     ai->sprite = car_sprite;
-    printf("AI Car %d created with sprite at position (%.2f, %.2f)\n", id, start_pos.x, start_pos.y);
 
     ai->current_lap = 0;
     ai->total_laps = MAX_LAPS;
     ai->just_crossed_finish_this_frame = false;
     ai->last_meaningful_road_segment_idx = (road->num_center_points > 1) ? (road->num_center_points - 2) : 0;
+
+    ai->hitbox_half_width = car_sprite->width / 2.0f;
+  	ai->hitbox_half_height = car_sprite->height / 2.0f;
 
     return ai;
 }
@@ -277,7 +279,10 @@ void ai_car_update(AICar *this, Road *road, Player *player, AICar *other_ai_cars
 
     ai_car_apply_movement(this, delta_time);
 
+    obb_update(&this->obb,  this->world_position,  this->forward_direction,  this->hitbox_half_width,  this->hitbox_half_height);
+
     ai_car_check_lap_completion(this, road);
+
     this->last_meaningful_road_segment_idx = this->current_road_segment_idx;
 }
 

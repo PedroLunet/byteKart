@@ -198,7 +198,7 @@ static void playing_update_internal(GameState *base) {
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
             player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
             if (timer_counter % 60 == 0) {
-                printf("Player Position: (%d, %d)\n", (int)this->player.world_position_car_center.x, (int)this->player.world_position_car_center.y);
+                // printf("Player Position: (%d, %d)\n", (int)this->player.world_position_car_center.x, (int)this->player.world_position_car_center.y);
             }
 
             this->current_lap = this->player.current_lap;
@@ -212,6 +212,52 @@ static void playing_update_internal(GameState *base) {
                 }
             }
             // TODO: Collision detection, lap counting, finish conditions
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+        		if (this->ai_cars[i]) {
+            		if (obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb)) {
+                		printf("Collision: Player vs AI Car %d\n", this->ai_cars[i]->id);
+                		// TODO: Handle Player vs. AI collision response
+                		// E.g., player_handle_hard_collision(&game->player, game->player.current_speed * 0.5f);
+               			// E.g., ai_car_handle_hard_collision(game->ai_cars[i], game->ai_cars[i]->current_speed * 0.5f);
+            		}
+        		}
+    		}
+
+    		// AI vs. AI Cars
+    		for (int i = 0; i < this->num_active_ai_cars; ++i) {
+        		if (!this->ai_cars[i]) continue;
+        		for (int j = i + 1; j < this->num_active_ai_cars; ++j) {
+           			if (!this->ai_cars[j]) continue;
+            		if (obb_check_collision_obb_vs_obb(&this->ai_cars[i]->obb, &this->ai_cars[j]->obb)) {
+                		// printf("Collision: AI Car %d vs AI Car %d\n", this->ai_cars[i]->id, this->ai_cars[j]->id);
+                		// TODO: Handle AI vs. AI collision response
+            		}
+        		}
+    		}
+
+        	int player_seg_idx = this->player.current_road_segment_idx;
+   			int search_radius_edges = 10;
+    		int N_road_points = this->road_data.num_center_points;
+
+        	for (int i = 0; i < (2 * search_radius_edges + 1); ++i) {
+            	int offset = i - search_radius_edges;
+            	int seg_to_check = (player_seg_idx + offset % N_road_points + N_road_points) % N_road_points;
+            	int next_seg_to_check = (seg_to_check + 1) % N_road_points;
+
+            	Point p0_left = this->road_data.left_edge_points[seg_to_check];
+            	Point p1_left = this->road_data.left_edge_points[next_seg_to_check];
+            	if (obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_left, p1_left)) {
+                	// printf("Collision: Player vs Left Track Edge (segment %d)\n", seg_to_check);
+                	// TODO: Handle Player vs. Left Edge collision response
+            	}
+
+            	Point p0_right = this->road_data.right_edge_points[seg_to_check];
+            	Point p1_right = this->road_data.right_edge_points[next_seg_to_check];
+            	if (obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_right, p1_right)) {
+                	// printf("Collision: Player vs Right Track Edge (segment %d)\n", seg_to_check);
+                	// TODO: Handle Player vs. Right Edge collision response
+            	}
+        	}
 
             if (this->current_lap > this->total_laps) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
@@ -310,7 +356,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
-    if (road_load(&this->road_data, road_data_file, 700, 0x8EC940, road_surface_file, loading_ui) != 0) {
+    if (road_load(&this->road_data, road_data_file, 1200, 0x8EC940, road_surface_file, loading_ui) != 0) {
         printf("Failed to load road data\n");
         base_destroy(&this->base);
         free(this);

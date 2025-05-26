@@ -12,6 +12,7 @@
 #include "macros.h"
 #include "sprites/sprite.h"
 #include "view/game/road.h"
+#include "model/obb.h"
 
 struct Road_s;
 
@@ -43,6 +44,10 @@ typedef struct Player_s {
     int last_meaningful_road_segment_idx;
 
     Sprite* sprite;
+
+    OBB obb;
+    float hitbox_half_width;
+  	float hitbox_half_height;
 
 } Player;
 
