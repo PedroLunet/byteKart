@@ -42,6 +42,7 @@ void road_draw(Road *road);
 bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_entity_current_segment_idx, Vector *out_tangent, Point *out_closest_point_on_centerline);
 bool road_get_tangent_at_world_pos_fullscan(Road *road, Point *world_pos, Vector *out_tangent, int *out_segment_idx, Point *out_closest_point_on_centerline);
 bool road_get_centerline_point(Road *road, int point_index, Point *out_point);
+Point road_get_start_point(Road *road, int car_index);
 
 Road *create_road(int road_number);
 

@@ -7,6 +7,7 @@ extern uint8_t scancode;
 extern int timer_counter;
 static UIComponent *countdownTextComponent = NULL;
 extern Font *gameFont;
+extern const xpm_map_t car_choices[6];
 
 static void playing_draw_internal(GameState *base) {
     Game *this = (Game *)base;
@@ -289,9 +290,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->precomputed_cos_skid = cos(PLAYER_SKID_ANGLE);
     this->precomputed_sin_skid = sin(PLAYER_SKID_ANGLE);
 
-    xpm_map_t car_xpms[4] = { (xpm_map_t)pink_car_xpm, (xpm_map_t)red_car_xpm,
-                              (xpm_map_t)orange_car_xpm, (xpm_map_t)blue_car_xpm };
-    this->playerCar.car_sprite = sprite_create_xpm(car_xpms[car_choice], 0, 0, 0, 0);
+    this->playerCar.car_sprite = sprite_create_xpm(car_choices[car_choice], 0, 0, 0, 0);
     if (!this->playerCar.car_sprite) {
         free(this);
         return NULL;
@@ -319,14 +318,16 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     }
 
     // Initialize Player
-    Point player_start_pos = this->road_data.start_point;
+    int creating_car_index = 0;
+    Point player_start_pos = road_get_start_point(&this->road_data, creating_car_index);
+    creating_car_index++;
     float player_initial_angle_rad = 0.0f;
     if (this->road_data.num_center_points > 1) {
         player_initial_angle_rad = atan2(this->road_data.center_points[1].y - this->road_data.center_points[0].y,
                                          this->road_data.center_points[1].x - this->road_data.center_points[0].x);
     }
 
-    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, car_xpms[car_choice]) != 0) {
+    if (player_create(&this->player, player_start_pos, player_initial_angle_rad, &this->road_data, car_choices[car_choice]) != 0) {
         printf("Failed to initialize player\n");
         road_destroy(&this->road_data);
         base_destroy(&this->base);
@@ -340,10 +341,10 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     for (int i = 0; i < MAX_AI_CARS; i++) {
 
         while (ai_xpm_idx == car_choice) ai_xpm_idx++;
+        ai_xpm_idx %= 6;
 
-        Point ai_start_pos = this->road_data.start_point;
-        ai_start_pos.x -= (i + 1) * 30.0f;
-        ai_start_pos.y += (i % 2 == 0 ? -1 : 1) * 20.0f;
+        Point ai_start_pos = road_get_start_point(&this->road_data, creating_car_index);
+        creating_car_index++;
 
         Vector ai_initial_dir_vec;
         ai_initial_dir_vec.x = cos(player_initial_angle_rad);
@@ -358,7 +359,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
             ai_difficulty = AI_DIFFICULTY_HARD;
         }
 
-        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, car_xpms[ai_xpm_idx], &this->road_data);
+        this->ai_cars[i] = ai_car_create(i, ai_start_pos, ai_initial_dir_vec, ai_difficulty, car_choices[ai_xpm_idx], &this->road_data);
         if (this->ai_cars[i]) {
             this->num_active_ai_cars++;
         } else {

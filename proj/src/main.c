@@ -218,7 +218,7 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             CarSelection chosenCar = select_car_get_chosen_level(selectCar);
             if (chosenCar == CAR_SELECTED) {
                 int carIndex = select_car_get_selected_option(selectCar);
-                if (carIndex == 4) {
+                if (carIndex == 6) {
                     select_car_reset_state(selectCar);
                     select_difficulty_reset_state(selectDifficulty);
 				    nextState = SELECT_DIFFICULTY;

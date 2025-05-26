@@ -52,7 +52,7 @@ typedef enum {
 
 // Game
 #define MAX_LAPS 3
-#define MAX_AI_CARS 1
+#define MAX_AI_CARS 3
 
 #define FINISH_LINE_SEGMENT_IDX 400
 #define LAP_APPROACH_ZONE_PERCENTAGE 0.85f

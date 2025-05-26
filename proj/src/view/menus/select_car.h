@@ -13,6 +13,8 @@
 #include "controller/mouse.h"
 #include "view/utils/ui_utils.h"
 
+extern const xpm_map_t car_choices[6];
+
 typedef enum {
     CAR_START,
     CAR_SELECTED,

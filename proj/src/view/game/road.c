@@ -363,3 +363,32 @@ bool road_get_centerline_point(Road *road, int point_index, Point *out_point) {
     return true;
 }
 
+Point road_get_start_point(Road *road, int car_index) {
+
+    if (!road || car_index < 0) {
+        return (Point){0.0f, 0.0f};
+    }
+
+    Point start_point = {0.0f, 0.0f};
+    switch (car_index) {
+        case 0:
+            start_point.y = 1216.0f;
+            start_point.x = 6670.0f;
+            return start_point;
+        case 1:
+            start_point.y = 1043.0f;
+            start_point.x = 6738.0f;
+            return start_point;
+        case 2:
+            start_point.y = 870.0f;
+            start_point.x = 6706.0f;
+            return start_point;
+        case 3:
+            start_point.y = 697.0f;
+            start_point.x = 6674.0f;
+            return start_point;
+        default:
+            return start_point;
+    }
+}
+
