@@ -35,14 +35,10 @@ static bool leaderboard_is_mouse_over(GameState *base, int mouse_x, int mouse_y,
     Leaderboard *this = (Leaderboard *)base;
     int *selected = (int *)data;
     *selected = -1;
-    if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
-        ContainerData *backButtonData = (ContainerData *)this->backButton->data;
-        if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
-            mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
-                *selected = 0;
-            return true;
-        }
-    }
+
+    if (is_mouse_over_back_button(this->backButton, mouse_x, mouse_y, selected, 0))
+        return true;
+
     return false;
 }
 

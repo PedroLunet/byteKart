@@ -30,7 +30,7 @@ UIComponent *create_menu_option(const char *text, Font *font, int width, int hei
   return container;
 }
 
-// Função genérica para verificar se o rato está dar hover
+// Função genérica para verificar se o rato está dar hover a opções do menu
 bool is_mouse_over_menu_options(GameState *base, int mouse_x, int mouse_y, UIComponent **options, size_t num_options, int *selected_option, uint32_t default_color, uint32_t hover_color) {
 
   *selected_option = -1;
@@ -124,5 +124,21 @@ UIComponent *create_row_options(int gap, int layout, UIComponent *parent) {
     add_child_to_container_component(parent, optionsRowContainer);
 
     return optionsRowContainer;
+}
+
+
+// Função genérica para ver se o rato está dar hover ao back button
+bool is_mouse_over_back_button(UIComponent *backButton, int mouse_x, int mouse_y, int *selected_option, int option) {
+
+    if (backButton && backButton->type == TYPE_CONTAINER && backButton->data) {
+        ContainerData *backButtonData = (ContainerData *)backButton->data;
+        if (mouse_x >= backButton->x && mouse_x < backButton->x + backButtonData->width &&
+            mouse_y >= backButton->y && mouse_y < backButton->y + backButtonData->height) {
+            *selected_option = option;
+            return true;
+        }
+    }
+
+    return false;
 }
 

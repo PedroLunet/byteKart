@@ -86,14 +86,8 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
         }
     }
 
-    if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
-        ContainerData *backButtonData = (ContainerData *)this->backButton->data;
-        if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
-            mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
-            *selected = 3;
-            return true;
-        }
-    }
+    if (is_mouse_over_back_button(this->backButton, mouse_x, mouse_y, selected, 3))
+        return true;
 
     return false;
 }

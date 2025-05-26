@@ -19,5 +19,6 @@ UIComponent *create_main_container(Sprite *background, int gap, int top_pad, int
 
 UIComponent *create_row_options(int gap, int layout, UIComponent *parent);
 
+bool is_mouse_over_back_button(UIComponent *backButton, int mouse_x, int mouse_y, int *selected_option, int option);
 #endif
 
