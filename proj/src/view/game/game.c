@@ -1,4 +1,5 @@
 #include <lcom/lcf.h>
+#include <string.h>
 
 #include "game.h"
 
@@ -229,6 +230,69 @@ static void update_countdown(Game *this, float delta_time) {
     }
 }
 
+static int calculate_race_position_score(int current_lap, int current_segment) {
+    return (current_lap * 27000) + current_segment; 
+}
+
+static void print_race_positions(Game *this) {
+    typedef struct {
+        int score;
+        int position;
+        const char* name;
+        int id;
+        int lap;
+        int segment;
+    } RaceEntry;
+    
+    RaceEntry entries[MAX_AI_CARS + 1]; 
+    int total_entries = 0;
+    
+    // Add player entry
+    entries[total_entries].score = calculate_race_position_score(this->player.current_lap, this->player.current_road_segment_idx);
+    entries[total_entries].name = "Player";
+    entries[total_entries].id = 0;
+    entries[total_entries].lap = this->player.current_lap;
+    entries[total_entries].segment = this->player.current_road_segment_idx;
+    total_entries++;
+    
+    // Add AI car entries
+    for (int i = 0; i < this->num_active_ai_cars; ++i) {
+        if (this->ai_cars[i]) {
+            entries[total_entries].score = calculate_race_position_score(this->ai_cars[i]->current_lap, this->ai_cars[i]->current_road_segment_idx);
+            entries[total_entries].name = "AI Car";
+            entries[total_entries].id = this->ai_cars[i]->id;
+            entries[total_entries].lap = this->ai_cars[i]->current_lap;
+            entries[total_entries].segment = this->ai_cars[i]->current_road_segment_idx;
+            total_entries++;
+        }
+    }
+    
+    for (int i = 0; i < total_entries - 1; i++) {
+        for (int j = 0; j < total_entries - i - 1; j++) {
+            if (entries[j].score < entries[j + 1].score) {
+                RaceEntry temp = entries[j];
+                entries[j] = entries[j + 1];
+                entries[j + 1] = temp;
+            }
+        }
+    }
+
+    printf("\n=== RACE POSITIONS ===\n");
+    for (int i = 0; i < total_entries; i++) {
+        entries[i].position = i + 1;
+        if (strcmp(entries[i].name, "Player") == 0) {
+            printf("%d. %s - Lap %d, Segment %d (Score: %d)\n", 
+                   entries[i].position, entries[i].name, 
+                   entries[i].lap, entries[i].segment, entries[i].score);
+        } else {
+            printf("%d. %s %d - Lap %d, Segment %d (Score: %d)\n", 
+                   entries[i].position, entries[i].name, entries[i].id,
+                   entries[i].lap, entries[i].segment, entries[i].score);
+        }
+    }
+    printf("======================\n\n");
+}
+
 static void playing_update_internal(GameState *base) {
     Game *this = (Game *)base;
     if (!this) return;
@@ -315,6 +379,11 @@ static void playing_update_internal(GameState *base) {
                 	// TODO: Handle Player vs. Right Edge collision response
             	}
         	}
+
+            // Print race positions every 3 seconds (180 frames at 60 FPS)
+            if (timer_counter % 180 == 0) {
+                print_race_positions(this);
+            }
 
             if (this->current_lap > this->total_laps) {
                 this->current_running_state = GAME_SUBSTATE_RACE_FINISH_DELAY;
