@@ -36,6 +36,15 @@ static void playing_draw_internal(GameState *base) {
         }
         renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
+        // Timer to 0 when countdown is running
+        if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
+            UIComponent *timerText = display_cronometer(0.0);
+            if (timerText) {
+                draw_ui_component(timerText);
+                destroy_ui_component(timerText);
+            }
+        }
+
         // TODO: Draw HUD (laps, speed)
         if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
             UIComponent *timerText = display_cronometer(this->cronometer_time);
