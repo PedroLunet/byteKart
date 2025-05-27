@@ -15,10 +15,6 @@ typedef enum {
 typedef struct Pause {
   GameState base;
   PauseSubstate currentPauseSubstate;
-  Sprite *pauseSprite;
-  Sprite *currentScoreSprite;
-  Sprite *resumeSprite;
-  Sprite *mainMenuSprite;
   int selectedOption;
   UIComponent *uiRoot;
 } Pause;

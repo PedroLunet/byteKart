@@ -5,6 +5,10 @@
 extern Font *gameFont;
 extern Game *game;
 
+static UIComponent *currentTime = NULL;
+static UIComponent *currentTimeContainer = NULL;
+static UIComponent *currentTimeText = NULL;
+
 UIComponent *display_cronometer(float cronometer_time) {
   char timer_string[16];
   int minutes = (int)(cronometer_time) / 60;
@@ -31,17 +35,15 @@ float get_current_cronometer_time() {
 
 UIComponent *display_current_time(UIComponent *parent) {
 
-  UIComponent *currentTime = display_cronometer(get_current_cronometer_time());
-  
-
-  UIComponent *currentTimeContainer = create_container_component(0, 0, 40, 40);
+  currentTime = display_cronometer(get_current_cronometer_time());
+  currentTimeContainer = create_container_component(0, 0, 40, 40);
   
   set_container_layout(currentTimeContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
   set_container_background_color(currentTimeContainer, 0x111111);
   set_container_padding(currentTimeContainer, 10, 10, 10, 10);
   set_container_border(currentTimeContainer, 2, 0x111111);
 
-  UIComponent *currentTimeText = create_text_component("Current Time: ", gameFont, 0xFFFFFF);
+  currentTimeText = create_text_component("Current Time: ", gameFont, 0xFFFFFF);
   if (!currentTimeText) {
     destroy_ui_component(parent);
     return NULL;

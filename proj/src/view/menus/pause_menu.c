@@ -38,7 +38,9 @@ static void pause_process(GameState *base, EventType event) {
     Pause *this = (Pause *)base;
     int prevSelected = this->selectedOption;
     if (event == EVENT_MOUSE) {
+      bool hovered = false;
         if (base->handle_mouse_input(base, (void (*)(GameState *))pause_clean_dirty_mouse_internal, pause_is_mouse_over_option, &this->selectedOption)) {
+          hovered = true;
             if (this->selectedOption == 0) {
               this->currentPauseSubstate = PAUSE_RESUME;
             } else if (this->selectedOption == 1) {
