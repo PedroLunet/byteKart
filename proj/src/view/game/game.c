@@ -324,6 +324,24 @@ static void playing_update_internal(GameState *base) {
 
             break;
         case GAME_SUBSTATE_RACE_FINISH_DELAY:
+            this->road_y1 += 2;
+            this->road_y2 += 2;
+
+            if (this->road_y1 >= (int)vbe_mode_info.YResolution)
+                this->road_y1 = -this->road_sprite1->height;
+
+            if (this->road_y2 >= (int)vbe_mode_info.YResolution)
+                this->road_y2 = -this->road_sprite2->height;
+
+            player_handle_turn_input(&this->player, this->player_turn_input_sign);
+            player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
+
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+                if (this->ai_cars[i]) {
+                    ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
+                }
+            }
+
             this->finish_race_delay_timer -= delta_time;
             if (this->finish_race_delay_timer <= 0.0f) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
