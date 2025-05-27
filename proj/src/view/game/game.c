@@ -197,28 +197,40 @@ static void playing_update_internal(GameState *base) {
 
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
             player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
-            if (timer_counter % 60 == 0) {
-                // printf("Player Position: (%d, %d)\n", (int)this->player.world_position_car_center.x, (int)this->player.world_position_car_center.y);
-            }
 
             this->current_lap = this->player.current_lap;
 
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
-                    if (timer_counter % 60 == 0) {
-                        // printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
-                    }
                 }
             }
-            // TODO: Collision detection, lap counting, finish conditions
+
+            CollisionInfo collision_info;
+    		float restitution = 0.4f;
+
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
         		if (this->ai_cars[i]) {
-            		if (obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb)) {
-                		printf("Collision: Player vs AI Car %d\n", this->ai_cars[i]->id);
-                		// TODO: Handle Player vs. AI collision response
-                		// E.g., player_handle_hard_collision(&game->player, game->player.current_speed * 0.5f);
-               			// E.g., ai_car_handle_hard_collision(game->ai_cars[i], game->ai_cars[i]->current_speed * 0.5f);
+            		obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb, &collision_info);
+            		if (collision_info.occurred) {
+                		printf("Collision: Player vs AI %d (Depth: %f, Normal: %f,%f)\n", this->ai_cars[i]->id, collision_info.penetration_depth, collision_info.collision_normal.x, collision_info.collision_normal.y);
+
+                		Vector player_mtv_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                        vector_init(&player_mtv_normal, player_mtv_normal.x, player_mtv_normal.y);
+                		physics_resolve_overlap(&this->player.world_position_car_center, &player_mtv_normal, collision_info.penetration_depth * 0.5f);
+
+                		Vector ai_mtv_normal = collision_info.collision_normal;
+                		physics_resolve_overlap(&this->ai_cars[i]->world_position, &ai_mtv_normal, collision_info.penetration_depth * 0.5f);
+
+
+                		obb_update(&this->player.obb, this->player.world_position_car_center, this->player.forward_direction, this->player.hitbox_half_width, this->player.hitbox_half_height);
+                		obb_update(&this->ai_cars[i]->obb, this->ai_cars[i]->world_position, this->ai_cars[i]->forward_direction, this->ai_cars[i]->hitbox_half_width, this->ai_cars[i]->hitbox_half_height);
+
+                		physics_apply_bounce(&this->player.current_velocity, &this->player.current_speed, &this->player.forward_direction, &collision_info.collision_normal, restitution);
+
+                		Vector ai_surface_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                        vector_init(&ai_surface_normal, ai_surface_normal.x, ai_surface_normal.y);
+                		physics_apply_bounce(&this->ai_cars[i]->current_velocity, &this->ai_cars[i]->current_speed, &this->ai_cars[i]->forward_direction, &ai_surface_normal, restitution);
             		}
         		}
     		}
@@ -227,37 +239,69 @@ static void playing_update_internal(GameState *base) {
     		for (int i = 0; i < this->num_active_ai_cars; ++i) {
         		if (!this->ai_cars[i]) continue;
         		for (int j = i + 1; j < this->num_active_ai_cars; ++j) {
-           			if (!this->ai_cars[j]) continue;
-            		if (obb_check_collision_obb_vs_obb(&this->ai_cars[i]->obb, &this->ai_cars[j]->obb)) {
-                		// printf("Collision: AI Car %d vs AI Car %d\n", this->ai_cars[i]->id, this->ai_cars[j]->id);
-                		// TODO: Handle AI vs. AI collision response
+            		if (!this->ai_cars[j]) continue;
+
+            		obb_check_collision_obb_vs_obb(&this->ai_cars[i]->obb, &this->ai_cars[j]->obb, &collision_info);
+            		if (collision_info.occurred) {
+                		printf("Collision: AI %d vs AI %d (Depth: %f)\n", this->ai_cars[i]->id, this->ai_cars[j]->id, collision_info.penetration_depth);
+
+                		Vector ai1_mtv_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                        vector_init(&ai1_mtv_normal, ai1_mtv_normal.x, ai1_mtv_normal.y);
+                		physics_resolve_overlap(&this->ai_cars[i]->world_position, &ai1_mtv_normal, collision_info.penetration_depth * 0.5f);
+
+                		Vector ai2_mtv_normal = collision_info.collision_normal;
+                		physics_resolve_overlap(&this->ai_cars[j]->world_position, &ai2_mtv_normal, collision_info.penetration_depth * 0.5f);
+
+                		obb_update(&this->ai_cars[i]->obb, this->ai_cars[i]->world_position, this->ai_cars[i]->forward_direction, this->ai_cars[i]->hitbox_half_width, this->ai_cars[i]->hitbox_half_height);
+                		obb_update(&this->ai_cars[j]->obb, this->ai_cars[j]->world_position, this->ai_cars[j]->forward_direction, this->ai_cars[j]->hitbox_half_width, this->ai_cars[j]->hitbox_half_height);
+
+                		physics_apply_bounce(&this->ai_cars[i]->current_velocity, &this->ai_cars[i]->current_speed, &this->ai_cars[i]->forward_direction, &collision_info.collision_normal, restitution);
+                		Vector ai2_surface_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                        vector_init(&ai2_surface_normal, ai2_surface_normal.x, ai2_surface_normal.y);
+                		physics_apply_bounce(&this->ai_cars[j]->current_velocity, &this->ai_cars[j]->current_speed, &this->ai_cars[j]->forward_direction, &ai2_surface_normal, restitution);
             		}
         		}
     		}
 
-        	int player_seg_idx = this->player.current_road_segment_idx;
-   			int search_radius_edges = 10;
-    		int N_road_points = this->road_data.num_center_points;
+        	/*
+        	int player_seg_idx = game->player.current_road_segment_idx;
+    		int search_radius_edges = 3;
+    		int N_road_points = game->road_data.num_center_points;
 
-        	for (int i = 0; i < (2 * search_radius_edges + 1); ++i) {
-            	int offset = i - search_radius_edges;
-            	int seg_to_check = (player_seg_idx + offset % N_road_points + N_road_points) % N_road_points;
-            	int next_seg_to_check = (seg_to_check + 1) % N_road_points;
+    		if (N_road_points >= 2 && game->road_data.left_edge_points && game->road_data.right_edge_points) {
+        		for (int i = 0; i < (2 * search_radius_edges + 1); ++i) {
+            		int offset = i - search_radius_edges;
+            		int seg_to_check = (player_seg_idx + offset % N_road_points + N_road_points) % N_road_points;
+            		int next_seg_to_check = (seg_to_check + 1) % N_road_points;
 
-            	Point p0_left = this->road_data.left_edge_points[seg_to_check];
-            	Point p1_left = this->road_data.left_edge_points[next_seg_to_check];
-            	if (obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_left, p1_left)) {
-                	// printf("Collision: Player vs Left Track Edge (segment %d)\n", seg_to_check);
-                	// TODO: Handle Player vs. Left Edge collision response
-            	}
+            		Point p0_left = game->road_data.left_edge_points[seg_to_check];
+            		Point p1_left = game->road_data.left_edge_points[next_seg_to_check];
+            		obb_check_collision_obb_vs_line_segment(&game->player.obb, p0_left, p1_left, &collision_info);
+            		if (collision_info.occurred) {
+                		printf("Collision: Player vs Left Edge (Seg %d, Depth: %f)\n", seg_to_check, collision_info.penetration_depth);
 
-            	Point p0_right = this->road_data.right_edge_points[seg_to_check];
-            	Point p1_right = this->road_data.right_edge_points[next_seg_to_check];
-            	if (obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_right, p1_right)) {
-                	// printf("Collision: Player vs Right Track Edge (segment %d)\n", seg_to_check);
-                	// TODO: Handle Player vs. Right Edge collision response
-            	}
-        	}
+                		Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y};
+                		physics_resolve_overlap(&game->player.world_position_car_center, &push_normal, collision_info.penetration_depth);
+                		obb_update(&game->player.obb, game->player.world_position_car_center, game->player.forward_direction, game->player.hitbox_half_width, game->player.hitbox_half_height);
+
+                		physics_apply_bounce(&game->player.current_velocity, &game->player.current_speed, &game->player.forward_direction,
+                                     &collision_info.collision_normal, restitution);
+            		}
+
+            		Point p0_right = game->road_data.right_edge_points[seg_to_check];
+            		Point p1_right = game->road_data.right_edge_points[next_seg_to_check];
+            		obb_check_collision_obb_vs_line_segment(&game->player.obb, p0_right, p1_right, &collision_info);
+            		if (collision_info.occurred) {
+                		printf("Collision: Player vs Right Edge (Seg %d, Depth: %f)\n", seg_to_check, collision_info.penetration_depth);
+                		Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y};
+                		physics_resolve_overlap(&game->player.world_position_car_center, &push_normal, collision_info.penetration_depth);
+                		obb_update(&game->player.obb, game->player.world_position_car_center, game->player.forward_direction, game->player.hitbox_half_width, game->player.hitbox_half_height);
+                		physics_apply_bounce(&game->player.current_velocity, &game->player.current_speed, &game->player.forward_direction, &collision_info.collision_normal, restitution);
+            		}
+        		}
+    		}
+
+        	 */
 
             if (this->current_lap > this->total_laps) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;

@@ -32,6 +32,7 @@ typedef struct {
     Point world_position;
     Vector forward_direction;
     float current_speed;
+    Vector current_velocity;
 
     float base_speed;
     float current_speed_modifier;

@@ -10,6 +10,7 @@
 #include "view/utils/ui.h"
 #include "model/player.h"
 #include "model/ai_car.h"
+#include "model/physics_utils.h"
 #include "sprites/sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
