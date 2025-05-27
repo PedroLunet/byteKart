@@ -24,6 +24,7 @@ typedef enum {
   GAME_SUBSTATE_COUNTDOWN,
   GAME_SUBSTATE_PLAYING,
   GAME_SUBSTATE_PAUSED,
+  GAME_SUBSTATE_RACE_FINISH_DELAY,
   GAME_SUBSTATE_FINISHED_RACE,
   GAME_SUBSTATE_BACK_TO_MENU,
   GAME_STATE_EXITING,
@@ -52,6 +53,7 @@ typedef struct Game {
     FinishRace *finishRaceMenu;
 
     float timer_count_down;
+    float finish_race_delay_timer;
 
     float precomputed_cos_skid;
     float precomputed_sin_skid;

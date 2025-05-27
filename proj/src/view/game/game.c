@@ -25,6 +25,7 @@ static void playing_draw_internal(GameState *base) {
 
     if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
         this->current_running_state == GAME_SUBSTATE_COUNTDOWN ||
+        this->current_running_state == GAME_SUBSTATE_RACE_FINISH_DELAY ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
 
         renderer_draw_road(&this->road_data, &this->player);
@@ -316,13 +317,21 @@ static void playing_update_internal(GameState *base) {
         	}
 
             if (this->current_lap > this->total_laps) {
+                this->current_running_state = GAME_SUBSTATE_RACE_FINISH_DELAY;
+                this->finish_race_delay_timer = 1.0f; // 1 second delay
+                printf("Player finished all laps! Starting delay...\n");
+            }
+
+            break;
+        case GAME_SUBSTATE_RACE_FINISH_DELAY:
+            this->finish_race_delay_timer -= delta_time;
+            if (this->finish_race_delay_timer <= 0.0f) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
                 if (!this->finishRaceMenu) {
                     this->finishRaceMenu = finish_race_menu_create();
                 }
-                printf("Player finished all laps!\n");
+                printf("Delay finished, showing finish race menu!\n");
             }
-
             break;
         case GAME_SUBSTATE_PAUSED:
             break;
@@ -499,6 +508,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     // Initialize Game State
     this->current_running_state = GAME_SUBSTATE_COUNTDOWN;
     this->timer_count_down = 3.99f;
+    this->finish_race_delay_timer = 0.0f;
     this->player_skid_input_active = false;
     this->player_turn_input_sign = 0;
     this->total_laps = MAX_LAPS;
