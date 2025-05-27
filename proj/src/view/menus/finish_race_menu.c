@@ -83,6 +83,7 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
     // Create positions container
     positionsContainer = create_container_component(0, 0, 400, 300);
     set_container_layout(positionsContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(positionsContainer, 0x222222);
     set_container_gap(positionsContainer, 10);
     add_child_to_container_component(finishRaceContainer, positionsContainer);
 
