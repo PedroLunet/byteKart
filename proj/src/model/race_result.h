@@ -9,6 +9,7 @@ typedef struct {
     int lap;
     int segment;
     int score;
+    float race_time; 
 } RaceResult;
 
 #endif

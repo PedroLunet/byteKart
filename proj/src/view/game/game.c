@@ -346,8 +346,16 @@ static void calculate_final_race_positions(Game *this, RaceResult *results, int 
         results[i].position = i + 1;
         if (strcmp(entries[i].name, "Player") == 0) {
             strcpy(results[i].name, "Player");
+            results[i].race_time = this->player_finish_time;
         } else {
             sprintf(results[i].name, "AI Car %d", entries[i].id);
+            // Find the corresponding AI car and get its finish time
+            for (int j = 0; j < this->num_active_ai_cars; j++) {
+                if (this->ai_cars[j] && this->ai_cars[j]->id == entries[i].id) {
+                    results[i].race_time = this->ai_cars[j]->finish_time;
+                    break;
+                }
+            }
         }
         results[i].id = entries[i].id;
         results[i].lap = entries[i].lap;
@@ -453,6 +461,12 @@ static void playing_update_internal(GameState *base) {
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
+                    
+                    if (this->ai_cars[i]->has_finished && this->ai_cars[i]->finish_time == 0.0f) {
+                        ai_car_set_finish_time(this->ai_cars[i], this->race_timer_s);
+                        printf("AI Car %d finished at time: %.2f seconds\n", this->ai_cars[i]->id, this->race_timer_s);
+                    }
+                    
                     if (timer_counter % 60 == 0) {
                         // printf("AI Car %d Position: (%d, %d)\n", this->ai_cars[i]->id, (int)this->ai_cars[i]->world_position.x, (int)this->ai_cars[i]->world_position.y);
                     }
@@ -558,6 +572,11 @@ static void playing_update_internal(GameState *base) {
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
+                    
+                    if (this->ai_cars[i]->has_finished && this->ai_cars[i]->finish_time == 0.0f) {
+                        ai_car_set_finish_time(this->ai_cars[i], this->race_timer_s);
+                        printf("AI Car %d finished at time: %.2f seconds\n", this->ai_cars[i]->id, this->race_timer_s);
+                    }
                 }
             }
 
@@ -575,7 +594,7 @@ static void playing_update_internal(GameState *base) {
                 this->finish_race_delay_timer = 1.0f; // 1 second delay
                 printf("All remaining cars finished! Starting delay...\n");
             }
-            
+
             if (timer_counter % 180 == 0) {
                 print_race_positions(this);
             }
@@ -597,6 +616,11 @@ static void playing_update_internal(GameState *base) {
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
+                    
+                    if (this->ai_cars[i]->has_finished && this->ai_cars[i]->finish_time == 0.0f) {
+                        ai_car_set_finish_time(this->ai_cars[i], this->race_timer_s);
+                        printf("AI Car %d finished at time: %.2f seconds\n", this->ai_cars[i]->id, this->race_timer_s);
+                    }
                 }
             }
 

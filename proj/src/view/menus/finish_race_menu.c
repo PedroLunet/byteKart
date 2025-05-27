@@ -105,11 +105,11 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
                             0xFFFFFF;              // White for others
             
             if (strcmp(results[i].name, "Player") == 0) {
-                sprintf(position_text, "%d. %s (Lap %d)", 
-                       results[i].position, results[i].name, results[i].lap);
+                sprintf(position_text, "%d. %s (%.2fs)", 
+                       results[i].position, results[i].name, results[i].race_time);
             } else {
-                sprintf(position_text, "%d. %s (Lap %d)", 
-                       results[i].position, results[i].name, results[i].lap);
+                sprintf(position_text, "%d. %s (%.2fs)", 
+                       results[i].position, results[i].name, results[i].race_time);
             }
             
             UIComponent *positionText = create_text_component(position_text, gameFont, color);
