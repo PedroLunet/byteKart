@@ -5,7 +5,7 @@
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
 extern int timer_counter;
-static UIComponent *countdownTextComponent = NULL;
+static UIComponent *countdownText = NULL;
 extern Font *gameFont;
 extern const xpm_map_t car_choices[6];
 
@@ -36,12 +36,25 @@ static void playing_draw_internal(GameState *base) {
         }
         renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
-        // Timer to 0 when countdown is running
         if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
-            UIComponent *timerText = display_cronometer(0.0);
+            UIComponent *timerText = display_cronometer(0.0); // Timer to 0 when countdown is running
+
             if (timerText) {
                 draw_ui_component(timerText);
                 destroy_ui_component(timerText);
+            }
+
+            if (countdownText) {
+                draw_ui_component(countdownText);
+            }
+
+            int count = this->timer_count_down;
+            if (count > 0.0f && count <= 3.0f) {
+                if (count % 1 == 0) {
+                    printf("Countdown: %d\n", (int)count);
+                }
+            } else if (count <= 0) {
+                    printf("GO!\n");
             }
         }
 
@@ -59,16 +72,6 @@ static void playing_draw_internal(GameState *base) {
         return; 
     }
 
-    if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
-        int count = this->timer_count_down;
-        if (count > 0.0f && count <= 3.0f) {
-          if (count % 1 == 0) {
-             printf("Countdown: %d\n", (int)count);
-          }
-        } else if (count <= 0) {
-            printf("GO!\n");
-        }
-    }
     else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
 }
 
@@ -171,7 +174,7 @@ static void playing_process_event_internal(GameState *base, EventType event) {
 static void update_countdown(Game *this, float delta_time) {
     if (this->timer_count_down > 0.0f) {
         this->timer_count_down -= delta_time;
-        if (countdownTextComponent) {
+        if (countdownText) {
             char countdown_str[5];
             int count = (int)this->timer_count_down;
             if (count > 0 && count <= 3) {
@@ -181,7 +184,7 @@ static void update_countdown(Game *this, float delta_time) {
             } else {
                 countdown_str[0] = '\0';
             }
-            TextElementData *text_data = (TextElementData *)countdownTextComponent->data;
+            TextElementData *text_data = (TextElementData *)countdownText->data;
             if (text_data && strcmp(text_data->text, countdown_str) != 0) {
                 free(text_data->text);
                 text_data->text = strdup(countdown_str);
@@ -216,16 +219,16 @@ static void update_countdown(Game *this, float delta_time) {
                 if (load_text(text_data->text, 0, 0, text_data->color, text_data->font, text_data->pixel_data, text_data->width) != 0) {
                     fprintf(stderr, "Error loading countdown text: %s\n", text_data->text);
                 }
-                countdownTextComponent->x = vbe_mode_info.XResolution / 2 - text_data->width / 2;
-                countdownTextComponent->y = vbe_mode_info.YResolution / 2 - text_data->height / 2;
+                countdownText->x = vbe_mode_info.XResolution / 2 - text_data->width / 2;
+                countdownText->y = vbe_mode_info.YResolution / 2 - text_data->height / 2;
             }
         }
     }
     if (this->timer_count_down <= 0) {
         this->current_running_state = GAME_SUBSTATE_PLAYING;
-        if (countdownTextComponent) {
-            destroy_ui_component(countdownTextComponent);
-            countdownTextComponent = NULL;
+        if (countdownText) {
+            destroy_ui_component(countdownText);
+            countdownText = NULL;
         }
     }
 }
@@ -356,9 +359,9 @@ static void playing_destroy_internal(GameState *base) {
         ai_car_destroy(this->ai_cars[i]);
     }
 
-    if (countdownTextComponent) {
-        destroy_ui_component(countdownTextComponent);
-        countdownTextComponent = NULL;
+    if (countdownText) {
+        destroy_ui_component(countdownText);
+        countdownText = NULL;
     }
     
     if (this->pauseMenu) {
@@ -506,11 +509,11 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->timer_count_down = 3.99f;
 
 
-    countdownTextComponent = create_text_component("3", gameFont, 0xFFFFFF); 
-    if (countdownTextComponent && countdownTextComponent->data) {
-        TextElementData *data = (TextElementData *)countdownTextComponent->data;
-        countdownTextComponent->x = vbe_mode_info.XResolution / 2 - data->width / 2;
-        countdownTextComponent->y = vbe_mode_info.YResolution / 2 - data->height / 2;
+    countdownText = create_text_component("3", gameFont, 0xFFFFFF); 
+    if (countdownText && countdownText->data) {
+        TextElementData *data = (TextElementData *)countdownText->data;
+        countdownText->x = vbe_mode_info.XResolution / 2 - data->width / 2;
+        countdownText->y = vbe_mode_info.YResolution / 2 - data->height / 2;
     }
     
     return this;
