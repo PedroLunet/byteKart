@@ -13,6 +13,7 @@ static UIComponent *pauseText = NULL;
 static UIComponent *resumeContainer = NULL;
 static UIComponent *mainMenuContainer = NULL;
 static UIComponent *pauseOptions[2];
+static UIComponent *currentTime = NULL;
 
 static void pause_draw_internal(GameState *base) {
   Pause *this = (Pause *)base;
@@ -37,7 +38,9 @@ static void pause_process(GameState *base, EventType event) {
     Pause *this = (Pause *)base;
     int prevSelected = this->selectedOption;
     if (event == EVENT_MOUSE) {
+      bool hovered = false;
         if (base->handle_mouse_input(base, (void (*)(GameState *))pause_clean_dirty_mouse_internal, pause_is_mouse_over_option, &this->selectedOption)) {
+          hovered = true;
             if (this->selectedOption == 0) {
               this->currentPauseSubstate = PAUSE_RESUME;
             } else if (this->selectedOption == 1) {
@@ -80,6 +83,9 @@ Pause *pause_menu_create() {
 
     // Title
     pauseText = create_title_text("Game Paused", gameFont, 0xFFFFFF, pauseContainer);
+
+    // Display current time 
+    currentTime = display_current_time(pauseContainer);
 
     // Resume option
     resumeContainer = create_menu_option("Resume", gameFont, 200, 50, pauseContainer);

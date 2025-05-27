@@ -22,6 +22,7 @@
     "player.h": "c",
     "select_difficulty.h": "c",
     "__split_buffer": "c",
-    "vector": "c"
+    "vector": "c",
+    "cronometer.h": "c"
   },
 }

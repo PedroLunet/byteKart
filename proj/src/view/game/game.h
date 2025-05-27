@@ -17,7 +17,8 @@
 #include "car.h"
 #include "view/utils/loadingUI.h"
 #include "model/race_result.h"
-#include "view/menus/pause_menu.h"
+#include "cronometer.h"
+#include "../menus/pause_menu.h"
 #include "view/menus/finish_race_menu.h"
 
 typedef enum {
@@ -67,6 +68,8 @@ typedef struct Game {
     Sprite *road_sprite2;
     int road_y1;
     int road_y2;
+
+    float cronometer_time;
 
     RaceResult current_race_positions[MAX_AI_CARS + 1];
     int current_total_racers;
