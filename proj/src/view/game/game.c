@@ -51,7 +51,11 @@ static void playing_draw_internal(GameState *base) {
             printf("GO!\n");
         }
     }
-    else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { /* Draw Race Finished UI */ }
+    else if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) { 
+        if (this->finishRaceMenu) {
+            finish_race_draw(this->finishRaceMenu);
+        }
+    }
 }
 
 static void playing_process_event_internal(GameState *base, EventType event) {
@@ -73,6 +77,18 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
             pause_menu_destroy(this->pauseMenu);
             this->pauseMenu = NULL;
+        }
+        return;
+    }
+
+    if (this->current_running_state == GAME_SUBSTATE_FINISHED_RACE && this->finishRaceMenu) {
+        finish_race_process_event(this->finishRaceMenu, event);
+        FinishRaceSubstate finishRaceState = finish_race_get_current_substate(this->finishRaceMenu);
+        if (finishRaceState == FINISH_RACE_MAIN_MENU) {
+            printf("Returning to main menu from finish race menu\n");
+            this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
+            finish_race_menu_destroy(this->finishRaceMenu);
+            this->finishRaceMenu = NULL;
         }
         return;
     }
@@ -301,6 +317,9 @@ static void playing_update_internal(GameState *base) {
 
             if (this->current_lap > this->total_laps) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
+                if (!this->finishRaceMenu) {
+                    this->finishRaceMenu = finish_race_menu_create();
+                }
                 printf("Player finished all laps!\n");
             }
 
@@ -344,6 +363,11 @@ static void playing_destroy_internal(GameState *base) {
     if (this->pauseMenu) {
         pause_menu_destroy(this->pauseMenu);
         this->pauseMenu = NULL;
+    }
+
+    if (this->finishRaceMenu) {
+        finish_race_menu_destroy(this->finishRaceMenu);
+        this->finishRaceMenu = NULL;
     }
 
     free(this);
@@ -481,6 +505,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->current_lap = 0;
     this->pause_requested = false;
     this->pauseMenu = NULL;
+    this->finishRaceMenu = NULL;
 
     this->timer_count_down = 3.99f;
 
