@@ -366,7 +366,7 @@ static void calculate_final_race_positions(Game *this, RaceResult *results, int 
     *total_results = total_entries;
 }
 
-static void print_race_positions(Game *this) {
+static void calculate_current_race_positions(Game *this, RaceResult *results, int *total_results) {
     typedef struct {
         int score;
         int position;
@@ -409,18 +409,34 @@ static void print_race_positions(Game *this) {
         }
     }
 
-    printf("\n=== RACE POSITIONS ===\n");
     for (int i = 0; i < total_entries; i++) {
-        entries[i].position = i + 1;
+        results[i].position = i + 1;
         if (strcmp(entries[i].name, "Player") == 0) {
-            printf("%d. %s - Lap %d, Segment %d (Score: %d)\n", 
-                   entries[i].position, entries[i].name, 
-                   entries[i].lap, entries[i].segment, entries[i].score);
+            strcpy(results[i].name, "Player");
         } else {
-            printf("%d. %s %d - Lap %d, Segment %d (Score: %d)\n", 
-                   entries[i].position, entries[i].name, entries[i].id,
-                   entries[i].lap, entries[i].segment, entries[i].score);
+            sprintf(results[i].name, "AI Car %d", entries[i].id);
         }
+        results[i].id = entries[i].id;
+        results[i].lap = entries[i].lap;
+        results[i].segment = entries[i].segment;
+        results[i].score = entries[i].score;
+        results[i].race_time = 0.0f; 
+    }
+    
+    *total_results = total_entries;
+}
+
+static void print_race_positions(Game *this) {
+    RaceResult current_positions[MAX_AI_CARS + 1];
+    int total_results = 0;
+    
+    calculate_current_race_positions(this, current_positions, &total_results);
+
+    printf("\n=== RACE POSITIONS ===\n");
+    for (int i = 0; i < total_results; i++) {
+        printf("%d. %s - Lap %d, Segment %d (Score: %d)\n", 
+               current_positions[i].position, current_positions[i].name, 
+               current_positions[i].lap, current_positions[i].segment, current_positions[i].score);
     }
     printf("======================\n\n");
 }
@@ -525,6 +541,8 @@ static void playing_update_internal(GameState *base) {
                 print_race_positions(this);
             }
 
+            calculate_current_race_positions(this, this->current_race_positions, &this->current_total_racers);
+
             if (!this->player_has_finished && this->player.current_lap > this->player.total_laps) {
                 this->player_has_finished = true;
                 this->player_finish_time = this->race_timer_s;
@@ -598,6 +616,8 @@ static void playing_update_internal(GameState *base) {
             if (timer_counter % 180 == 0) {
                 print_race_positions(this);
             }
+
+            calculate_current_race_positions(this, this->current_race_positions, &this->current_total_racers);
 
             break;
         case GAME_SUBSTATE_RACE_FINISH_DELAY:
@@ -823,6 +843,8 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->pause_requested = false;
     this->pauseMenu = NULL;
     this->finishRaceMenu = NULL;
+    this->current_total_racers = 0;
+    memset(this->current_race_positions, 0, sizeof(this->current_race_positions));
 
     this->timer_count_down = 3.99f;
 

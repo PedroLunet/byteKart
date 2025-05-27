@@ -68,6 +68,9 @@ typedef struct Game {
     int road_y1;
     int road_y2;
 
+    RaceResult current_race_positions[MAX_AI_CARS + 1];
+    int current_total_racers;
+
 } Game;
 
 // Public Game Class Methods
