@@ -25,6 +25,7 @@ typedef enum {
   GAME_SUBSTATE_COUNTDOWN,
   GAME_SUBSTATE_PLAYING,
   GAME_SUBSTATE_PAUSED,
+  GAME_SUBSTATE_PLAYER_FINISHED,
   GAME_SUBSTATE_RACE_FINISH_DELAY,
   GAME_SUBSTATE_FINISHED_RACE,
   GAME_SUBSTATE_BACK_TO_MENU,
@@ -45,6 +46,8 @@ typedef struct Game {
     int total_laps;
     float race_timer_s;
     bool race_started;
+    bool player_has_finished;
+    float player_finish_time;
 
     bool player_skid_input_active;
     int player_skid_input_sign; // -1 for left, 0 for none, 1 for right

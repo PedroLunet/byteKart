@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "game.h"
+#include "../utils/text_renderer.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
@@ -26,6 +27,7 @@ static void playing_draw_internal(GameState *base) {
 
     if (this->current_running_state == GAME_SUBSTATE_PLAYING ||
         this->current_running_state == GAME_SUBSTATE_COUNTDOWN ||
+        this->current_running_state == GAME_SUBSTATE_PLAYER_FINISHED ||
         this->current_running_state == GAME_SUBSTATE_RACE_FINISH_DELAY ||
         this->current_running_state == GAME_SUBSTATE_FINISHED_RACE) {
 
@@ -39,6 +41,71 @@ static void playing_draw_internal(GameState *base) {
         renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
         // TODO: Draw HUD (laps, speed, timer)
+
+        if (this->current_running_state == GAME_SUBSTATE_PLAYER_FINISHED) {
+            vg_draw_rectangle(0, 0, vbe_mode_info.XResolution, 120, 0x80000000);
+            
+            if (gameFont) {
+                char finish_message[100];
+                sprintf(finish_message, "Race Finished! Time: %.2f seconds", this->player_finish_time);
+                
+                int text_width = 0;
+                int text_height = 0;
+                for (int i = 0; finish_message[i] != '\0'; i++) {
+                    GlyphData glyphData;
+                    if (font_get_glyph_data(gameFont, finish_message[i], &glyphData)) {
+                        text_width += glyphData.xadvance;
+                        if (glyphData.height > text_height) {
+                            text_height = glyphData.height;
+                        }
+                    }
+                }
+                
+                if (text_width > 0 && text_height > 0) {
+                    uint32_t *text_buffer = malloc(text_width * text_height * sizeof(uint32_t));
+                    if (text_buffer) {
+
+                        for (int i = 0; i < text_width * text_height; i++) {
+                            text_buffer[i] = 0x00000000;
+                        }
+                        
+                        if (load_text(finish_message, 0, 0, 0xFFFFFF, gameFont, text_buffer, text_width) == 0) {
+                            int text_x = (vbe_mode_info.XResolution - text_width) / 2;
+                            vg_draw_text(text_buffer, text_width, text_x, 20, text_height, text_width);
+                        }
+                        free(text_buffer);
+                    }
+                }
+                
+                char wait_message[] = "Waiting for other cars to finish...";
+                int wait_text_width = 0;
+                int wait_text_height = 0;
+                for (int i = 0; wait_message[i] != '\0'; i++) {
+                    GlyphData glyphData;
+                    if (font_get_glyph_data(gameFont, wait_message[i], &glyphData)) {
+                        wait_text_width += glyphData.xadvance;
+                        if (glyphData.height > wait_text_height) {
+                            wait_text_height = glyphData.height;
+                        }
+                    }
+                }
+                
+                if (wait_text_width > 0 && wait_text_height > 0) {
+                    uint32_t *wait_buffer = malloc(wait_text_width * wait_text_height * sizeof(uint32_t));
+                    if (wait_buffer) {
+                        for (int i = 0; i < wait_text_width * wait_text_height; i++) {
+                            wait_buffer[i] = 0x00000000;
+                        }
+                        
+                        if (load_text(wait_message, 0, 0, 0xFFFF00, gameFont, wait_buffer, wait_text_width) == 0) {
+                            int wait_text_x = (vbe_mode_info.XResolution - wait_text_width) / 2;
+                            vg_draw_text(wait_buffer, wait_text_width, wait_text_x, 60, wait_text_height, wait_text_width);
+                        }
+                        free(wait_buffer);
+                    }
+                }
+            }
+        }
     }
 
     if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
@@ -364,6 +431,8 @@ static void playing_update_internal(GameState *base) {
             update_countdown(this, delta_time);
             break;
         case GAME_SUBSTATE_PLAYING:
+            this->race_timer_s += delta_time;
+            
             this->road_y1 += 2;
             this->road_y2 += 2;
 
@@ -442,6 +511,14 @@ static void playing_update_internal(GameState *base) {
                 print_race_positions(this);
             }
 
+            if (!this->player_has_finished && this->player.current_lap > this->player.total_laps) {
+                this->player_has_finished = true;
+                this->player_finish_time = this->race_timer_s;
+                this->current_running_state = GAME_SUBSTATE_PLAYER_FINISHED;
+                printf("Player finished the race! Final time: %.2f seconds\n", this->player_finish_time);
+                printf("Waiting for other cars to finish...\n");
+            }
+
             bool all_cars_finished = true;
             
             // Check player
@@ -461,6 +538,46 @@ static void playing_update_internal(GameState *base) {
                 this->current_running_state = GAME_SUBSTATE_RACE_FINISH_DELAY;
                 this->finish_race_delay_timer = 1.0f; // 1 second delay
                 printf("All cars finished the race! Starting delay...\n");
+            }
+
+            break;
+        case GAME_SUBSTATE_PLAYER_FINISHED:
+            this->race_timer_s += delta_time;
+
+            this->road_y1 += 2;
+            this->road_y2 += 2;
+
+            if (this->road_y1 >= (int)vbe_mode_info.YResolution)
+                this->road_y1 = -this->road_sprite1->height;
+
+            if (this->road_y2 >= (int)vbe_mode_info.YResolution)
+                this->road_y2 = -this->road_sprite2->height;
+            player_handle_turn_input(&this->player, this->player_turn_input_sign);
+            player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
+
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+                if (this->ai_cars[i]) {
+                    ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
+                }
+            }
+
+            bool all_cars_finished_player_state = true;
+
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+                if (this->ai_cars[i] && this->ai_cars[i]->current_lap <= this->ai_cars[i]->total_laps) {
+                    all_cars_finished_player_state = false;
+                    break;
+                }
+            }
+            
+            if (all_cars_finished_player_state) {
+                this->current_running_state = GAME_SUBSTATE_RACE_FINISH_DELAY;
+                this->finish_race_delay_timer = 1.0f; // 1 second delay
+                printf("All remaining cars finished! Starting delay...\n");
+            }
+            
+            if (timer_counter % 180 == 0) {
+                print_race_positions(this);
             }
 
             break;
@@ -676,6 +793,9 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->player_turn_input_sign = 0;
     this->total_laps = MAX_LAPS;
     this->current_lap = 0;
+    this->race_timer_s = 0.0f;
+    this->player_has_finished = false;
+    this->player_finish_time = 0.0f;
     this->pause_requested = false;
     this->pauseMenu = NULL;
     this->finishRaceMenu = NULL;
