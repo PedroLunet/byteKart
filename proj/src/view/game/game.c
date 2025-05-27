@@ -442,10 +442,25 @@ static void playing_update_internal(GameState *base) {
                 print_race_positions(this);
             }
 
-            if (this->current_lap > this->total_laps) {
+            bool all_cars_finished = true;
+            
+            // Check player
+            if (this->player.current_lap <= this->player.total_laps) {
+                all_cars_finished = false;
+            }
+            
+            // Check AI cars
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+                if (this->ai_cars[i] && this->ai_cars[i]->current_lap <= this->ai_cars[i]->total_laps) {
+                    all_cars_finished = false;
+                    break;
+                }
+            }
+            
+            if (all_cars_finished) {
                 this->current_running_state = GAME_SUBSTATE_RACE_FINISH_DELAY;
                 this->finish_race_delay_timer = 1.0f; // 1 second delay
-                printf("Player finished all laps! Starting delay...\n");
+                printf("All cars finished the race! Starting delay...\n");
             }
 
             break;
