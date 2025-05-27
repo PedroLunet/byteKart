@@ -16,14 +16,18 @@
 #include "road.h"
 #include "car.h"
 #include "view/utils/loadingUI.h"
+#include "model/race_result.h"
 #include "cronometer.h"
 #include "../menus/pause_menu.h"
+#include "view/menus/finish_race_menu.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,
   GAME_SUBSTATE_COUNTDOWN,
   GAME_SUBSTATE_PLAYING,
   GAME_SUBSTATE_PAUSED,
+  GAME_SUBSTATE_PLAYER_FINISHED,
+  GAME_SUBSTATE_RACE_FINISH_DELAY,
   GAME_SUBSTATE_FINISHED_RACE,
   GAME_SUBSTATE_BACK_TO_MENU,
   GAME_STATE_EXITING,
@@ -43,14 +47,18 @@ typedef struct Game {
     int total_laps;
     float race_timer_s;
     bool race_started;
+    bool player_has_finished;
+    float player_finish_time;
 
     bool player_skid_input_active;
     int player_skid_input_sign; // -1 for left, 0 for none, 1 for right
     int player_turn_input_sign; // -1 for left, 0 for none, 1 for right
     bool pause_requested;
     Pause *pauseMenu;
+    FinishRace *finishRaceMenu;
 
     float timer_count_down;
+    float finish_race_delay_timer;
 
     float precomputed_cos_skid;
     float precomputed_sin_skid;
@@ -62,6 +70,9 @@ typedef struct Game {
     int road_y2;
 
     float cronometer_time;
+
+    RaceResult current_race_positions[MAX_AI_CARS + 1];
+    int current_total_racers;
 
 } Game;
 
