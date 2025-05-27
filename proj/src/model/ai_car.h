@@ -63,6 +63,8 @@ typedef struct {
     int total_laps;
     bool just_crossed_finish_this_frame;
     int last_meaningful_road_segment_idx;
+    bool has_finished;
+    float finish_time;
 
     OBB obb;
 	float hitbox_half_width;
@@ -75,5 +77,6 @@ void ai_car_destroy(AICar *this);
 void ai_car_update(AICar *this, Road *road, Player *player, AICar *other_ai_cars[], int num_other_ai_cars, float delta_time);
 void ai_car_apply_speed_effect(AICar *ai, float modifier, float duration_s);
 void ai_car_handle_hard_collision(AICar *ai, float new_speed);
+void ai_car_set_finish_time(AICar *ai, float race_time);
 
 #endif //AI_CAR_H
