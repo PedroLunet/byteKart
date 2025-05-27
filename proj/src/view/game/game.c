@@ -36,10 +36,15 @@ static void playing_draw_internal(GameState *base) {
         }
         renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
-        // TODO: Draw HUD (laps, speed, timer)
+        // TODO: Draw HUD (laps, speed)
+        if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
+            display_cronometer(this->cronometer_time);
+        }
     }
 
-    if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
+    if (this->current_running_state == GAME_SUBSTATE_LOADING) { 
+        return; 
+    }
 
     if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
         int count = this->timer_count_down;
@@ -234,6 +239,8 @@ static void playing_update_internal(GameState *base) {
 
             if (this->road_y2 >= (int)vbe_mode_info.YResolution)
                 this->road_y2 = -this->road_sprite2->height;
+            
+            this->cronometer_time += delta_time;
 
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
             player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
@@ -363,6 +370,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->base.process_event = playing_process_event_internal;
     this->base.update_state = playing_update_internal;
     this->base.destroy = playing_destroy_internal;
+    this->cronometer_time = 0.0f;
 
     this->current_running_state = GAME_SUBSTATE_LOADING;
   	LoadingUI *loading_ui = loading_ui_create(gameFont, vbe_mode_info.XResolution, vbe_mode_info.YResolution);

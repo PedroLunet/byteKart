@@ -17,6 +17,7 @@
 #include "car.h"
 #include "view/utils/loadingUI.h"
 #include "view/menus/pause_menu.h"
+#include "cronometer.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,
@@ -59,6 +60,8 @@ typedef struct Game {
     Sprite *road_sprite2;
     int road_y1;
     int road_y2;
+
+    float cronometer_time;
 
 } Game;
 
