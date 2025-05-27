@@ -1,6 +1,7 @@
 #include <lcom/lcf.h>
 
 #include "finish_race_menu.h"
+#include "view/game/game.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
@@ -10,6 +11,7 @@ extern Font *gameFont;
 
 static UIComponent *finishRaceContainer = NULL;
 static UIComponent *finishRaceText = NULL;
+static UIComponent *positionsContainer = NULL;
 static UIComponent *mainMenuContainer = NULL;
 static UIComponent *finishRaceOptions[1];
 
@@ -57,7 +59,7 @@ static void finish_race_destroy_internal(GameState *base) {
     free(base);
 }
 
-FinishRace *finish_race_menu_create() {
+FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
     FinishRace *this = (FinishRace *) malloc(sizeof(FinishRace));
     if (this == NULL) return NULL;
     
@@ -72,11 +74,40 @@ FinishRace *finish_race_menu_create() {
     this->uiRoot = NULL;
 
     // Main Container
-    finishRaceContainer = create_main_container(NULL, 30, 0, 0, 0, 0);;
+    finishRaceContainer = create_main_container(NULL, 30, 0, 0, 0, 0);
     this->uiRoot = finishRaceContainer;
 
     // Title
     finishRaceText = create_title_text("Race Finished", gameFont, 0xFFFFFF, finishRaceContainer);
+
+    // Create positions container
+    positionsContainer = create_container_component(0, 0, 400, 300);
+    set_container_layout(positionsContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_gap(positionsContainer, 10);
+    add_child_to_container_component(finishRaceContainer, positionsContainer);
+
+    if (results && total_results > 0) {
+        for (int i = 0; i < total_results && i < 6; i++) {
+            char position_text[100];
+            uint32_t color = (i == 0) ? 0xFFD700 : // Gold for 1st place
+                            (i == 1) ? 0xC0C0C0 : // Silver for 2nd place
+                            (i == 2) ? 0xCD7F32 : // Bronze for 3rd place
+                            0xFFFFFF;              // White for others
+            
+            if (strcmp(results[i].name, "Player") == 0) {
+                sprintf(position_text, "%d. %s (Lap %d)", 
+                       results[i].position, results[i].name, results[i].lap);
+            } else {
+                sprintf(position_text, "%d. %s (Lap %d)", 
+                       results[i].position, results[i].name, results[i].lap);
+            }
+            
+            UIComponent *positionText = create_text_component(position_text, gameFont, color);
+            if (positionText) {
+                add_child_to_container_component(positionsContainer, positionText);
+            }
+        }
+    }
 
     // Back to main menu option
     mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, finishRaceContainer);

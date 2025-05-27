@@ -16,6 +16,7 @@
 #include "road.h"
 #include "car.h"
 #include "view/utils/loadingUI.h"
+#include "model/race_result.h"
 #include "view/menus/pause_menu.h"
 #include "view/menus/finish_race_menu.h"
 

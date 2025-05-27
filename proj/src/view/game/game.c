@@ -234,6 +234,63 @@ static int calculate_race_position_score(int current_lap, int current_segment) {
     return (current_lap * 27000) + current_segment; 
 }
 
+static void calculate_final_race_positions(Game *this, RaceResult *results, int *total_results) {
+    typedef struct {
+        int score;
+        int position;
+        const char* name;
+        int id;
+        int lap;
+        int segment;
+    } RaceEntry;
+    
+    RaceEntry entries[MAX_AI_CARS + 1]; 
+    int total_entries = 0;
+    
+    entries[total_entries].score = calculate_race_position_score(this->player.current_lap, this->player.current_road_segment_idx);
+    entries[total_entries].name = "Player";
+    entries[total_entries].id = 0;
+    entries[total_entries].lap = this->player.current_lap;
+    entries[total_entries].segment = this->player.current_road_segment_idx;
+    total_entries++;
+
+    for (int i = 0; i < this->num_active_ai_cars; ++i) {
+        if (this->ai_cars[i]) {
+            entries[total_entries].score = calculate_race_position_score(this->ai_cars[i]->current_lap, this->ai_cars[i]->current_road_segment_idx);
+            entries[total_entries].name = "AI Car";
+            entries[total_entries].id = this->ai_cars[i]->id;
+            entries[total_entries].lap = this->ai_cars[i]->current_lap;
+            entries[total_entries].segment = this->ai_cars[i]->current_road_segment_idx;
+            total_entries++;
+        }
+    }
+
+    for (int i = 0; i < total_entries - 1; i++) {
+        for (int j = 0; j < total_entries - i - 1; j++) {
+            if (entries[j].score < entries[j + 1].score) {
+                RaceEntry temp = entries[j];
+                entries[j] = entries[j + 1];
+                entries[j + 1] = temp;
+            }
+        }
+    }
+
+    for (int i = 0; i < total_entries; i++) {
+        results[i].position = i + 1;
+        if (strcmp(entries[i].name, "Player") == 0) {
+            strcpy(results[i].name, "Player");
+        } else {
+            sprintf(results[i].name, "AI Car %d", entries[i].id);
+        }
+        results[i].id = entries[i].id;
+        results[i].lap = entries[i].lap;
+        results[i].segment = entries[i].segment;
+        results[i].score = entries[i].score;
+    }
+    
+    *total_results = total_entries;
+}
+
 static void print_race_positions(Game *this) {
     typedef struct {
         int score;
@@ -415,7 +472,11 @@ static void playing_update_internal(GameState *base) {
             if (this->finish_race_delay_timer <= 0.0f) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
                 if (!this->finishRaceMenu) {
-                    this->finishRaceMenu = finish_race_menu_create();
+                    RaceResult race_results[MAX_AI_CARS + 1];
+                    int total_results = 0;
+                    calculate_final_race_positions(this, race_results, &total_results);
+                    
+                    this->finishRaceMenu = finish_race_menu_create(race_results, total_results);
                 }
                 printf("Delay finished, showing finish race menu!\n");
             }
