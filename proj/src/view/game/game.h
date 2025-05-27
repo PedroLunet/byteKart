@@ -16,8 +16,8 @@
 #include "road.h"
 #include "car.h"
 #include "view/utils/loadingUI.h"
-#include "view/menus/pause_menu.h"
 #include "cronometer.h"
+#include "../menus/pause_menu.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,

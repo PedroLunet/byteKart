@@ -4,6 +4,7 @@
 #include "model/game_state.h"
 #include "view/utils/ui.h"
 #include "view/utils/ui_utils.h"
+#include "view/game/cronometer.h"
 
 typedef enum {
   PAUSE_MENU,
@@ -11,7 +12,7 @@ typedef enum {
   PAUSE_MAIN_MENU
 } PauseSubstate;
 
-typedef struct {
+typedef struct Pause {
   GameState base;
   PauseSubstate currentPauseSubstate;
   Sprite *pauseSprite;

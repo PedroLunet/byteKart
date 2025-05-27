@@ -13,6 +13,7 @@ static UIComponent *pauseText = NULL;
 static UIComponent *resumeContainer = NULL;
 static UIComponent *mainMenuContainer = NULL;
 static UIComponent *pauseOptions[2];
+static UIComponent *currentTime = NULL;
 
 static void pause_draw_internal(GameState *base) {
   Pause *this = (Pause *)base;
@@ -80,6 +81,9 @@ Pause *pause_menu_create() {
 
     // Title
     pauseText = create_title_text("Game Paused", gameFont, 0xFFFFFF, pauseContainer);
+
+    // Display current time 
+    currentTime = display_current_time(pauseContainer);
 
     // Resume option
     resumeContainer = create_menu_option("Resume", gameFont, 200, 50, pauseContainer);

@@ -1,7 +1,9 @@
 #include <lcom/lcf.h>
 #include "cronometer.h"
+#include "game.h"
 
 extern Font *gameFont;
+extern Game *game;
 
 UIComponent *display_cronometer(float cronometer_time) {
   char timer_string[16];
@@ -14,10 +16,43 @@ UIComponent *display_cronometer(float cronometer_time) {
   if (timerText && timerText->data) {
     timerText->x = 20;
     timerText->y = 20;
-    draw_ui_component(timerText);
-    destroy_ui_component(timerText);
   }
 
   return timerText;
+}
+
+float get_current_cronometer_time() {
+  if (game) {
+    return game->cronometer_time;
+  }
+  return 0.0f;
+}
+
+
+UIComponent *display_current_time(UIComponent *parent) {
+
+  UIComponent *currentTime = display_cronometer(get_current_cronometer_time());
+  
+
+  UIComponent *currentTimeContainer = create_container_component(0, 0, 40, 40);
+  
+  set_container_layout(currentTimeContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
+  set_container_background_color(currentTimeContainer, 0x111111);
+  set_container_padding(currentTimeContainer, 10, 10, 10, 10);
+  set_container_border(currentTimeContainer, 2, 0x111111);
+
+  UIComponent *currentTimeText = create_text_component("Current Time: ", gameFont, 0xFFFFFF);
+  if (!currentTimeText) {
+    destroy_ui_component(parent);
+    return NULL;
+  }
+
+  add_child_to_container_component(currentTimeContainer, currentTimeText);
+  add_child_to_container_component(currentTimeContainer, currentTime);
+  add_child_to_container_component(parent, currentTimeContainer);
+
+  perform_container_layout(parent);
+
+  return currentTimeContainer;
 }
 

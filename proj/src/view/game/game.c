@@ -38,7 +38,11 @@ static void playing_draw_internal(GameState *base) {
 
         // TODO: Draw HUD (laps, speed)
         if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
-            display_cronometer(this->cronometer_time);
+            UIComponent *timerText = display_cronometer(this->cronometer_time);
+            if (timerText) {
+                draw_ui_component(timerText);
+                destroy_ui_component(timerText);
+            }
         }
     }
 
