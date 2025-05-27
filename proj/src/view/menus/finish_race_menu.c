@@ -80,6 +80,15 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
     // Title
     finishRaceText = create_title_text("Race Finished", gameFont, 0xFFFFFF, finishRaceContainer);
 
+    if (results && total_results > 0) {
+        char winner_message[50];
+        sprintf(winner_message, "%s wins!", results[0].name);
+        UIComponent *winnerText = create_text_component(winner_message, gameFont, 0xFFD700); 
+        if (winnerText) {
+            add_child_to_container_component(finishRaceContainer, winnerText);
+        }
+    }
+
     // Create positions container
     positionsContainer = create_container_component(0, 0, 400, 300);
     set_container_layout(positionsContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
