@@ -51,15 +51,6 @@ static void playing_draw_internal(GameState *base) {
             if (countdownText) {
                 draw_ui_component(countdownText);
             }
-
-            int count = this->timer_count_down;
-            if (count > 0.0f && count <= 3.0f) {
-                if (count % 1 == 0) {
-                    printf("Countdown: %d\n", (int)count);
-                }
-            } else if (count <= 0) {
-                    printf("GO!\n");
-            }
         }
 
         // TODO: Draw HUD (laps, speed)
