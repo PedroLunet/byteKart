@@ -11,6 +11,21 @@ static UIComponent *countdownTextComponent = NULL;
 extern Font *gameFont;
 extern const xpm_map_t car_choices[6];
 
+static UIComponent *display_player_lap(Game *this) {
+    if (!this) return NULL;
+    
+    char lap_string[16];
+    sprintf(lap_string, "Lap: %d/%d", this->player.current_lap, this->player.total_laps);
+    
+    UIComponent *lapText = create_text_component(lap_string, gameFont, 0xFFFFFF);
+    if (lapText && lapText->data) {
+        lapText->x = 20;
+        lapText->y = 60;
+    }
+    
+    return lapText;
+}
+
 static UIComponent *display_player_position(Game *this) {
     if (!this || this->current_total_racers == 0) return NULL;
     
@@ -153,6 +168,12 @@ static void playing_draw_internal(GameState *base) {
                 draw_ui_component(positionText);
                 destroy_ui_component(positionText);
             }
+
+            UIComponent *lapText = display_player_lap(this);
+            if (lapText) {
+                draw_ui_component(lapText);
+                destroy_ui_component(lapText);
+            }
         }
 
         // TODO: Draw HUD (laps, speed)
@@ -232,6 +253,12 @@ static void playing_draw_internal(GameState *base) {
             if (positionText) {
                 draw_ui_component(positionText);
                 destroy_ui_component(positionText);
+            }
+
+            UIComponent *lapText = display_player_lap(this);
+            if (lapText) {
+                draw_ui_component(lapText);
+                destroy_ui_component(lapText);
             }
         }
     }
