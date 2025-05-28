@@ -16,6 +16,9 @@
 #include "cars/green_car.xpm"
 #include "fonts/font_2_0.xpm"
 #include "game/byte-kart.xpm"
+#include "items/oil-spill.xpm"
+#include "items/barrier.xpm"
+#include "items/powerups.xpm"
 
 #endif
 

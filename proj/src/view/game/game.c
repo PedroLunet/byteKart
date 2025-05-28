@@ -213,7 +213,7 @@ static void playing_update_internal(GameState *base) {
         		if (this->ai_cars[i]) {
             		obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb, &collision_info);
             		if (collision_info.occurred) {
-                		printf("Collision: Player vs AI %d (Depth: %f, Normal: %f,%f)\n", this->ai_cars[i]->id, collision_info.penetration_depth, collision_info.collision_normal.x, collision_info.collision_normal.y);
+                		// printf("Collision: Player vs AI %d (Depth: %f, Normal: %f,%f)\n", this->ai_cars[i]->id, collision_info.penetration_depth, collision_info.collision_normal.x, collision_info.collision_normal.y);
 
                 		Vector player_mtv_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
                         vector_init(&player_mtv_normal, player_mtv_normal.x, player_mtv_normal.y);
@@ -243,7 +243,7 @@ static void playing_update_internal(GameState *base) {
 
             		obb_check_collision_obb_vs_obb(&this->ai_cars[i]->obb, &this->ai_cars[j]->obb, &collision_info);
             		if (collision_info.occurred) {
-                		printf("Collision: AI %d vs AI %d (Depth: %f)\n", this->ai_cars[i]->id, this->ai_cars[j]->id, collision_info.penetration_depth);
+                		// printf("Collision: AI %d vs AI %d (Depth: %f)\n", this->ai_cars[i]->id, this->ai_cars[j]->id, collision_info.penetration_depth);
 
                 		Vector ai1_mtv_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
                         vector_init(&ai1_mtv_normal, ai1_mtv_normal.x, ai1_mtv_normal.y);
