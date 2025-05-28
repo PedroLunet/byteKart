@@ -31,7 +31,22 @@ static void pause_clean_dirty_mouse_internal(GameState *base) {
 
 static bool pause_is_mouse_over_option(GameState *base, int mouse_x, int mouse_y, void *data) {
     int *selected_option = (int *)data;
-    return is_mouse_over_menu_options(base, mouse_x, mouse_y, pauseOptions, 2, selected_option, 0x111111, 0xA81D1D);
+    UIComponent *resume_option[] = {pauseOptions[0]};
+    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, resume_option, 1, selected_option, 0x00AA00, 0x00DD00)) {
+        return true;
+    }
+
+    UIComponent *menu_option[] = {pauseOptions[1]};
+    int temp_selection;
+    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, menu_option, 1, &temp_selection, 0xAA0000, 0xDD0000)) {
+        *selected_option = 1;  
+        return true;
+    }
+
+    set_container_background_color(pauseOptions[0], 0x00AA00); 
+    set_container_background_color(pauseOptions[1], 0xAA0000); 
+    *selected_option = -1;
+    return false;
 }
 
 static void pause_process(GameState *base, EventType event) {
@@ -89,10 +104,12 @@ Pause *pause_menu_create() {
 
     // Resume option
     resumeContainer = create_menu_option("Resume", gameFont, 200, 50, pauseContainer);
+    set_container_background_color(resumeContainer, 0x00AA00);
     pauseOptions[0] = resumeContainer;
 
     // Back to main menu option
     mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, pauseContainer);
+    set_container_background_color(mainMenuContainer, 0xAA0000);
     pauseOptions[1] = mainMenuContainer;
 
     perform_container_layout(pauseContainer);
