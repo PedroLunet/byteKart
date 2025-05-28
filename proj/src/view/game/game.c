@@ -11,6 +11,121 @@ static UIComponent *countdownText = NULL;
 extern Font *gameFont;
 extern const xpm_map_t car_choices[6];
 
+static UIComponent *display_player_lap(Game *this) {
+    if (!this) return NULL;
+    
+    char lap_string[16];
+    sprintf(lap_string, "Lap: %d/%d", this->player.current_lap, this->player.total_laps);
+    
+    UIComponent *lapText = create_text_component(lap_string, gameFont, 0xFFFFFF);
+    if (lapText && lapText->data) {
+        lapText->x = 20;
+        lapText->y = 60;
+    }
+    
+    return lapText;
+}
+
+static UIComponent *display_player_position(Game *this) {
+    if (!this || this->current_total_racers == 0) return NULL;
+    
+    int player_position = 0;
+    for (int i = 0; i < this->current_total_racers; i++) {
+        if (strcmp(this->current_race_positions[i].name, "Player") == 0) {
+            player_position = this->current_race_positions[i].position;
+            break;
+        }
+    }
+    
+    if (player_position == 0) return NULL; 
+    
+    char position_text[8];
+    switch (player_position) {
+        case 1: sprintf(position_text, "1st"); break;
+        case 2: sprintf(position_text, "2nd"); break;
+        case 3: sprintf(position_text, "3rd"); break;
+        default: sprintf(position_text, "%dth", player_position); break;
+    }
+    
+    uint32_t color = (player_position == 1) ? 0xFFD700 : 
+                     (player_position == 2) ? 0xC0C0C0 : 
+                     (player_position == 3) ? 0xCD7F32 : 
+                     0xFFFFFF;                            
+    
+    int orig_width = 0;
+    int orig_height = 0;
+    for (int i = 0; position_text[i] != '\0'; i++) {
+        GlyphData glyphData;
+        if (font_get_glyph_data(gameFont, position_text[i], &glyphData)) {
+            orig_width += glyphData.xadvance;
+            if (glyphData.height > orig_height) {
+                orig_height = glyphData.height;
+            }
+        }
+    }
+    
+    if (orig_width == 0 || orig_height == 0) return NULL;
+    
+    int scale = 3;
+    int scaled_width = orig_width * scale;
+    int scaled_height = orig_height * scale;
+    
+    uint32_t *orig_buffer = malloc(orig_width * orig_height * sizeof(uint32_t));
+    if (!orig_buffer) return NULL;
+    
+    for (int i = 0; i < orig_width * orig_height; i++) {
+        orig_buffer[i] = 0x00000000;
+    }
+    
+    if (load_text(position_text, 0, 0, color, gameFont, orig_buffer, orig_width) != 0) {
+        free(orig_buffer);
+        return NULL;
+    }
+    
+    uint32_t *scaled_buffer = malloc(scaled_width * scaled_height * sizeof(uint32_t));
+    if (!scaled_buffer) {
+        free(orig_buffer);
+        return NULL;
+    }
+    
+    for (int y = 0; y < orig_height; y++) {
+        for (int x = 0; x < orig_width; x++) {
+            uint32_t pixel = orig_buffer[y * orig_width + x];
+            
+            for (int sy = 0; sy < scale; sy++) {
+                for (int sx = 0; sx < scale; sx++) {
+                    int scaled_x = x * scale + sx;
+                    int scaled_y = y * scale + sy;
+                    if (scaled_x < scaled_width && scaled_y < scaled_height) {
+                        scaled_buffer[scaled_y * scaled_width + scaled_x] = pixel;
+                    }
+                }
+            }
+        }
+    }
+    
+    free(orig_buffer);
+    
+    UIComponent *positionText = create_text_component(position_text, gameFont, color);
+    if (!positionText) {
+        free(scaled_buffer);
+        return NULL;
+    }
+
+    TextElementData *data = (TextElementData *)positionText->data;
+    if (data->pixel_data) {
+        free(data->pixel_data);
+    }
+    data->width = scaled_width;
+    data->height = scaled_height;
+    data->pixel_data = scaled_buffer;
+
+    positionText->x = vbe_mode_info.XResolution - scaled_width - 50;
+    positionText->y = 10;
+    
+    return positionText;
+}
+
 static void playing_draw_internal(GameState *base) {
     Game *this = (Game *)base;
 
@@ -50,6 +165,17 @@ static void playing_draw_internal(GameState *base) {
 
             if (countdownText) {
                 draw_ui_component(countdownText);
+            
+            UIComponent *positionText = display_player_position(this);
+            if (positionText) {
+                draw_ui_component(positionText);
+                destroy_ui_component(positionText);
+            }
+
+            UIComponent *lapText = display_player_lap(this);
+            if (lapText) {
+                draw_ui_component(lapText);
+                destroy_ui_component(lapText);
             }
         }
 
@@ -125,6 +251,18 @@ static void playing_draw_internal(GameState *base) {
                 draw_ui_component(timerText);
                 destroy_ui_component(timerText);
             }
+            
+            UIComponent *positionText = display_player_position(this);
+            if (positionText) {
+                draw_ui_component(positionText);
+                destroy_ui_component(positionText);
+            }
+
+            UIComponent *lapText = display_player_lap(this);
+            if (lapText) {
+                draw_ui_component(lapText);
+                destroy_ui_component(lapText);
+            }
         }
     }
 
@@ -137,6 +275,7 @@ static void playing_draw_internal(GameState *base) {
             finish_race_draw(this->finishRaceMenu);
         }
     }
+}
 }
 
 static void playing_process_event_internal(GameState *base, EventType event) {
