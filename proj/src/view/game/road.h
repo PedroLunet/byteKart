@@ -15,6 +15,17 @@
 
 struct Player_s;
 
+typedef struct {
+    int centerline_segment_index;
+    int num_boxes_in_line;
+} RawPowerUpLineData;
+
+typedef struct {
+    int centerline_segment_index;
+    float offset_from_center;
+    int type;
+} RawObstacleData;
+
 typedef struct Road_s {
     Point *center_points;
     int num_center_points;
@@ -30,13 +41,22 @@ typedef struct Road_s {
 
     Point start_point;
     Point end_point;
+
+    Sprite *finish_line_sprite;
+    Point finish_line_position;
+    Vector finish_line_direction;
+
+    RawPowerUpLineData* raw_powerup_data;
+    int num_powerup_lines_from_file;
+
+    RawObstacleData* raw_obstacle_data;
+    int num_obstacles_from_file;
 } Road;
 
 void draw_road_background(Sprite *road_sprite1, Sprite *road_sprite2, int road_y1, int road_y2);
 void cleanup_road_background();
 
-int road_calculate_edge_points(Road *road);
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, LoadingUI *loading_ui);
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, xpm_map_t var_finish_xpm, LoadingUI *loading_ui);
 void road_destroy(Road *road);
 void road_draw(Road *road);
 bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_entity_current_segment_idx, Vector *out_tangent, Point *out_closest_point_on_centerline);

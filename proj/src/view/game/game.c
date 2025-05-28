@@ -347,7 +347,7 @@ static void playing_destroy_internal(GameState *base) {
     free(base);
 }
 
-Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file) {
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file, uint32_t road_bg_color) {
     Game *this = (Game *) malloc(sizeof(Game));
     if (this == NULL) {
         return NULL;
@@ -400,7 +400,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
-    if (road_load(&this->road_data, road_data_file, 1200, 0x8EC940, road_surface_file, loading_ui) != 0) {
+    if (road_load(&this->road_data, road_data_file, 1200, road_bg_color, road_surface_file, NULL, loading_ui) != 0) {
         printf("Failed to load road data\n");
         base_destroy(&this->base);
         free(this);

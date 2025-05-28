@@ -13,8 +13,17 @@ typedef enum {
 } EventType;
 
 // Tracks
+#define TRACK_TEST_FILENAME "/home/lcom/labs/proj/src/tracks/track_test.dat"
+#define TRACK_TEST_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_test.bin"
+#define TRACK_TEST_BG_COLOR 0x8EC940
+
 #define TRACK_1_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.dat"
-#define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_surface.bin"
+#define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.bin"
+#define TRACK_1_BG_COLOR 0xd7e432
+
+#define TRACK_2_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.dat"
+#define TRACK_2_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.bin"
+#define TRACK_2_BG_COLOR 0x5540c9
 
 // Fonts
 #define MAX_FONT_GLYPHS 382

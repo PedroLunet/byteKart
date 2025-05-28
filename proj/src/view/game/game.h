@@ -61,7 +61,7 @@ typedef struct Game {
 } Game;
 
 // Public Game Class Methods
-Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file);
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file, uint32_t road_bg_color);
 void playing_destroy(Game *this);
 void playing_draw(Game *this);
 void playing_process_event(Game *this, EventType event);
