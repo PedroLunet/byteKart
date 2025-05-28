@@ -11,6 +11,31 @@ static UIComponent *countdownTextComponent = NULL;
 extern Font *gameFont;
 extern const xpm_map_t car_choices[6];
 
+static UIComponent *display_player_position(Game *this) {
+    if (!this || this->current_total_racers == 0) return NULL;
+    
+    int player_position = 0;
+    for (int i = 0; i < this->current_total_racers; i++) {
+        if (strcmp(this->current_race_positions[i].name, "Player") == 0) {
+            player_position = this->current_race_positions[i].position;
+            break;
+        }
+    }
+    
+    if (player_position == 0) return NULL; 
+    
+    char position_text[32];
+    sprintf(position_text, "Position: %d/%d", player_position, this->current_total_racers);
+    
+    UIComponent *positionText = create_text_component(position_text, gameFont, 0xFFFFFF);
+    if (positionText && positionText->data) {
+        positionText->x = 20;
+        positionText->y = 50; 
+    }
+    
+    return positionText;
+}
+
 static void playing_draw_internal(GameState *base) {
     Game *this = (Game *)base;
 
@@ -46,6 +71,12 @@ static void playing_draw_internal(GameState *base) {
             if (timerText) {
                 draw_ui_component(timerText);
                 destroy_ui_component(timerText);
+            }
+            
+            UIComponent *positionText = display_player_position(this);
+            if (positionText) {
+                draw_ui_component(positionText);
+                destroy_ui_component(positionText);
             }
         }
 
@@ -120,6 +151,12 @@ static void playing_draw_internal(GameState *base) {
             if (timerText) {
                 draw_ui_component(timerText);
                 destroy_ui_component(timerText);
+            }
+            
+            UIComponent *positionText = display_player_position(this);
+            if (positionText) {
+                draw_ui_component(positionText);
+                destroy_ui_component(positionText);
             }
         }
     }
