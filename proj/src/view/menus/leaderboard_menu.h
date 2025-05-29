@@ -5,6 +5,16 @@
 #include "view/utils/ui.h"
 #include "view/utils/ui_utils.h"
 
+#define MAX_ENTRIES 5
+#define MAX_NAME_LENGTH 10
+
+extern int count_leaderboard_entries;
+
+typedef struct LeaderboardEntries {
+  char name[MAX_NAME_LENGTH];
+  float time;
+} LeaderboardEntries;
+
 typedef enum {
   LEADERBOARD_MENU,
   LEADERBOARD_BACK_TO_MENU
@@ -24,6 +34,7 @@ void leaderboard_draw(Leaderboard *this);
 void leaderboard_process_event(Leaderboard *this, EventType event);
 LeaderboardSubstate leaderboard_get_current_substate(Leaderboard *this);
 void leaderboard_reset_state(Leaderboard *this);
+void add_entry_to_leaderboard(LeaderboardEntries entries[], int *count, const char *name, float time);
 
 
 #endif
