@@ -68,6 +68,14 @@ static void pause_process(GameState *base, EventType event) {
         if (this->selectedOption != prevSelected) {
             base->draw(base);
         }
+    } else if (event == EVENT_KEYBOARD) {
+        switch (scancode) {
+            case P_KEY:
+                this->currentPauseSubstate = PAUSE_RESUME;
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -114,7 +122,7 @@ Pause *pause_menu_create() {
 
     // Game controls information
     create_title_text("Quick Controls", gameFont, 0xFFDD00, quickControlsContainer);
-    create_title_text("P - Pause", gameFont, 0xAAAAAA, quickControlsContainer);
+    create_title_text("P - Pause/Resume", gameFont, 0xAAAAAA, quickControlsContainer);
     create_title_text("Arrow Keys - Steer", gameFont, 0xAAAAAA, quickControlsContainer);
 
     add_child_to_container_component(pauseContainer, quickControlsContainer);
