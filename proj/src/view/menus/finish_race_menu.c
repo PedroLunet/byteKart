@@ -31,7 +31,14 @@ static void finish_race_clean_dirty_mouse_internal(GameState *base) {
 
 static bool finish_race_is_mouse_over_option(GameState *base, int mouse_x, int mouse_y, void *data) {
     int *selected_option = (int *)data;
-    return is_mouse_over_menu_options(base, mouse_x, mouse_y, finishRaceOptions, 1, selected_option, 0x111111, 0xA81D1D);
+    UIComponent *menu_option[] = {finishRaceOptions[0]};
+    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, menu_option, 1, selected_option, 0xDC3545, 0xFF4757)) {
+        return true;
+    }
+
+    set_container_background_color(finishRaceOptions[0], 0xDC3545); 
+    *selected_option = -1;
+    return false;
 }
 
 static void finish_race_process(GameState *base, EventType event) {
@@ -73,27 +80,33 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
     this->currentFinishRaceSubstate = FINISH_RACE_MENU;
     this->uiRoot = NULL;
 
-    // Main Container
     finishRaceContainer = create_main_container(NULL, 30, 0, 0, 0, 0);
+    set_container_background_color(finishRaceContainer, 0x80000000);
     this->uiRoot = finishRaceContainer;
 
     // Title
-    finishRaceText = create_title_text("Race Finished", gameFont, 0xFFFFFF, finishRaceContainer);
+    finishRaceText = create_title_text("RACE FINISHED", gameFont, 0xFFFFFF, finishRaceContainer);
 
     if (results && total_results > 0) {
         char winner_message[50];
-        sprintf(winner_message, "%s wins!", results[0].name);
-        UIComponent *winnerText = create_text_component(winner_message, gameFont, 0xFFD700); 
+        sprintf(winner_message, "%s WINS!", results[0].name);
+        UIComponent *winnerText = create_text_component(winner_message, gameFont, 0xFFDD00); 
         if (winnerText) {
             add_child_to_container_component(finishRaceContainer, winnerText);
         }
     }
 
     // Create positions container
-    positionsContainer = create_container_component(0, 0, 400, 300);
+    positionsContainer = create_container_component(0, 0, 450, 350);
     set_container_layout(positionsContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_background_color(positionsContainer, 0x222222);
-    set_container_gap(positionsContainer, 10);
+    set_container_background_color(positionsContainer, 0x1C1C1C);
+    set_container_padding(positionsContainer, 20, 20, 20, 20);
+    set_container_border(positionsContainer, 2, 0xFFDD00);
+    set_container_border_radius(positionsContainer, 8);
+    set_container_gap(positionsContainer, 8);
+
+    create_title_text("Final Results", gameFont, 0xFFDD00, positionsContainer);
+    
     add_child_to_container_component(finishRaceContainer, positionsContainer);
 
     if (results && total_results > 0) {
@@ -105,7 +118,7 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
                             0xFFFFFF;              // White for others
             
             if (strcmp(results[i].name, "Player") == 0) {
-                sprintf(position_text, "%d. %s (%.2fs)", 
+                sprintf(position_text, "%d. %s (%.2fs) ★", 
                        results[i].position, results[i].name, results[i].race_time);
             } else {
                 sprintf(position_text, "%d. %s (%.2fs)", 
@@ -122,6 +135,7 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
     // Back to main menu option
     mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, finishRaceContainer);
     finishRaceOptions[0] = mainMenuContainer;
+    set_container_background_color(finishRaceOptions[0], 0xDC3545);
 
     perform_container_layout(finishRaceContainer);
     return this;
