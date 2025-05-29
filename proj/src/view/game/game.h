@@ -75,6 +75,10 @@ typedef struct Game {
     RaceResult current_race_positions[MAX_AI_CARS + 1];
     int current_total_racers;
 
+    int previous_player_score;
+    float wrong_direction_timer;
+    bool is_going_wrong_direction;
+
 } Game;
 
 // Public Game Class Methods

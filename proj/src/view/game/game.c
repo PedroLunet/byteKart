@@ -26,6 +26,53 @@ static UIComponent *display_player_lap(Game *this) {
     return lapText;
 }
 
+static UIComponent *display_wrong_direction_warning(Game *this) {
+    if (!this || !this->is_going_wrong_direction) return NULL;
+    
+    char warning_text[] = "WRONG WAY!";
+    uint32_t color = 0xFF0000; 
+    
+    UIComponent *warningText = create_text_component(warning_text, gameFont, color);
+    if (warningText && warningText->data) {
+        TextElementData *data = (TextElementData *)warningText->data;
+
+        int scale = 4;
+        int orig_width = data->width;
+        int orig_height = data->height;
+        int scaled_width = orig_width * scale;
+        int scaled_height = orig_height * scale;
+        
+        uint32_t *scaled_buffer = malloc(scaled_width * scaled_height * sizeof(uint32_t));
+        if (scaled_buffer) {
+            for (int y = 0; y < orig_height; y++) {
+                for (int x = 0; x < orig_width; x++) {
+                    uint32_t pixel = data->pixel_data[y * orig_width + x];
+                    
+                    for (int sy = 0; sy < scale; sy++) {
+                        for (int sx = 0; sx < scale; sx++) {
+                            int scaled_x = x * scale + sx;
+                            int scaled_y = y * scale + sy;
+                            if (scaled_x < scaled_width && scaled_y < scaled_height) {
+                                scaled_buffer[scaled_y * scaled_width + scaled_x] = pixel;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            free(data->pixel_data);
+            data->pixel_data = scaled_buffer;
+            data->width = scaled_width;
+            data->height = scaled_height;
+        }
+
+        warningText->x = vbe_mode_info.XResolution / 2 - data->width / 2;
+        warningText->y = vbe_mode_info.YResolution / 2 - 100; 
+    }
+    
+    return warningText;
+}
+
 static UIComponent *display_player_position(Game *this) {
     if (!this || this->current_total_racers == 0) return NULL;
     
@@ -174,6 +221,12 @@ static void playing_draw_internal(GameState *base) {
                 draw_ui_component(lapText);
                 destroy_ui_component(lapText);
             }
+            
+            UIComponent *wrongWayText = display_wrong_direction_warning(this);
+            if (wrongWayText) {
+                draw_ui_component(wrongWayText);
+                destroy_ui_component(wrongWayText);
+            }
         }
 
         // TODO: Draw HUD (laps, speed)
@@ -259,6 +312,12 @@ static void playing_draw_internal(GameState *base) {
             if (lapText) {
                 draw_ui_component(lapText);
                 destroy_ui_component(lapText);
+            }
+            
+            UIComponent *wrongWayText = display_wrong_direction_warning(this);
+            if (wrongWayText) {
+                draw_ui_component(wrongWayText);
+                destroy_ui_component(wrongWayText);
             }
         }
     }
@@ -722,6 +781,22 @@ static void playing_update_internal(GameState *base) {
 
             calculate_current_race_positions(this, this->current_race_positions, &this->current_total_racers);
 
+            int current_player_score = calculate_race_position_score(this->player.current_lap, this->player.current_road_segment_idx);
+
+            if (this->previous_player_score > 0) { 
+                if (current_player_score < this->previous_player_score) {
+                    this->wrong_direction_timer += delta_time;
+
+                    if (this->wrong_direction_timer >= 1.0f) {
+                        this->is_going_wrong_direction = true;
+                    }
+                } else if (current_player_score > this->previous_player_score) {
+                    this->wrong_direction_timer = 0.0f;
+                    this->is_going_wrong_direction = false;
+                }
+            }
+            this->previous_player_score = current_player_score;
+
             if (!this->player_has_finished && this->player.current_lap > this->player.total_laps) {
                 this->player_has_finished = true;
                 this->player_finish_time = this->race_timer_s;
@@ -1026,6 +1101,11 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->finishRaceMenu = NULL;
     this->current_total_racers = 0;
     memset(this->current_race_positions, 0, sizeof(this->current_race_positions));
+
+    // Initialize wrong direction detection
+    this->previous_player_score = 0;
+    this->wrong_direction_timer = 0.0f;
+    this->is_going_wrong_direction = false;
 
     this->timer_count_down = 3.99f;
 
