@@ -36,12 +36,14 @@ float get_current_cronometer_time() {
 UIComponent *display_current_time(UIComponent *parent) {
 
   currentTime = display_cronometer(get_current_cronometer_time());
-  currentTimeContainer = create_container_component(0, 0, 40, 40);
+  currentTimeContainer = create_container_component(0, 0, 0, 0);
   
   set_container_layout(currentTimeContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
-  set_container_background_color(currentTimeContainer, 0x111111);
-  set_container_padding(currentTimeContainer, 10, 10, 10, 10);
-  set_container_border(currentTimeContainer, 2, 0x111111);
+  set_container_background_color(currentTimeContainer, 0x1C1C1C);
+  set_container_padding(currentTimeContainer, 15, 15, 15, 15);
+  set_container_border(currentTimeContainer, 2, 0xFFDD00); 
+  set_container_border_radius(currentTimeContainer, 8);
+  set_container_gap(currentTimeContainer, 10); 
 
   currentTimeText = create_text_component("Current Time: ", gameFont, 0xFFFFFF);
   if (!currentTimeText) {
@@ -56,5 +58,20 @@ UIComponent *display_current_time(UIComponent *parent) {
   perform_container_layout(parent);
 
   return currentTimeContainer;
+}
+
+void update_current_time_display() {
+  if (currentTime && currentTimeContainer) {
+    UIComponent *newTime = display_cronometer(get_current_cronometer_time());
+    if (newTime) {
+      destroy_ui_component(currentTime);
+      currentTime = newTime;
+      ContainerData *data = (ContainerData *)currentTimeContainer->data;
+      if (data && data->num_children >= 2) {
+        data->children[1] = currentTime;
+        perform_container_layout(currentTimeContainer);
+      }
+    }
+  }
 }
 

@@ -1,6 +1,7 @@
 #include <lcom/lcf.h>
 
 #include "pause_menu.h"
+#include "../game/cronometer.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
@@ -18,6 +19,7 @@ static UIComponent *currentTime = NULL;
 static void pause_draw_internal(GameState *base) {
   Pause *this = (Pause *)base;
   if (this->uiRoot) {
+    update_current_time_display();
     draw_ui_component(this->uiRoot);
   }
 }
