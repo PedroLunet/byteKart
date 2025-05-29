@@ -15,6 +15,7 @@ static UIComponent *resumeContainer = NULL;
 static UIComponent *mainMenuContainer = NULL;
 static UIComponent *pauseOptions[2];
 static UIComponent *currentTime = NULL;
+static UIComponent *quickControlsContainer = NULL;
 
 static void pause_draw_internal(GameState *base) {
   Pause *this = (Pause *)base;
@@ -76,6 +77,7 @@ static void pause_destroy_internal(GameState *base) {
         destroy_ui_component(this->uiRoot);
         this->uiRoot = NULL;
         pauseText = NULL;
+        quickControlsContainer = NULL;
     }
     free(base);
 }
@@ -101,10 +103,21 @@ Pause *pause_menu_create() {
     // Title with better styling
     pauseText = create_title_text("GAME PAUSED", gameFont, 0xFFFFFF, pauseContainer);
 
+    // Quick Controls container
+    quickControlsContainer = create_container_component(0, 0, 0, 0);
+    set_container_layout(quickControlsContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(quickControlsContainer, 0x1C1C1C);
+    set_container_padding(quickControlsContainer, 15, 15, 15, 15);
+    set_container_border(quickControlsContainer, 2, 0xFFDD00); 
+    set_container_border_radius(quickControlsContainer, 8);
+    set_container_gap(quickControlsContainer, 5); 
+
     // Game controls information
-    create_title_text("Quick Controls", gameFont, 0xFFDD00, pauseContainer);
-    create_title_text("P - Pause", gameFont, 0xAAAAAA, pauseContainer);
-    create_title_text("Arrow Keys - Steer", gameFont, 0xAAAAAA, pauseContainer);
+    create_title_text("Quick Controls", gameFont, 0xFFDD00, quickControlsContainer);
+    create_title_text("P - Pause", gameFont, 0xAAAAAA, quickControlsContainer);
+    create_title_text("Arrow Keys - Steer", gameFont, 0xAAAAAA, quickControlsContainer);
+
+    add_child_to_container_component(pauseContainer, quickControlsContainer);
 
     // Display current time
     currentTime = display_current_time(pauseContainer);
