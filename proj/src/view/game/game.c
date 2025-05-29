@@ -202,35 +202,44 @@ static void playing_draw_internal(GameState *base) {
         }
         renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
+        UIComponent *timerText = NULL;
         if (this->current_running_state == GAME_SUBSTATE_COUNTDOWN) {
-            UIComponent *timerText = display_cronometer(0.0); // Timer to 0 when countdown is running
+            timerText = display_cronometer(0.0); // Timer to 0 when countdown is running
 
             if (timerText) {
                 draw_ui_component(timerText);
                 destroy_ui_component(timerText);
             }
 
-            if (countdownText) {
-                draw_ui_component(countdownText);
-            
-            UIComponent *positionText = display_player_position(this);
-            if (positionText) {
-                draw_ui_component(positionText);
-                destroy_ui_component(positionText);
-            }
 
-            UIComponent *lapText = display_player_lap(this);
-            if (lapText) {
-                draw_ui_component(lapText);
-                destroy_ui_component(lapText);
-            }
-            
-            UIComponent *wrongWayText = display_wrong_direction_warning(this);
-            if (wrongWayText) {
-                draw_ui_component(wrongWayText);
-                destroy_ui_component(wrongWayText);
-            }
         }
+
+        if (timerText) {
+                draw_ui_component(timerText);
+                destroy_ui_component(timerText);
+        }
+
+        if (countdownText) {
+            draw_ui_component(countdownText);
+        
+        UIComponent *positionText = display_player_position(this);
+        if (positionText) {
+            draw_ui_component(positionText);
+            destroy_ui_component(positionText);
+        }
+
+        UIComponent *lapText = display_player_lap(this);
+        if (lapText) {
+            draw_ui_component(lapText);
+            destroy_ui_component(lapText);
+        }
+        
+        UIComponent *wrongWayText = display_wrong_direction_warning(this);
+        if (wrongWayText) {
+            draw_ui_component(wrongWayText);
+            destroy_ui_component(wrongWayText);
+        }
+    }
 
         // TODO: Draw HUD (laps, speed)
 
@@ -334,7 +343,6 @@ static void playing_draw_internal(GameState *base) {
             finish_race_draw(this->finishRaceMenu);
         }
     }
-}
 }
 
 static void playing_process_event_internal(GameState *base, EventType event) {
