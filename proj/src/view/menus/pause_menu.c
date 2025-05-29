@@ -138,6 +138,9 @@ Pause *pause_menu_create() {
     mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, pauseContainer);
     pauseOptions[1] = mainMenuContainer;
 
+    set_container_background_color(pauseOptions[0], 0x28A745); 
+    set_container_background_color(pauseOptions[1], 0xDC3545); 
+
     perform_container_layout(pauseContainer);
     return this;
 }
