@@ -311,7 +311,13 @@ static void playing_process_event_internal(GameState *base, EventType event) {
         finish_race_process_event(this->finishRaceMenu, event);
         FinishRaceSubstate finishRaceState = finish_race_get_current_substate(this->finishRaceMenu);
         if (finishRaceState == FINISH_RACE_MAIN_MENU) {
-            printf("Returning to main menu from finish race menu\n");
+            if (this->finishRaceMenu->selectedOption == 0) {
+                printf("Restarting the game with same settings\n");
+                this->replay_requested = true;
+            } else {
+                printf("Returning to main menu from finish race menu\n");
+                this->replay_requested = false;
+            }
             this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
             finish_race_menu_destroy(this->finishRaceMenu);
             this->finishRaceMenu = NULL;
@@ -880,6 +886,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->base.update_state = playing_update_internal;
     this->base.destroy = playing_destroy_internal;
     this->cronometer_time = 0.0f;
+    this->replay_requested = false;  
 
     this->current_running_state = GAME_SUBSTATE_LOADING;
   	LoadingUI *loading_ui = loading_ui_create(gameFont, vbe_mode_info.XResolution, vbe_mode_info.YResolution);
@@ -1041,5 +1048,9 @@ GameRunningState playing_get_current_substate(Game *this) {
 
 void playing_reset_state(Game *this) {
     this->current_running_state = GAME_SUBSTATE_LOADING;
+}
+
+bool playing_is_replay_requested(Game *this) {
+    return this->replay_requested;
 }
 

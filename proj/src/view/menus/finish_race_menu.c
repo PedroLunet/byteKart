@@ -12,8 +12,9 @@ extern Font *gameFont;
 static UIComponent *finishRaceContainer = NULL;
 static UIComponent *finishRaceText = NULL;
 static UIComponent *positionsContainer = NULL;
+static UIComponent *replayContainer = NULL;
 static UIComponent *mainMenuContainer = NULL;
-static UIComponent *finishRaceOptions[1];
+static UIComponent *finishRaceOptions[2];
 
 static void finish_race_draw_internal(GameState *base) {
   FinishRace *this = (FinishRace *)base;
@@ -31,12 +32,20 @@ static void finish_race_clean_dirty_mouse_internal(GameState *base) {
 
 static bool finish_race_is_mouse_over_option(GameState *base, int mouse_x, int mouse_y, void *data) {
     int *selected_option = (int *)data;
-    UIComponent *menu_option[] = {finishRaceOptions[0]};
-    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, menu_option, 1, selected_option, 0xDC3545, 0xFF4757)) {
+    UIComponent *replay_option[] = {finishRaceOptions[0]};
+    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, replay_option, 1, selected_option, 0x28A745, 0x20C837)) {
         return true;
     }
 
-    set_container_background_color(finishRaceOptions[0], 0xDC3545); 
+    UIComponent *menu_option[] = {finishRaceOptions[1]};
+    int temp_selection;
+    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, menu_option, 1, &temp_selection, 0xDC3545, 0xFF4757)) {
+        *selected_option = 1;  
+        return true;
+    }
+
+    set_container_background_color(finishRaceOptions[0], 0x28A745); 
+    set_container_background_color(finishRaceOptions[1], 0xDC3545); 
     *selected_option = -1;
     return false;
 }
@@ -45,10 +54,14 @@ static void finish_race_process(GameState *base, EventType event) {
     FinishRace *this = (FinishRace *)base;
     int prevSelected = this->selectedOption;
     if (event == EVENT_MOUSE) {
+      bool hovered = false;
         if (base->handle_mouse_input(base, (void (*)(GameState *))finish_race_clean_dirty_mouse_internal, finish_race_is_mouse_over_option, &this->selectedOption)) {
+          hovered = true;
             if (this->selectedOption == 0) {
               this->currentFinishRaceSubstate = FINISH_RACE_MAIN_MENU;
-            }
+            } else if (this->selectedOption == 1) {
+              this->currentFinishRaceSubstate = FINISH_RACE_MAIN_MENU;
+            } 
         }
         if (this->selectedOption != prevSelected) {
             base->draw(base);
@@ -62,6 +75,9 @@ static void finish_race_destroy_internal(GameState *base) {
         destroy_ui_component(this->uiRoot);
         this->uiRoot = NULL;
         finishRaceText = NULL;
+        positionsContainer = NULL;
+        replayContainer = NULL;
+        mainMenuContainer = NULL;
     }
     free(base);
 }
@@ -96,21 +112,20 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
         }
     }
 
-    // Create positions container
-    positionsContainer = create_container_component(0, 0, 450, 350);
+    positionsContainer = create_container_component(0, 0, 450, 250);
     set_container_layout(positionsContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
     set_container_background_color(positionsContainer, 0x1C1C1C);
     set_container_padding(positionsContainer, 20, 20, 20, 20);
     set_container_border(positionsContainer, 2, 0xFFDD00);
     set_container_border_radius(positionsContainer, 8);
-    set_container_gap(positionsContainer, 8);
+    set_container_gap(positionsContainer, 5);
 
     create_title_text("Final Results", gameFont, 0xFFDD00, positionsContainer);
     
     add_child_to_container_component(finishRaceContainer, positionsContainer);
 
     if (results && total_results > 0) {
-        for (int i = 0; i < total_results && i < 6; i++) {
+        for (int i = 0; i < total_results && i < 4; i++) {
             char position_text[100];
             uint32_t color = (i == 0) ? 0xFFD700 : // Gold for 1st place
                             (i == 1) ? 0xC0C0C0 : // Silver for 2nd place
@@ -132,10 +147,16 @@ FinishRace *finish_race_menu_create(RaceResult *results, int total_results) {
         }
     }
 
-    // Back to main menu option
-    mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, finishRaceContainer);
-    finishRaceOptions[0] = mainMenuContainer;
-    set_container_background_color(finishRaceOptions[0], 0xDC3545);
+    // Replay option - directly in main container like pause menu
+    replayContainer = create_menu_option("Replay", gameFont, 180, 50, finishRaceContainer);
+    finishRaceOptions[0] = replayContainer;
+
+    // Back to main menu option - directly in main container like pause menu
+    mainMenuContainer = create_menu_option("Back to Menu", gameFont, 180, 50, finishRaceContainer);
+    finishRaceOptions[1] = mainMenuContainer;
+
+    set_container_background_color(finishRaceOptions[0], 0x28A745); 
+    set_container_background_color(finishRaceOptions[1], 0xDC3545);
 
     perform_container_layout(finishRaceContainer);
     return this;

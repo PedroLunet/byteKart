@@ -251,16 +251,22 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             } else if (currentGameSubstate == GAME_EXITED) {
                 nextState = QUIT;
             } else if (currentGameSubstate == GAME_SUBSTATE_BACK_TO_MENU) {
+                bool replay_requested = playing_is_replay_requested(game);
+                
                 // Clean up the game state completely
-                printf("Cleaning up game state and returning to main menu\n");
                 playing_destroy(game);
                 game = NULL;
                 
-                select_difficulty_reset_state(selectDifficulty);
-                select_car_reset_state(selectCar);
-                
-                nextState = MENU;
-                menu_reset_state(mainMenu);
+                if (replay_requested) {
+                    printf("Restarting game with same settings (difficulty %d, car %d)\n", difficulty, selectedCar);
+                } else {
+                    printf("Cleaning up game state and returning to main menu\n");
+                    select_difficulty_reset_state(selectDifficulty);
+                    select_car_reset_state(selectCar);
+                    
+                    nextState = MENU;
+                    menu_reset_state(mainMenu);
+                }
             }
             break;
 

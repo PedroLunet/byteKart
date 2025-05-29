@@ -54,6 +54,7 @@ typedef struct Game {
     int player_skid_input_sign; // -1 for left, 0 for none, 1 for right
     int player_turn_input_sign; // -1 for left, 0 for none, 1 for right
     bool pause_requested;
+    bool replay_requested;
     Pause *pauseMenu;
     FinishRace *finishRaceMenu;
 
@@ -84,6 +85,7 @@ void playing_process_event(Game *this, EventType event);
 void playing_update_state(Game *this);
 GameRunningState playing_get_current_substate(Game *this);
 void playing_reset_state(Game *this);
+bool playing_is_replay_requested(Game *this);
 
 #endif
 
