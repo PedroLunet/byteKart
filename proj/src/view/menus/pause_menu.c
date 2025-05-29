@@ -1,6 +1,7 @@
 #include <lcom/lcf.h>
 
 #include "pause_menu.h"
+#include "../game/cronometer.h"
 
 extern vbe_mode_info_t vbe_mode_info;
 extern uint8_t scancode;
@@ -14,10 +15,12 @@ static UIComponent *resumeContainer = NULL;
 static UIComponent *mainMenuContainer = NULL;
 static UIComponent *pauseOptions[2];
 static UIComponent *currentTime = NULL;
+static UIComponent *quickControlsContainer = NULL;
 
 static void pause_draw_internal(GameState *base) {
   Pause *this = (Pause *)base;
   if (this->uiRoot) {
+    update_current_time_display();
     draw_ui_component(this->uiRoot);
   }
 }
@@ -31,7 +34,22 @@ static void pause_clean_dirty_mouse_internal(GameState *base) {
 
 static bool pause_is_mouse_over_option(GameState *base, int mouse_x, int mouse_y, void *data) {
     int *selected_option = (int *)data;
-    return is_mouse_over_menu_options(base, mouse_x, mouse_y, pauseOptions, 2, selected_option, 0x111111, 0xA81D1D);
+    UIComponent *resume_option[] = {pauseOptions[0]};
+    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, resume_option, 1, selected_option, 0x28A745, 0x20C837)) {
+        return true;
+    }
+
+    UIComponent *menu_option[] = {pauseOptions[1]};
+    int temp_selection;
+    if (is_mouse_over_menu_options(base, mouse_x, mouse_y, menu_option, 1, &temp_selection, 0xDC3545, 0xFF4757)) {
+        *selected_option = 1;  
+        return true;
+    }
+
+    set_container_background_color(pauseOptions[0], 0x28A745); 
+    set_container_background_color(pauseOptions[1], 0xDC3545); 
+    *selected_option = -1;
+    return false;
 }
 
 static void pause_process(GameState *base, EventType event) {
@@ -50,6 +68,14 @@ static void pause_process(GameState *base, EventType event) {
         if (this->selectedOption != prevSelected) {
             base->draw(base);
         }
+    } else if (event == EVENT_KEYBOARD) {
+        switch (scancode) {
+            case P_KEY:
+                this->currentPauseSubstate = PAUSE_RESUME;
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -59,6 +85,7 @@ static void pause_destroy_internal(GameState *base) {
         destroy_ui_component(this->uiRoot);
         this->uiRoot = NULL;
         pauseText = NULL;
+        quickControlsContainer = NULL;
     }
     free(base);
 }
@@ -77,14 +104,30 @@ Pause *pause_menu_create() {
     this->currentPauseSubstate = PAUSE_MENU;
     this->uiRoot = NULL;
 
-    // Main Container
-    pauseContainer = create_main_container(NULL, 30, 0, 0, 0, 0);;
+    pauseContainer = create_main_container(NULL, 30, 0, 0, 0, 0);
+    set_container_background_color(pauseContainer, 0x80000000);
     this->uiRoot = pauseContainer;
 
-    // Title
-    pauseText = create_title_text("Game Paused", gameFont, 0xFFFFFF, pauseContainer);
+    // Title with better styling
+    pauseText = create_title_text("GAME PAUSED", gameFont, 0xFFFFFF, pauseContainer);
 
-    // Display current time 
+    // Quick Controls container
+    quickControlsContainer = create_container_component(0, 0, 0, 0);
+    set_container_layout(quickControlsContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(quickControlsContainer, 0x1C1C1C);
+    set_container_padding(quickControlsContainer, 15, 15, 15, 15);
+    set_container_border(quickControlsContainer, 2, 0xFFDD00); 
+    set_container_border_radius(quickControlsContainer, 8);
+    set_container_gap(quickControlsContainer, 5); 
+
+    // Game controls information
+    create_title_text("Quick Controls", gameFont, 0xFFDD00, quickControlsContainer);
+    create_title_text("P - Pause/Resume", gameFont, 0xAAAAAA, quickControlsContainer);
+    create_title_text("Arrow Keys - Steer", gameFont, 0xAAAAAA, quickControlsContainer);
+
+    add_child_to_container_component(pauseContainer, quickControlsContainer);
+
+    // Display current time
     currentTime = display_current_time(pauseContainer);
 
     // Resume option
@@ -94,6 +137,9 @@ Pause *pause_menu_create() {
     // Back to main menu option
     mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, pauseContainer);
     pauseOptions[1] = mainMenuContainer;
+
+    set_container_background_color(pauseOptions[0], 0x28A745); 
+    set_container_background_color(pauseOptions[1], 0xDC3545); 
 
     perform_container_layout(pauseContainer);
     return this;
