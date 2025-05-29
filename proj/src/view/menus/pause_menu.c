@@ -93,25 +93,41 @@ Pause *pause_menu_create() {
     this->uiRoot = NULL;
 
     // Main Container
-    pauseContainer = create_main_container(NULL, 30, 0, 0, 0, 0);;
+    pauseContainer = create_main_container(NULL, 30, 0, 0, 0, 0);
     this->uiRoot = pauseContainer;
 
+    // Content Container with yellow border
+    UIComponent *contentContainer = create_container_component(0, 0, 0, 0);
+    if (!contentContainer) {
+        destroy_ui_component(pauseContainer);
+        free(this);
+        return NULL;
+    }
+    set_container_layout(contentContainer, LAYOUT_COLUMN, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(contentContainer, 0x373737); 
+    set_container_padding(contentContainer, 50, 50, 150, 150);
+    set_container_border(contentContainer, 5, 0xFFDD00); 
+    set_container_border_radius(contentContainer, 15); 
+    set_container_gap(contentContainer, 50);
+    add_child_to_container_component(pauseContainer, contentContainer);
+
     // Title
-    pauseText = create_title_text("Game Paused", gameFont, 0xFFFFFF, pauseContainer);
+    pauseText = create_title_text("Game Paused", gameFont, 0xFFFFFF, contentContainer);
 
     // Display current time 
-    currentTime = display_current_time(pauseContainer);
+    currentTime = display_current_time(contentContainer);
 
     // Resume option
-    resumeContainer = create_menu_option("Resume", gameFont, 200, 50, pauseContainer);
+    resumeContainer = create_menu_option("Resume", gameFont, 200, 50, contentContainer);
     set_container_background_color(resumeContainer, 0x00AA00);
     pauseOptions[0] = resumeContainer;
 
     // Back to main menu option
-    mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, pauseContainer);
+    mainMenuContainer = create_menu_option("Back to Menu", gameFont, 200, 50, contentContainer);
     set_container_background_color(mainMenuContainer, 0xAA0000);
     pauseOptions[1] = mainMenuContainer;
 
+    perform_container_layout(contentContainer);
     perform_container_layout(pauseContainer);
     return this;
 }
