@@ -407,8 +407,7 @@ static void playing_process_event_internal(GameState *base, EventType event) {
                     if (this->name_length > 0) {
                         this->player_name[this->name_length] = '\0';
 
-                        add_entry_to_leaderboard(leaderboard_entries, &count_leaderboard_entries, 
-                                                this->player_name, this->player_finish_time);
+                        add_entry_to_leaderboard(leaderboard_entries, &count_leaderboard_entries, this->player_name, this->player_finish_time);
 
                         destroy_ui_component(this->nameInputContainer);
                         this->nameInputContainer = NULL;
@@ -437,6 +436,8 @@ static void playing_process_event_internal(GameState *base, EventType event) {
                     destroy_ui_component(this->nameInputContainer);
                     this->nameInputContainer = NULL;
                     this->nameInputText = NULL;
+
+                    add_entry_to_leaderboard(leaderboard_entries, &count_leaderboard_entries, this->player_name, this->player_finish_time);
 
                     RaceResult final_results[MAX_AI_CARS + 1];
                     int total_results = 0;

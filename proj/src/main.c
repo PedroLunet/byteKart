@@ -100,12 +100,6 @@ int (initial_setup)() {
         return 1;
     }
 
-    leaderboard = leaderboard_create();
-    if (!leaderboard) {
-        leaderboard_destroy(leaderboard);
-        return 1;
-    }
-
     current_state = MENU;
     running = true;
 
@@ -188,6 +182,11 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 nextState = SELECT_DIFFICULTY;
             } else if (currentMenuSubstate == MENU_FINISHED_LEADERBOARD) {
                 nextState = LEADERBOARD;
+                if (leaderboard) {
+                    leaderboard_destroy(leaderboard);
+                    leaderboard = NULL;
+                }
+                leaderboard = leaderboard_create();
                 leaderboard_draw(leaderboard);
             } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
                 nextState = QUIT;
