@@ -75,8 +75,8 @@ void renderer_draw_road(const Road *road, const Player *player_view) {
         int screen_pivot_x = s_screen_width / 2;
         int screen_pivot_y = s_screen_height / 2;
 
-        float local_pivot_in_track_image_x = player_view->world_position_car_center.y; // 6000 -> 1000
-        float local_pivot_in_track_image_y = player_view->world_position_car_center.x; // 1000 -> 6000
+        float local_pivot_in_track_image_x = player_view->world_position_car_center.y - road->world_origin_of_track_image.x; // 6000 -> 1000
+        float local_pivot_in_track_image_y = player_view->world_position_car_center.x - road->world_origin_of_track_image.y; // 1000 -> 6000
 
         float cos_track_rotation = -player_view->forward_direction.x;
         float sin_track_rotation = -player_view->forward_direction.y;
@@ -92,23 +92,6 @@ void renderer_draw_road(const Road *road, const Player *player_view) {
             false
         );
 
-    } else {
-        if (road->num_center_points >= 2 && road->left_edge_points && road->right_edge_points) {
-            uint32_t road_edge_color = 0x404040;
-            for (int i = 0; i < road->num_center_points; ++i) {
-                int next_i = (i + 1) % road->num_center_points;
-                Point_i p_left_start_screen, p_left_end_screen;
-                Point_i p_right_start_screen, p_right_end_screen;
-
-                renderer_transform_world_to_screen(player_view, road->left_edge_points[i], &p_left_start_screen);
-                renderer_transform_world_to_screen(player_view, road->left_edge_points[next_i], &p_left_end_screen);
-                renderer_draw_line(p_left_start_screen.x, p_left_start_screen.y, p_left_end_screen.x, p_left_end_screen.y, road_edge_color);
-
-                renderer_transform_world_to_screen(player_view, road->right_edge_points[i], &p_right_start_screen);
-                renderer_transform_world_to_screen(player_view, road->right_edge_points[next_i], &p_right_end_screen);
-                renderer_draw_line(p_right_start_screen.x, p_right_start_screen.y, p_right_end_screen.x, p_right_end_screen.y, road_edge_color);
-            }
-        }
     }
 }
 

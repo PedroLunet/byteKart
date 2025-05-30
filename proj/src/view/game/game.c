@@ -30,7 +30,10 @@ static void playing_draw_internal(GameState *base) {
         }
         renderer_draw_player_car(&this->player, this->player_skid_input_active, this->player_skid_input_sign, this->precomputed_cos_skid, this->precomputed_sin_skid);
 
+        items_draw(&this->game_items, &this->player);
+
         // TODO: Draw HUD (laps, speed, timer)
+        minimap_draw(&this->minimap, &this->player, this->ai_cars, this->num_active_ai_cars);
     }
 
     if (this->current_running_state == GAME_SUBSTATE_LOADING) { /* Draw loading screen */ return; }
@@ -156,7 +159,7 @@ static void update_countdown(Game *this, float delta_time) {
                     text_data->height = max_height;
                 }
                 if (load_text(text_data->text, 0, 0, text_data->color, text_data->font, text_data->pixel_data, text_data->width) != 0) {
-                    fprintf(stderr, "Error loading countdown text: %s\n", text_data->text);
+                    printf("Error loading countdown text: %s\n", text_data->text);
                 }
                 countdownTextComponent->x = vbe_mode_info.XResolution / 2 - text_data->width / 2;
                 countdownTextComponent->y = vbe_mode_info.YResolution / 2 - text_data->height / 2;
@@ -178,6 +181,16 @@ static void playing_update_internal(GameState *base) {
 
     float delta_time = 1.0f / 60.0f;
 
+    if (this->current_running_state == GAME_SUBSTATE_PLAYING) {
+         obb_update(&this->player.obb, this->player.world_position_car_center, this->player.forward_direction,
+                    this->player.hitbox_half_width, this->player.hitbox_half_height);
+        for (int i = 0; i < this->num_active_ai_cars; ++i) {
+            if (this->ai_cars[i]) {
+                obb_update(&this->ai_cars[i]->obb, this->ai_cars[i]->world_position, this->ai_cars[i]->forward_direction, this->ai_cars[i]->hitbox_half_width, this->ai_cars[i]->hitbox_half_height);
+            }
+        }
+    }
+
     switch(this->current_running_state) {
         case GAME_SUBSTATE_LOADING:
             // if (assets_loaded()) this->current_running_state = GAME_RUN_STATE_COUNTDOWN;
@@ -186,29 +199,31 @@ static void playing_update_internal(GameState *base) {
             update_countdown(this, delta_time);
             break;
         case GAME_SUBSTATE_PLAYING:
-            this->road_y1 += 2;
-            this->road_y2 += 2;
-
-            if (this->road_y1 >= (int)vbe_mode_info.YResolution)
-                this->road_y1 = -this->road_sprite1->height;
-
-            if (this->road_y2 >= (int)vbe_mode_info.YResolution)
-                this->road_y2 = -this->road_sprite2->height;
+          	this->current_lap = this->player.current_lap;
 
             player_handle_turn_input(&this->player, this->player_turn_input_sign);
             player_update(&this->player, &this->road_data, this->player_skid_input_active, delta_time);
-
-            this->current_lap = this->player.current_lap;
+            obb_update(&this->player.obb, this->player.world_position_car_center, this->player.forward_direction, this->player.hitbox_half_width, this->player.hitbox_half_height);
 
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
                 if (this->ai_cars[i]) {
                     ai_car_update(this->ai_cars[i], &this->road_data, &this->player, NULL, 0, delta_time);
+                    obb_update(&this->ai_cars[i]->obb, this->ai_cars[i]->world_position, this->ai_cars[i]->forward_direction, this->ai_cars[i]->hitbox_half_width, this->ai_cars[i]->hitbox_half_height);
+                }
+            }
+
+            items_update(&this->game_items, &this->player, this->ai_cars, this->num_active_ai_cars, &this->road_data, delta_time);
+            obb_update(&this->player.obb, this->player.world_position_car_center, this->player.forward_direction, this->player.hitbox_half_width, this->player.hitbox_half_height);
+            for (int i = 0; i < this->num_active_ai_cars; ++i) {
+                if (this->ai_cars[i]) {
+                    obb_update(&this->ai_cars[i]->obb, this->ai_cars[i]->world_position, this->ai_cars[i]->forward_direction, this->ai_cars[i]->hitbox_half_width, this->ai_cars[i]->hitbox_half_height);
                 }
             }
 
             CollisionInfo collision_info;
-    		float restitution = 0.4f;
+    		float restitution = 0.8f;
 
+        	// Player vs. AI Cars
             for (int i = 0; i < this->num_active_ai_cars; ++i) {
         		if (this->ai_cars[i]) {
             		obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb, &collision_info);
@@ -263,45 +278,66 @@ static void playing_update_internal(GameState *base) {
         		}
     		}
 
-        	/*
-        	int player_seg_idx = game->player.current_road_segment_idx;
-    		int search_radius_edges = 3;
-    		int N_road_points = game->road_data.num_center_points;
+        	int player_seg_idx = this->player.current_road_segment_idx;
+            int search_radius_edges = 30;
+            int N_road_points = this->road_data.num_center_points;
+            float track_restitution = 0.8f;
 
-    		if (N_road_points >= 2 && game->road_data.left_edge_points && game->road_data.right_edge_points) {
-        		for (int i = 0; i < (2 * search_radius_edges + 1); ++i) {
-            		int offset = i - search_radius_edges;
-            		int seg_to_check = (player_seg_idx + offset % N_road_points + N_road_points) % N_road_points;
-            		int next_seg_to_check = (seg_to_check + 1) % N_road_points;
+            if (N_road_points >= 2 && this->road_data.left_edge_points && this->road_data.right_edge_points) {
+                for (int k = 0; k < (2 * search_radius_edges + 1); ++k) {
+                    int offset = k - search_radius_edges;
+                    int seg_to_check = (player_seg_idx + offset % N_road_points + N_road_points) % N_road_points;
+                    int next_seg_to_check = (seg_to_check + 1) % N_road_points;
 
-            		Point p0_left = game->road_data.left_edge_points[seg_to_check];
-            		Point p1_left = game->road_data.left_edge_points[next_seg_to_check];
-            		obb_check_collision_obb_vs_line_segment(&game->player.obb, p0_left, p1_left, &collision_info);
-            		if (collision_info.occurred) {
-                		printf("Collision: Player vs Left Edge (Seg %d, Depth: %f)\n", seg_to_check, collision_info.penetration_depth);
+                    Point p0_left = this->road_data.left_edge_points[seg_to_check];
+                    Point p1_left = this->road_data.left_edge_points[next_seg_to_check];
+                    obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_left, p1_left, &collision_info);
+                    if (collision_info.occurred) {
+                        // printf("Collision: Player vs Left Edge (Seg %d, Depth: %f)\n", seg_to_check, collision_info.penetration_depth);
 
-                		Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y};
-                		physics_resolve_overlap(&game->player.world_position_car_center, &push_normal, collision_info.penetration_depth);
-                		obb_update(&game->player.obb, game->player.world_position_car_center, game->player.forward_direction, game->player.hitbox_half_width, game->player.hitbox_half_height);
+                        physics_apply_bounce(&this->player.current_velocity, &this->player.current_speed, &this->player.forward_direction, &collision_info.collision_normal, track_restitution);
 
-                		physics_apply_bounce(&game->player.current_velocity, &game->player.current_speed, &game->player.forward_direction,
-                                     &collision_info.collision_normal, restitution);
-            		}
+                        Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                        vector_init(&push_normal, push_normal.x, push_normal.y);
+                        float effective_depth = collision_info.penetration_depth;
+                        if (effective_depth < 0.01f && effective_depth > -0.01f) effective_depth = 0.5f;
+                        else if (effective_depth < 0) effective_depth = 0.5f;
+                        else effective_depth += 0.1f;
+                        physics_resolve_overlap(&this->player.world_position_car_center, &push_normal, effective_depth);
 
-            		Point p0_right = game->road_data.right_edge_points[seg_to_check];
-            		Point p1_right = game->road_data.right_edge_points[next_seg_to_check];
-            		obb_check_collision_obb_vs_line_segment(&game->player.obb, p0_right, p1_right, &collision_info);
-            		if (collision_info.occurred) {
-                		printf("Collision: Player vs Right Edge (Seg %d, Depth: %f)\n", seg_to_check, collision_info.penetration_depth);
-                		Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y};
-                		physics_resolve_overlap(&game->player.world_position_car_center, &push_normal, collision_info.penetration_depth);
-                		obb_update(&game->player.obb, game->player.world_position_car_center, game->player.forward_direction, game->player.hitbox_half_width, game->player.hitbox_half_height);
-                		physics_apply_bounce(&game->player.current_velocity, &game->player.current_speed, &game->player.forward_direction, &collision_info.collision_normal, restitution);
-            		}
-        		}
-    		}
+                        player_handle_hard_collision(&this->player, this->player.current_speed * 0.1f);
 
-        	 */
+                        obb_update(&this->player.obb, this->player.world_position_car_center, this->player.forward_direction, this->player.hitbox_half_width, this->player.hitbox_half_height);
+
+                        this->player.recovery_timer_s = 0.25f;
+                        break;
+                    }
+
+                    Point p0_right = this->road_data.right_edge_points[seg_to_check];
+                    Point p1_right = this->road_data.right_edge_points[next_seg_to_check];
+                    obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_right, p1_right, &collision_info);
+                    if (collision_info.occurred) {
+                        // printf("Collision: Player vs Right Edge (Seg %d, Depth: %f)\n", seg_to_check, collision_info.penetration_depth);
+
+                        physics_apply_bounce(&this->player.current_velocity, &this->player.current_speed, &this->player.forward_direction, &collision_info.collision_normal, track_restitution);
+
+                        Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                        vector_init(&push_normal, push_normal.x, push_normal.y);
+
+                        float effective_depth = collision_info.penetration_depth;
+                        if (effective_depth < 0.01f && effective_depth > -0.01f) effective_depth = 0.5f;
+                        else if (effective_depth < 0) effective_depth = 0.5f;
+                        else effective_depth += 0.1f;
+
+                        physics_resolve_overlap(&this->player.world_position_car_center, &push_normal, effective_depth);
+                        player_handle_hard_collision(&this->player, this->player.current_speed * 0.1f);
+
+                        obb_update(&this->player.obb, this->player.world_position_car_center, this->player.forward_direction, this->player.hitbox_half_width, this->player.hitbox_half_height);
+                        this->player.recovery_timer_s = 0.25f;
+                        break;
+                    }
+                }
+            }
 
             if (this->current_lap > this->total_laps) {
                 this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
@@ -331,7 +367,9 @@ static void playing_destroy_internal(GameState *base) {
     sprite_destroy(this->road_sprite1);
     sprite_destroy(this->road_sprite2);
 
+    items_destroy(&this->game_items);
     road_destroy(&this->road_data);
+    minimap_destroy(&this->minimap);
     player_destroy(&this->player);
 
     for (int i = 0; i < MAX_AI_CARS; i++) {
@@ -347,7 +385,7 @@ static void playing_destroy_internal(GameState *base) {
     free(base);
 }
 
-Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file, uint32_t road_bg_color) {
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file, float track_offset_x, float track_offset_y, uint32_t road_bg_color, xpm_map_t road_map_xpm) {
     Game *this = (Game *) malloc(sizeof(Game));
     if (this == NULL) {
         return NULL;
@@ -400,8 +438,27 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
     this->road_y2 = -this->road_sprite1->height;
 
     // Initialize Road
-    if (road_load(&this->road_data, road_data_file, 1200, road_bg_color, road_surface_file, NULL, loading_ui) != 0) {
+    if (road_load(&this->road_data, road_data_file, 1200, road_bg_color, road_surface_file, track_offset_x, track_offset_y, NULL, loading_ui) != 0) {
         printf("Failed to load road data\n");
+        base_destroy(&this->base);
+        free(this);
+        return NULL;
+    }
+
+    // Initialize Minimap
+    if (minimap_init(&this->minimap, road_map_xpm, &this->road_data, track_offset_x, track_offset_y) != 0) {
+        printf("Failed to initialize minimap\n");
+        road_destroy(&this->road_data);
+        base_destroy(&this->base);
+        free(this);
+        return NULL;
+    }
+
+    // Initialize Game Items
+    if (items_init(&this->game_items, &this->road_data) != 0) {
+        printf("Failed to initialize game items\n");
+        minimap_destroy(&this->minimap);
+        road_destroy(&this->road_data);
         base_destroy(&this->base);
         free(this);
         return NULL;
@@ -409,7 +466,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
 
     // Initialize Player
     int creating_car_index = 0;
-    Point player_start_pos = road_get_start_point(&this->road_data, creating_car_index);
+    Point player_start_pos = this->road_data.center_points[0];
     creating_car_index++;
     float player_initial_angle_rad = 0.0f;
     if (this->road_data.num_center_points > 1) {
@@ -433,7 +490,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
         while (ai_xpm_idx == car_choice) ai_xpm_idx++;
         ai_xpm_idx %= 6;
 
-        Point ai_start_pos = road_get_start_point(&this->road_data, creating_car_index);
+        Point ai_start_pos = this->road_data.center_points[0];
         creating_car_index++;
 
         Vector ai_initial_dir_vec;
@@ -453,7 +510,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
         if (this->ai_cars[i]) {
             this->num_active_ai_cars++;
         } else {
-            fprintf(stderr, "game_state_create_playing: Failed to create AI car %d.\n", i);
+            printf("game_state_create_playing: Failed to create AI car %d.\n", i);
             for (int j = 0; j < i; j++) {
                 ai_car_destroy(this->ai_cars[j]);
             }
@@ -461,7 +518,7 @@ Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_
         ai_xpm_idx++;
     }
     if (this->num_active_ai_cars == 0 && MAX_AI_CARS > 0) {
-        fprintf(stderr, "game_state_create_playing: No AI cars created.\n");
+        printf("game_state_create_playing: No AI cars created.\n");
         player_destroy(&this->player);
         road_destroy(&this->road_data);
         base_destroy(&this->base);

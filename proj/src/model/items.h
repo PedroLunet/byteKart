@@ -2,13 +2,13 @@
 #define ITEMS_H
 
 #include "model/geometry.h"
-#include "model/sprite.h"
+#include "sprites/sprite.h"
 #include "model/obb.h"
 #include "model/physics_utils.h"
 #include "model/ai_car.h"
 #include "model/player.h"
 #include "xpm/xpm_files.h"
-#include "view/renderer.h"
+#include "view/utils/renderer.h"
 #include "macros.h"
 
 #include <stdbool.h>
@@ -16,8 +16,8 @@
 #include <stdio.h>
 
 typedef enum {
+  	OBSTACLE_TYPE_OIL_SLICK,
     OBSTACLE_TYPE_BARRIER,
-    OBSTACLE_TYPE_OIL_SLICK,
     // Add more obstacle types
 } ObstacleType;
 
@@ -50,6 +50,14 @@ typedef struct {
     float hitbox_half_width;
     float hitbox_half_height;
 } PowerUpBox;
+
+typedef struct {
+    Obstacle obstacles[MAX_OBSTACLES];
+    int num_obstacles;
+
+    PowerUpBox powerup_boxes[MAX_POWERUP_BOXES];
+    int num_powerup_boxes;
+} GameItems;
 
 int items_init(GameItems *items, const Road* road);
 void items_destroy(GameItems *items);

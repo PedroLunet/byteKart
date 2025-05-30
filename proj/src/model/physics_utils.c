@@ -15,23 +15,19 @@ void physics_apply_bounce(Vector *velocity, float *current_speed, Vector *forwar
         return;
     }
 
+    // printf("Current Speed: %d, Velocity: (%d, %d)\n", (int)*current_speed, (int)velocity->x, (int)velocity->y);
     float vel_along_normal = vector_dot_product(velocity, surface_normal);
 
     if (vel_along_normal < 0) {
-        float j = -(1.0f + restitution_coefficient) * vel_along_normal;
+      /*
+        float j = -velocity->magnitude * restitution_coefficient;
 
         velocity->x += j * surface_normal->x;
         velocity->y += j * surface_normal->y;
 
         vector_init(velocity, velocity->x, velocity->y);
-        *current_speed = velocity->magnitude;
-
-        if (*current_speed > 0.001f) {
-            forward_direction->x = velocity->x / *current_speed;
-            forward_direction->y = velocity->y / *current_speed;
-            vector_normalize(forward_direction);
-        } else {
-            *current_speed = 0.0f;
-        }
+        *current_speed = -velocity->magnitude;
+       */
+      *current_speed = -300.0f;
     }
 }

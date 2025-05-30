@@ -25,11 +25,13 @@ static void player_update_effects(Player *player, float delta_time) {
     }
 }
 
-static void player_update_speed_and_velocity_mk(Player *player, bool skid_input, float delta_time) {
+static void player_update_speed_and_velocity_mk(Player *player, bool skid_input, float delta_time, bool in_recovery) {
     float target_speed_now = player->base_speed * player->current_speed_modifier;
 
     if (skid_input && player->current_speed > 350.0f) {
         player->current_speed -= player->skid_deceleration_value * delta_time;
+    } else if (in_recovery) {
+      player->current_speed += player->deceleration_value * delta_time * 0.5f;
     } else {
         if (player->current_speed < target_speed_now) {
             player->current_speed += player->acceleration_value * delta_time;
@@ -186,6 +188,8 @@ int player_create(Player *player, Point initial_car_center_world, float initial_
     player->hitbox_half_width = player->sprite->width / 2.0f;
     player->hitbox_half_height = player->sprite->height / 2.0f;
 
+    player->recovery_timer_s = 0.0f;
+
     return 0;
 }
 
@@ -221,11 +225,18 @@ void player_handle_turn_input(Player *player, int turn_direction_sign) {
 void player_update(Player *player, Road *road, bool skid_input, float delta_time) {
     if (!player || !road || delta_time <= 0.0f) return;
 
+    bool is_in_recovery = false;
+    if (player->recovery_timer_s > 0.0f) {
+        is_in_recovery = true;
+        player->recovery_timer_s -= delta_time;
+        if (player->recovery_timer_s < 0.0f) player->recovery_timer_s = 0.0f;
+    }
+
     player_update_effects(player, delta_time);
 
     road_update_entity_on_track(road, &player->world_position_car_center, &player->current_road_segment_idx, &player->track_tangent_at_pos, &player->closest_point_on_track);
 
-    player_update_speed_and_velocity_mk(player, skid_input, delta_time);
+    player_update_speed_and_velocity_mk(player, (is_in_recovery ? false : skid_input), delta_time, is_in_recovery);
 
     player_apply_world_movement(player, delta_time);
 

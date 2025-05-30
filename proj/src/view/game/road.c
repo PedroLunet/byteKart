@@ -53,7 +53,7 @@ void road_destroy(Road *road) {
     }
 }
 
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, xpm_map_t var_finish_xpm, LoadingUI *loading_ui) {
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, float track_offset_x, float track_offset_y, xpm_map_t var_finish_xpm, LoadingUI *loading_ui) {
     if (!road || !filename) {
         return 1;
     }
@@ -225,8 +225,8 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
     }
     road->prerendered_track_image->x = 0;
     road->prerendered_track_image->y = 0;
-    road->world_origin_of_track_image.x = 0.0f;
-    road->world_origin_of_track_image.y = 0.0f;
+    road->world_origin_of_track_image.y = track_offset_y;
+    road->world_origin_of_track_image.x = track_offset_x;
 
     // Set road properties
     road->road_width = road_width_param;

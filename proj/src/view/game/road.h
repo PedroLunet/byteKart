@@ -56,7 +56,7 @@ typedef struct Road_s {
 void draw_road_background(Sprite *road_sprite1, Sprite *road_sprite2, int road_y1, int road_y2);
 void cleanup_road_background();
 
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, xpm_map_t var_finish_xpm, LoadingUI *loading_ui);
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, float track_offset_x, float track_offset_y, xpm_map_t var_finish_xpm, LoadingUI *loading_ui);
 void road_destroy(Road *road);
 void road_draw(Road *road);
 bool road_update_entity_on_track(Road *road, Point *entity_world_pos, int *p_entity_current_segment_idx, Vector *out_tangent, Point *out_closest_point_on_centerline);

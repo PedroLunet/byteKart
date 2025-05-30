@@ -49,6 +49,8 @@ typedef struct Player_s {
     float hitbox_half_width;
   	float hitbox_half_height;
 
+	float recovery_timer_s;
+
 } Player;
 
 int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road, xpm_map_t car_sprite_xpm);

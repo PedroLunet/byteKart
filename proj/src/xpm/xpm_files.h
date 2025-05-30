@@ -19,6 +19,9 @@
 #include "items/oil-spill.xpm"
 #include "items/barrier.xpm"
 #include "items/powerups.xpm"
+#include "tracks/track_1_map_final.xpm"
+#include "tracks/track_2_map_final.xpm"
+#include "tracks/track_3_map_final.xpm"
 
 #endif
 

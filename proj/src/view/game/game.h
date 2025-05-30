@@ -11,11 +11,13 @@
 #include "model/player.h"
 #include "model/ai_car.h"
 #include "model/physics_utils.h"
+#include "model/items.h"
 #include "sprites/sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
 #include "road.h"
 #include "car.h"
+#include "minimap.h"
 #include "view/utils/loadingUI.h"
 
 typedef enum {
@@ -36,11 +38,14 @@ typedef struct Game {
     Player player;
     AICar* ai_cars[MAX_AI_CARS];
     int num_active_ai_cars;
+    Minimap minimap;
 
     int current_lap;
     int total_laps;
     float race_timer_s;
     bool race_started;
+
+    GameItems game_items;
 
     bool player_skid_input_active;
     int player_skid_input_sign; // -1 for left, 0 for none, 1 for right
@@ -61,7 +66,7 @@ typedef struct Game {
 } Game;
 
 // Public Game Class Methods
-Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file, uint32_t road_bg_color);
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file, float track_offset_x, float track_offset_y, uint32_t road_bg_color, xpm_map_t road_map_xpm);
 void playing_destroy(Game *this);
 void playing_draw(Game *this);
 void playing_process_event(Game *this, EventType event);

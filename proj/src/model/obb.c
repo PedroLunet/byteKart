@@ -41,17 +41,6 @@ static void project_obb_onto_axis(const OBB *obb, const Vector *axis, float *min
     *max_proj = center_proj + r_proj;
 }
 
-static void project_segment_onto_axis(Point p0, Point p1, const Vector *axis, float *min_proj, float *max_proj) {
-    Vector p0_vec = {p0.x, p0.y, 0.0f}; vector_init(&p0_vec, p0.x, p0.y);
-    Vector p1_vec = {p1.x, p1.y, 0.0f}; vector_init(&p1_vec, p1.x, p1.y);
-
-    float proj0 = vector_dot_product(&p0_vec, axis);
-    float proj1 = vector_dot_product(&p1_vec, axis);
-
-    if (proj0 < proj1) { *min_proj = proj0; *max_proj = proj1; }
-    else { *min_proj = proj1; *max_proj = proj0; }
-}
-
 static bool get_interval_overlap(float minA, float maxA, float minB, float maxB, float *overlap) {
     if (maxA < minB || maxB < minA) {
         *overlap = 0;
@@ -114,54 +103,26 @@ void obb_check_collision_obb_vs_line_segment(const OBB *obb, Point p0, Point p1,
         return;
     }
 
-    info->occurred = false;
-    info->penetration_depth = FLT_MAX;
+    float thickness = 4.0f;
 
-    Vector test_axes[3];
-    test_axes[0] = obb->axis[0];
-    test_axes[1] = obb->axis[1];
+    Point center;
+    center.x = (p0.x + p1.x) / 2.0f;
+    center.y = (p0.y + p1.y) / 2.0f;
 
-    Vector edge_vec = { p1.x - p0.x, p1.y - p0.y, 0.0f};
-    vector_init(&edge_vec, edge_vec.x, edge_vec.y);
-    if (edge_vec.magnitude < 0.0001f) {
-        // TODO: Implement OBB vs Point collision if necessary, or treat as no collision for a line.
+    Vector dir;
+    dir.x = p1.x - p0.x;
+    dir.y = p1.y - p0.y;
+    float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
+    if (len < 0.0001f) {
         info->occurred = false;
         return;
     }
+    dir.x /= len;
+    dir.y /= len;
 
-    test_axes[2].x = -edge_vec.y;
-    test_axes[2].y = edge_vec.x;
-    vector_init(&test_axes[2], test_axes[2].x, test_axes[2].y);
-    vector_normalize(&test_axes[2]);
+    OBB seg_obb;
+    obb_update(&seg_obb, center, dir, len / 2.0f, thickness / 2.0f);
 
-    float min_obb_proj, max_obb_proj, min_line_proj, max_line_proj;
-    float current_overlap;
-
-    for (int i = 0; i < 3; ++i) {
-        Vector current_axis = test_axes[i];
-
-        project_obb_onto_axis(obb, &current_axis, &min_obb_proj, &max_obb_proj);
-        project_segment_onto_axis(p0, p1, &current_axis, &min_line_proj, &max_line_proj);
-
-        if (!get_interval_overlap(min_obb_proj, max_obb_proj, min_line_proj, max_line_proj, &current_overlap)) {
-            info->occurred = false;
-            return;
-        }
-        if (current_overlap < info->penetration_depth) {
-            info->penetration_depth = current_overlap;
-            info->collision_normal = current_axis;
-        }
-    }
-
-    info->occurred = true;
-
-    Point line_midpoint = {(p0.x + p1.x) / 2.0f, (p0.y + p1.y) / 2.0f};
-    Vector obb_center_to_line_mid = {line_midpoint.x - obb->center.x, line_midpoint.y - obb->center.y, 0.0f};
-    vector_init(&obb_center_to_line_mid, obb_center_to_line_mid.x, obb_center_to_line_mid.y);
-
-    if (vector_dot_product(&obb_center_to_line_mid, &info->collision_normal) < 0.0f) {
-        info->collision_normal.x *= -1.0f;
-        info->collision_normal.y *= -1.0f;
-    }
+    obb_check_collision_obb_vs_obb(obb, &seg_obb, info);
 }
 
