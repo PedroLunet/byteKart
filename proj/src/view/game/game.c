@@ -11,6 +11,55 @@ static UIComponent *countdownText = NULL;
 extern Font *gameFont;
 extern const xpm_map_t car_choices[6];
 
+static char scancode_to_char(uint8_t scancode);
+static void create_name_input_ui(Game *this);
+static void update_name_input_display(Game *this);
+static void calculate_final_race_positions(Game *this, RaceResult *results, int *total_results);
+
+static char scancode_to_char(uint8_t scancode) {
+    switch (scancode) {
+        case 0x1E: return 'A';  
+        case 0x30: return 'B';  
+        case 0x2E: return 'C';  
+        case 0x20: return 'D';  
+        case 0x12: return 'E';  
+        case 0x21: return 'F';  
+        case 0x22: return 'G';  
+        case 0x23: return 'H';  
+        case 0x17: return 'I';  
+        case 0x24: return 'J';  
+        case 0x25: return 'K';  
+        case 0x26: return 'L';  
+        case 0x32: return 'M';  
+        case 0x31: return 'N';  
+        case 0x18: return 'O';  
+        case 0x19: return 'P';  
+        case 0x10: return 'Q';  
+        case 0x13: return 'R';  
+        case 0x1F: return 'S';  
+        case 0x14: return 'T';  
+        case 0x16: return 'U';  
+        case 0x2F: return 'V';  
+        case 0x11: return 'W';  
+        case 0x2D: return 'X';  
+        case 0x15: return 'Y';  
+        case 0x2C: return 'Z';  
+        
+        case 0x02: return '1';  
+        case 0x03: return '2';  
+        case 0x04: return '3';  
+        case 0x05: return '4';  
+        case 0x06: return '5';  
+        case 0x07: return '6';  
+        case 0x08: return '7';  
+        case 0x09: return '8';  
+        case 0x0A: return '9';  
+        case 0x0B: return '0';  
+        
+        default: return '\0';
+    }
+}
+
 static UIComponent *display_player_lap(Game *this) {
     if (!this) return NULL;
     
@@ -183,6 +232,13 @@ static void playing_draw_internal(GameState *base) {
         if (this->pauseMenu) {
             vg_draw_rectangle(0, 0, vbe_mode_info.XResolution, vbe_mode_info.YResolution, 0x80000000);
             pause_draw(this->pauseMenu);
+        }
+        return;
+    }
+
+    if (this->current_running_state == GAME_SUBSTATE_NAME_INPUT) {
+        if (this->nameInputContainer) {
+            draw_ui_component(this->nameInputContainer);
         }
         return;
     }
@@ -390,6 +446,67 @@ static void playing_process_event_internal(GameState *base, EventType event) {
         this->base.update_state(base);
         this->base.draw(base);
     } else if (event == EVENT_KEYBOARD) {
+        if (this->current_running_state == GAME_SUBSTATE_NAME_INPUT) {
+            switch (scancode) {
+                case ENTER_KEY:
+                    if (this->name_length > 0) {
+                        this->player_name[this->name_length] = '\0';
+
+                        add_entry_to_leaderboard(leaderboard_entries, &count_leaderboard_entries, 
+                                                this->player_name, this->player_finish_time);
+
+                        destroy_ui_component(this->nameInputContainer);
+                        this->nameInputContainer = NULL;
+                        this->nameInputText = NULL;
+
+                        RaceResult final_results[MAX_AI_CARS + 1];
+                        int total_results = 0;
+                        calculate_final_race_positions(this, final_results, &total_results);
+                        
+                        this->finishRaceMenu = finish_race_menu_create(final_results, total_results);
+                        this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
+                        this->base.draw(base);
+                    }
+                    break;
+                    
+                case BACKSPACE_KEY:
+                    if (this->name_length > 0) {
+                        this->name_length--;
+                        this->player_name[this->name_length] = '\0';
+                        update_name_input_display(this);
+                        this->base.draw(base);
+                    }
+                    break;
+                    
+                case ESC_BREAKCODE:
+                    destroy_ui_component(this->nameInputContainer);
+                    this->nameInputContainer = NULL;
+                    this->nameInputText = NULL;
+
+                    RaceResult final_results[MAX_AI_CARS + 1];
+                    int total_results = 0;
+                    calculate_final_race_positions(this, final_results, &total_results);
+                    
+                    this->finishRaceMenu = finish_race_menu_create(final_results, total_results);
+                    this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
+                    this->base.draw(base);
+                    break;
+                    
+                default:
+                    if (this->name_length < MAX_NAME_LENGTH - 1) {
+                        char input_char = scancode_to_char(scancode);
+                        if (input_char != '\0') {
+                            this->player_name[this->name_length] = input_char;
+                            this->name_length++;
+                            update_name_input_display(this);
+                            this->base.draw(base);
+                        }
+                    }
+                    break;
+            }
+            return;
+        }
+        
         switch (scancode) {
             case LEFT_ARROW:
               this->player_turn_input_sign = 1;
@@ -902,16 +1019,12 @@ static void playing_update_internal(GameState *base) {
 
             this->finish_race_delay_timer -= delta_time;
             if (this->finish_race_delay_timer <= 0.0f) {
-                this->current_running_state = GAME_SUBSTATE_FINISHED_RACE;
-                if (!this->finishRaceMenu) {
-                    RaceResult race_results[MAX_AI_CARS + 1];
-                    int total_results = 0;
-                    calculate_final_race_positions(this, race_results, &total_results);
-                    
-                    this->finishRaceMenu = finish_race_menu_create(race_results, total_results);
-                }
-                printf("Delay finished, showing finish race menu!\n");
+                this->current_running_state = GAME_SUBSTATE_NAME_INPUT;
+                create_name_input_ui(this);
+                printf("Delay finished, showing name input!\n");
             }
+            break;
+        case GAME_SUBSTATE_NAME_INPUT:
             break;
         case GAME_SUBSTATE_PAUSED:
             break;
@@ -957,6 +1070,12 @@ static void playing_destroy_internal(GameState *base) {
     if (this->finishRaceMenu) {
         finish_race_menu_destroy(this->finishRaceMenu);
         this->finishRaceMenu = NULL;
+    }
+
+    if (this->nameInputContainer) {
+        destroy_ui_component(this->nameInputContainer);
+        this->nameInputContainer = NULL;
+        this->nameInputText = NULL;
     }
 
     free(this);
@@ -1148,5 +1267,97 @@ void playing_reset_state(Game *this) {
 
 bool playing_is_replay_requested(Game *this) {
     return this->replay_requested;
+}
+
+static void create_name_input_ui(Game *this) {
+    if (this->nameInputContainer) {
+        destroy_ui_component(this->nameInputContainer);
+        this->nameInputContainer = NULL;
+        this->nameInputText = NULL;
+    }
+
+    memset(this->player_name, 0, MAX_NAME_LENGTH);
+    this->name_length = 0;
+
+    this->nameInputContainer = create_main_container(NULL, 30, 0, 0, 0, 0);
+    set_container_background_color(this->nameInputContainer, 0x80000000);
+
+    create_title_text("ENTER YOUR NAME", gameFont, 0xFFFFFF, this->nameInputContainer);
+
+    UIComponent *instructionText = create_text_component("Type your name (max 9 chars) and press Enter", gameFont, 0xAAAAA);
+    if (instructionText) {
+        add_child_to_container_component(this->nameInputContainer, instructionText);
+    }
+
+    UIComponent *inputContainer = create_container_component(0, 0, 400, 60);
+    set_container_layout(inputContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
+    set_container_background_color(inputContainer, 0x2C2C2C);
+    set_container_padding(inputContainer, 15, 15, 15, 15);
+    set_container_border(inputContainer, 2, 0xFFDD00);
+    set_container_border_radius(inputContainer, 8);
+
+    char display_name[MAX_NAME_LENGTH + 2]; 
+    sprintf(display_name, "%s_", this->player_name);
+    this->nameInputText = create_text_component(display_name, gameFont, 0xFFFFFF);
+    if (this->nameInputText) {
+        add_child_to_container_component(inputContainer, this->nameInputText);
+    }
+
+    add_child_to_container_component(this->nameInputContainer, inputContainer);
+
+    char time_str[32];
+    int minutes = (int)(this->player_finish_time / 60);
+    int seconds = (int)(this->player_finish_time) % 60;
+    int milliseconds = (int)((this->player_finish_time - (int)this->player_finish_time) * 100);
+    sprintf(time_str, "Your time: %02d:%02d.%02d", minutes, seconds, milliseconds);
+    
+    UIComponent *timeText = create_text_component(time_str, gameFont, 0x00FF00);
+    if (timeText) {
+        add_child_to_container_component(this->nameInputContainer, timeText);
+    }
+
+    perform_container_layout(this->nameInputContainer);
+}
+
+static void update_name_input_display(Game *this) {
+    if (!this->nameInputText) return;
+
+    char display_name[MAX_NAME_LENGTH + 2]; 
+    sprintf(display_name, "%s_", this->player_name);
+
+    if (this->nameInputText->data) {
+        TextElementData *data = (TextElementData *)this->nameInputText->data;
+        if (data->pixel_data) {
+            free(data->pixel_data);
+        }
+
+        int text_width = 0, text_height = 0;
+        for (int i = 0; display_name[i] != '\0'; i++) {
+            GlyphData glyphData;
+            if (font_get_glyph_data(gameFont, display_name[i], &glyphData)) {
+                text_width += glyphData.xadvance;
+                if (glyphData.height > text_height) {
+                    text_height = glyphData.height;
+                }
+            }
+        }
+        
+        if (text_width > 0 && text_height > 0) {
+            uint32_t *text_buffer = malloc(text_width * text_height * sizeof(uint32_t));
+            if (text_buffer) {
+                for (int i = 0; i < text_width * text_height; i++) {
+                    text_buffer[i] = 0x00000000;
+                }
+                
+                if (load_text(display_name, 0, 0, 0xFFFFFF, gameFont, text_buffer, text_width) == 0) {
+                    data->pixel_data = text_buffer;
+                    data->width = text_width;
+                    data->height = text_height;
+                } else {
+                    free(text_buffer);
+                }
+            }
+        }
+    }
 }
 

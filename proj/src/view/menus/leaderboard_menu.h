@@ -8,12 +8,13 @@
 #define MAX_ENTRIES 5
 #define MAX_NAME_LENGTH 10
 
-extern int count_leaderboard_entries;
-
 typedef struct LeaderboardEntries {
   char name[MAX_NAME_LENGTH];
   float time;
 } LeaderboardEntries;
+
+extern int count_leaderboard_entries;
+extern LeaderboardEntries leaderboard_entries[MAX_ENTRIES];
 
 typedef enum {
   LEADERBOARD_MENU,
