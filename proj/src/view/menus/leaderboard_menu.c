@@ -8,6 +8,9 @@ extern uint8_t index_packet;
 extern struct packet pp;
 extern Font *gameFont;
 
+int count_leaderboard_entries = 0;
+LeaderboardEntries leaderboard_entries[MAX_ENTRIES];
+
 static UIComponent *leaderboardText = NULL;
 static UIComponent *backButton = NULL;
 
@@ -35,14 +38,10 @@ static bool leaderboard_is_mouse_over(GameState *base, int mouse_x, int mouse_y,
     Leaderboard *this = (Leaderboard *)base;
     int *selected = (int *)data;
     *selected = -1;
-    if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
-        ContainerData *backButtonData = (ContainerData *)this->backButton->data;
-        if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
-            mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
-                *selected = 0;
-            return true;
-        }
-    }
+
+    if (is_mouse_over_back_button(this->backButton, mouse_x, mouse_y, selected, 0))
+        return true;
+
     return false;
 }
 
@@ -66,6 +65,33 @@ static void leaderboard_destroy_internal(GameState *base) {
         leaderboardText = NULL;
     }
     free(base);
+}
+
+
+static int compare_leaderboard_entries(const void *a, const void *b) {
+    LeaderboardEntries *entryA = (LeaderboardEntries *)a;
+    LeaderboardEntries *entryB = (LeaderboardEntries *)b;
+    if (entryA->time < entryB->time) return -1;
+    if (entryA->time > entryB->time) return 1;
+    return 0;
+}
+
+void add_entry_to_leaderboard(LeaderboardEntries entries[], int *count, const char *name, float time) {
+    if (*count == MAX_ENTRIES) { // Leaderboard full
+        if (time < entries[*count - 1].time) {
+            strncpy(entries[*count - 1].name, name, MAX_NAME_LENGTH - 1);
+            entries[*count - 1].name[MAX_NAME_LENGTH - 1] = '\0';
+            entries[*count - 1].time = time;
+        } else {
+            return;
+        }
+    } else { // Leaderboard not full
+        strncpy(entries[*count].name, name, MAX_NAME_LENGTH - 1);
+        entries[*count].name[MAX_NAME_LENGTH - 1] = '\0';
+        entries[*count].time = time;
+        (*count)++;
+    }
+    qsort(entries, *count, sizeof(LeaderboardEntries), compare_leaderboard_entries);
 }
 
 Leaderboard *leaderboard_create() {
@@ -118,51 +144,36 @@ Leaderboard *leaderboard_create() {
 
     UIComponent *rankHeader = create_text_component("Rank", gameFont, 0xFFCC00);
     UIComponent *nameHeader = create_text_component("Name", gameFont, 0xFFCC00);
-    UIComponent *scoreHeader = create_text_component("Score", gameFont, 0xFFCC00);
+    UIComponent *timeHeader = create_text_component("Time", gameFont, 0xFFCC00);
 
     add_child_to_container_component(headerRow, rankHeader);
     add_child_to_container_component(headerRow, nameHeader);
-    add_child_to_container_component(headerRow, scoreHeader);
+    add_child_to_container_component(headerRow, timeHeader);
     
     add_child_to_container_component(leaderboardBox, headerRow);
     perform_container_layout(headerRow);
 
-
-
-    // Exemplo
-    const char *entries[] = {
-        "1. Alice - 1500",
-        "2. Bob - 1300",
-        "3. Clara - 1100",
-        "4. David - 900",
-        "5. Eva - 750"
-    };
-    const int num_entries = sizeof(entries) / sizeof(entries[0]);
-
-    for (int i = 0; i < num_entries; i++) {
+    for (int i = 0; i < count_leaderboard_entries; i++) {
         UIComponent *row = create_container_component(0, 0, 280, 40);
         set_container_layout(row, LAYOUT_ROW, ALIGN_START, JUSTIFY_SPACE_BETWEEN);
         set_container_background_color(row, 0x222222);
         set_container_gap(row, 10);
-        
-        int rank;
-        char name[32];
-        int score;
-        sscanf(entries[i], "%d. %31s - %d", &rank, name, &score);
     
-        char rank_str[4];
-        sprintf(rank_str, "%d.", rank);
+        char rank_str[8];
+        sprintf(rank_str, "%d.", i+1);
         UIComponent *rankText = create_text_component(rank_str, gameFont, 0xFFFFFF);
+        UIComponent *nameText = create_text_component(leaderboard_entries[i].name, gameFont, 0xFFFFFF);
     
-        UIComponent *nameText = create_text_component(name, gameFont, 0xFFFFFF);
-    
-        char score_str[12];
-        sprintf(score_str, "%d", score);
-        UIComponent *scoreText = create_text_component(score_str, gameFont, 0xFFFFFF);
+        char time_str[16];
+        int minutes = (int)(leaderboard_entries[i].time / 60);
+        int seconds = (int)(leaderboard_entries[i].time) % 60;
+        int milliseconds = (int)((leaderboard_entries[i].time - (int)leaderboard_entries[i].time) * 100);
+        sprintf(time_str, "%02d:%02d.%02d", minutes, seconds, milliseconds);
+        UIComponent *timeText = create_text_component(time_str, gameFont, 0xFFFFFF);
     
         add_child_to_container_component(row, rankText);
         add_child_to_container_component(row, nameText);
-        add_child_to_container_component(row, scoreText);
+        add_child_to_container_component(row, timeText);
     
         add_child_to_container_component(leaderboardBox, row);
     }

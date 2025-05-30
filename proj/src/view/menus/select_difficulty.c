@@ -86,14 +86,8 @@ static bool select_difficulty_is_mouse_over(GameState *base, int mouse_x, int mo
         }
     }
 
-    if (this->backButton && this->backButton->type == TYPE_CONTAINER && this->backButton->data) {
-        ContainerData *backButtonData = (ContainerData *)this->backButton->data;
-        if (mouse_x >= this->backButton->x && mouse_x < this->backButton->x + backButtonData->width &&
-            mouse_y >= this->backButton->y && mouse_y < this->backButton->y + backButtonData->height) {
-            *selected = 3;
-            return true;
-        }
-    }
+    if (is_mouse_over_back_button(this->backButton, mouse_x, mouse_y, selected, 3))
+        return true;
 
     return false;
 }
@@ -178,16 +172,7 @@ SelectDifficulty *select_difficulty_create() {
     titleText = create_title_text("Select Difficulty", gameFont, 0xFFFFFF, difficultyContainer);
 
     // Create a container for the difficulty options in a row
-    optionsRowContainer = create_container_component(0, 0, 0, 0);
-    if (!optionsRowContainer) {
-        destroy_ui_component(difficultyContainer);
-        free(this);
-        return NULL;
-    }
-    set_container_layout(optionsRowContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
-    set_container_gap(optionsRowContainer, 30);
-    set_container_background_color(optionsRowContainer, 0x111111);
-    add_child_to_container_component(difficultyContainer, optionsRowContainer);
+    optionsRowContainer = create_row_options(30, LAYOUT_ROW, difficultyContainer);
 
     // Create the difficulty option components
     easyContainer = create_container_component(0, 0, 200, 300);
