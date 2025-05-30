@@ -659,7 +659,7 @@ static void calculate_final_race_positions(Game *this, RaceResult *results, int 
     
     // Add player entry
     entries[total_entries].score = calculate_race_position_score(this->player.current_lap, this->player.current_road_segment_idx);
-    entries[total_entries].name = "Player";
+    entries[total_entries].name = (this->name_length > 0) ? this->player_name : "Player";
     entries[total_entries].id = 0;
     entries[total_entries].lap = this->player.current_lap;
     entries[total_entries].segment = this->player.current_road_segment_idx;
@@ -706,8 +706,9 @@ static void calculate_final_race_positions(Game *this, RaceResult *results, int 
 
     for (int i = 0; i < total_entries; i++) {
         results[i].position = i + 1;
-        if (strcmp(entries[i].name, "Player") == 0) {
-            strcpy(results[i].name, "Player");
+        if (strcmp(entries[i].name, "Player") == 0 || 
+            (this->name_length > 0 && strcmp(entries[i].name, this->player_name) == 0)) {
+            strcpy(results[i].name, (this->name_length > 0) ? this->player_name : "Player");
         } else {
             sprintf(results[i].name, "AI Car %d", entries[i].id);
         }
@@ -736,7 +737,7 @@ static void calculate_current_race_positions(Game *this, RaceResult *results, in
     
     // Add player entry
     entries[total_entries].score = calculate_race_position_score(this->player.current_lap, this->player.current_road_segment_idx);
-    entries[total_entries].name = "Player";
+    entries[total_entries].name = (this->name_length > 0) ? this->player_name : "Player";
     entries[total_entries].id = 0;
     entries[total_entries].lap = this->player.current_lap;
     entries[total_entries].segment = this->player.current_road_segment_idx;
@@ -766,8 +767,9 @@ static void calculate_current_race_positions(Game *this, RaceResult *results, in
 
     for (int i = 0; i < total_entries; i++) {
         results[i].position = i + 1;
-        if (strcmp(entries[i].name, "Player") == 0) {
-            strcpy(results[i].name, "Player");
+        if (strcmp(entries[i].name, "Player") == 0 || 
+            (this->name_length > 0 && strcmp(entries[i].name, this->player_name) == 0)) {
+            strcpy(results[i].name, (this->name_length > 0) ? this->player_name : "Player");
         } else {
             sprintf(results[i].name, "AI Car %d", entries[i].id);
         }
