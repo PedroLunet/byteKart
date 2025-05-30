@@ -812,8 +812,8 @@ static void playing_update_internal(GameState *base) {
             		if (obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb)) {
                 		printf("Collision: Player vs AI Car %d\n", this->ai_cars[i]->id);
                 		// TODO: Handle Player vs. AI collision response
-                		// E.g., player_handle_hard_collision(&game->player, game->player.current_speed * 0.5f);
-               			// E.g., ai_car_handle_hard_collision(game->ai_cars[i], game->ai_cars[i]->current_speed * 0.5f);
+                		// player_handle_hard_collision(&game->player, game->player.current_speed * 0.5f);
+               			// ai_car_handle_hard_collision(game->ai_cars[i], game->ai_cars[i]->current_speed * 0.5f);
             		}
         		}
     		}

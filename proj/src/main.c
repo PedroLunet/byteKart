@@ -280,26 +280,6 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 menu_reset_state(mainMenu);
             }
             break;
-        
-        /*
-
-        case GAMEOVER:
-            gameover_process_event(gameOver, event);
-            GameOverSubstate currentGameOverSubstate = gameover_get_current_substate(gameOver);
-            if (currentGameOverSubstate == GAMEOVER_MENU) {
-                // próprio menu
-            } else if (currentGameOverSubstate == GAMEOVER_RESTART) {
-                // play again
-            } else if (currentGameOverSubstate == GAMEOVER_MAIN_MENU) {
-                // voltar menu inicial
-            } else if (currentGameOverSubstate == GAMEOVER_QUIT_BUTTON) {
-                nextState = QUIT;
-            } else if (currentGameOverSubstate == GAMEOVER_EXITED) {
-                nextState = QUIT;
-            }
-            break;
-
-         */
 
         case QUIT:
             running = false;
