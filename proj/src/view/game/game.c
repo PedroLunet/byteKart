@@ -876,6 +876,7 @@ static void playing_update_internal(GameState *base) {
             if (!this->player_has_finished && this->player.current_lap > this->player.total_laps) {
                 this->player_has_finished = true;
                 this->player_finish_time = this->race_timer_s;
+                player_enable_autopilot(&this->player); 
                 this->current_running_state = GAME_SUBSTATE_PLAYER_FINISHED;
                 printf("Player finished the race! Final time: %.2f seconds\n", this->player_finish_time);
                 printf("Waiting for other cars to finish...\n");
