@@ -5,8 +5,8 @@
 #include "view/utils/ui.h"
 #include "view/utils/ui_utils.h"
 
-#define MAX_ENTRIES 5
-#define MAX_NAME_LENGTH 10
+#define MAX_ENTRIES 4
+#define MAX_NAME_LENGTH 9
 
 typedef struct LeaderboardEntries {
   char name[MAX_NAME_LENGTH];
