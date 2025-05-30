@@ -386,6 +386,9 @@ static void playing_process_event_internal(GameState *base, EventType event) {
             if (this->finishRaceMenu->selectedOption == 0) {
                 printf("Restarting the game with same settings\n");
                 this->replay_requested = true;
+                this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
+                finish_race_menu_destroy(this->finishRaceMenu);
+                this->finishRaceMenu = NULL;
             } else {
                 this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
                 finish_race_menu_destroy(this->finishRaceMenu);
