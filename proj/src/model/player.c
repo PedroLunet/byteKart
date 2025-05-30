@@ -7,6 +7,11 @@ static float precalculated_cos_turn;
 static float precalculated_sin_turn;
 static bool player_module_turn_statics_initialized = false;
 
+static void initialize_player_turn_statics(void);
+static void player_perceive_track_autopilot(Player *player, Road *road);
+static void player_decide_steering_autopilot(Player *player);
+static void player_apply_autopilot_movement(Player *player, float delta_time);
+
 static void initialize_player_turn_statics() {
     if (!player_module_turn_statics_initialized) {
         precalculated_cos_turn = cos(PLAYER_TURN_INCREMENT_RAD);
@@ -190,6 +195,13 @@ int player_create(Player *player, Point initial_car_center_world, float initial_
 
     player->recovery_timer_s = 0.0f;
 
+    player->autopilot_enabled = false;
+    player->lookahead_distance = 100.0f;
+    player->current_steering_input = 0.0f;
+    player->max_steering_angle_rad = 1.5f;
+    player->path_adherence_factor = 2.0f;
+    player->target_track_point = initial_car_center_world;
+
     return 0;
 }
 
@@ -236,6 +248,12 @@ void player_update(Player *player, Road *road, bool skid_input, float delta_time
 
     road_update_entity_on_track(road, &player->world_position_car_center, &player->current_road_segment_idx, &player->track_tangent_at_pos, &player->closest_point_on_track);
 
+    if (player->autopilot_enabled) {
+        player_perceive_track_autopilot(player, road);
+        player_decide_steering_autopilot(player);
+        player_apply_autopilot_movement(player, delta_time);
+    }
+
     player_update_speed_and_velocity_mk(player, (is_in_recovery ? false : skid_input), delta_time, is_in_recovery);
 
     player_apply_world_movement(player, delta_time);
@@ -245,6 +263,105 @@ void player_update(Player *player, Road *road, bool skid_input, float delta_time
     player_check_lap_completion(player, road);
 
     player->last_meaningful_road_segment_idx = player->current_road_segment_idx;
+}
+
+static void player_perceive_track_autopilot(Player *player, Road *road) {
+    float remaining_lookahead = player->lookahead_distance;
+    Point current_p_on_line = player->closest_point_on_track;
+    int p1_idx = player->current_road_segment_idx;
+
+    player->target_track_point = current_p_on_line;
+
+    int iterations = 0;
+    int max_iterations = road->num_center_points * 2;
+    if (max_iterations == 0 && road->num_center_points == 1) max_iterations = 1;
+
+    while (remaining_lookahead > 0.001f && iterations < max_iterations) {
+        iterations++;
+
+        Point p1_on_segment = (iterations == 1) ? current_p_on_line : road->center_points[p1_idx];
+
+        int p2_idx = (p1_idx + 1) % road->num_center_points;
+        Point p2_on_segment = road->center_points[p2_idx];
+
+        Vector segment_vec;
+        segment_vec.x = p2_on_segment.x - p1_on_segment.x;
+        segment_vec.y = p2_on_segment.y - p1_on_segment.y;
+        vector_init(&segment_vec, segment_vec.x, segment_vec.y);
+
+        if (segment_vec.magnitude < 0.0001f) {
+            if (p1_idx == p2_idx) {
+                break;
+            }
+            p1_idx = p2_idx;
+            current_p_on_line = road->center_points[p1_idx];
+            player->target_track_point = current_p_on_line;
+            continue;
+        }
+
+        if (remaining_lookahead <= segment_vec.magnitude) {
+            float ratio = remaining_lookahead / segment_vec.magnitude;
+            player->target_track_point.x = p1_on_segment.x + segment_vec.x * ratio;
+            player->target_track_point.y = p1_on_segment.y + segment_vec.y * ratio;
+            return;
+        } else {
+            remaining_lookahead -= segment_vec.magnitude;
+            player->target_track_point = p2_on_segment;
+            p1_idx = p2_idx;
+        }
+    }
+}
+
+static void player_decide_steering_autopilot(Player *player) {
+    Vector vec_to_target;
+    vec_to_target.x = player->target_track_point.x - player->world_position_car_center.x;
+    vec_to_target.y = player->target_track_point.y - player->world_position_car_center.y;
+    vector_init(&vec_to_target, vec_to_target.x, vec_to_target.y);
+
+    if (vec_to_target.magnitude < 0.01f) {
+        player->current_steering_input = 0.0f;
+        return;
+    }
+    vector_normalize(&vec_to_target);
+
+    Vector F = player->forward_direction;
+    Vector T_norm = vec_to_target;
+
+    float steering_value = F.x * T_norm.y - F.y * T_norm.x;
+
+    player->current_steering_input = steering_value * player->path_adherence_factor * 1.5f;
+
+    if (player->current_steering_input > 1.0f) player->current_steering_input = 1.0f;
+    if (player->current_steering_input < -1.0f) player->current_steering_input = -1.0f;
+}
+
+static void player_apply_autopilot_movement(Player *player, float delta_time) {
+    float turn_amount_rad = player->current_steering_input * player->max_steering_angle_rad * delta_time;
+
+    float old_dx = player->forward_direction.x;
+    float old_dy = player->forward_direction.y;
+    float cos_turn = cos(turn_amount_rad);
+    float sin_turn = sin(turn_amount_rad);
+
+    player->forward_direction.x = old_dx * cos_turn - old_dy * sin_turn;
+    player->forward_direction.y = old_dx * sin_turn + old_dy * cos_turn;
+    vector_normalize(&player->forward_direction);
+
+    player->current_velocity.x = player->current_speed * player->forward_direction.x;
+    player->current_velocity.y = player->current_speed * player->forward_direction.y;
+    vector_init(&player->current_velocity, player->current_velocity.x, player->current_velocity.y);
+}
+
+void player_enable_autopilot(Player *player) {
+    if (!player) return;
+    player->autopilot_enabled = true;
+    player->current_steering_input = 0.0f;
+}
+
+void player_disable_autopilot(Player *player) {
+    if (!player) return;
+    player->autopilot_enabled = false;
+    player->current_steering_input = 0.0f;
 }
 
 void player_apply_speed_effect(Player *player, float modifier, float duration_s) {

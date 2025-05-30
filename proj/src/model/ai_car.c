@@ -163,7 +163,8 @@ static void ai_car_check_lap_completion(AICar *ai, Road *road) {
             printf("AI Car %d on Lap: %d / %d\n", ai->id, (ai->current_lap > ai->total_laps ? ai->total_laps : ai->current_lap), ai->total_laps);
         }
 
-        if (ai->current_lap > ai->total_laps) {
+        if (!ai->has_finished && ai->current_lap > ai->total_laps) {
+            ai->has_finished = true;
             printf("AI Car %d has finished the race!\n", ai->id);
         }
         ai->just_crossed_finish_this_frame = true;
@@ -253,6 +254,8 @@ AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDiffic
     ai->total_laps = MAX_LAPS;
     ai->just_crossed_finish_this_frame = false;
     ai->last_meaningful_road_segment_idx = (road->num_center_points > 1) ? (road->num_center_points - 2) : 0;
+    ai->has_finished = false;
+    ai->finish_time = 0.0f;
 
     ai->hitbox_half_width = car_sprite->width / 2.0f;
   	ai->hitbox_half_height = car_sprite->height / 2.0f;
@@ -304,5 +307,12 @@ void ai_car_handle_hard_collision(AICar *ai, float new_speed) {
     ai->current_speed = new_speed;
     ai->current_speed_modifier = 1.0f;
     ai->speed_modifier_duration_s = 0.0f;
+}
+
+void ai_car_set_finish_time(AICar *ai, float race_time) {
+    if (!ai) return;
+    if (ai->has_finished && ai->finish_time == 0.0f) {
+        ai->finish_time = race_time;
+    }
 }
 

@@ -100,12 +100,6 @@ int (initial_setup)() {
         return 1;
     }
 
-    leaderboard = leaderboard_create();
-    if (!leaderboard) {
-        leaderboard_destroy(leaderboard);
-        return 1;
-    }
-
     current_state = MENU;
     running = true;
 
@@ -188,6 +182,11 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 nextState = SELECT_DIFFICULTY;
             } else if (currentMenuSubstate == MENU_FINISHED_LEADERBOARD) {
                 nextState = LEADERBOARD;
+                if (leaderboard) {
+                    leaderboard_destroy(leaderboard);
+                    leaderboard = NULL;
+                }
+                leaderboard = leaderboard_create();
                 leaderboard_draw(leaderboard);
             } else if (currentMenuSubstate == MENU_FINISHED_QUIT) {
                 nextState = QUIT;
@@ -249,6 +248,23 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 nextState = QUIT;
             } else if (currentGameSubstate == GAME_EXITED) {
                 nextState = QUIT;
+            } else if (currentGameSubstate == GAME_SUBSTATE_BACK_TO_MENU) {
+                bool replay_requested = playing_is_replay_requested(game);
+                
+                // Clean up the game state completely
+                playing_destroy(game);
+                game = NULL;
+                
+                if (replay_requested) {
+                    printf("Restarting game with same settings (difficulty %d, car %d)\n", difficulty, selectedCar);
+                } else {
+                    printf("Cleaning up game state and returning to main menu\n");
+                    select_difficulty_reset_state(selectDifficulty);
+                    select_car_reset_state(selectCar);
+                    
+                    nextState = MENU;
+                    menu_reset_state(mainMenu);
+                }
             }
             break;
 
@@ -263,26 +279,6 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
                 menu_reset_state(mainMenu);
             }
             break;
-        
-        /*
-
-        case GAMEOVER:
-            gameover_process_event(gameOver, event);
-            GameOverSubstate currentGameOverSubstate = gameover_get_current_substate(gameOver);
-            if (currentGameOverSubstate == GAMEOVER_MENU) {
-                // próprio menu
-            } else if (currentGameOverSubstate == GAMEOVER_RESTART) {
-                // play again
-            } else if (currentGameOverSubstate == GAMEOVER_MAIN_MENU) {
-                // voltar menu inicial
-            } else if (currentGameOverSubstate == GAMEOVER_QUIT_BUTTON) {
-                nextState = QUIT;
-            } else if (currentGameOverSubstate == GAMEOVER_EXITED) {
-                nextState = QUIT;
-            }
-            break;
-
-         */
 
         case QUIT:
             running = false;

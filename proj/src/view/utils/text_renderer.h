@@ -11,5 +11,6 @@
 
 
 int load_text(const char *text, int x, int y, uint32_t color, const Font *font, uint32_t *pixel_data, int buffer_width);
+char scancode_to_char(uint8_t scancode);
 
 #endif

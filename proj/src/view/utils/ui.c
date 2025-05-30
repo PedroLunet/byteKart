@@ -277,6 +277,17 @@ UIComponent *create_text_component(const char *text, Font *font, uint32_t color)
     }
 
     text_data->pixel_data = malloc(text_data->width * text_data->height * sizeof(uint32_t));
+    if (text_data->pixel_data == NULL) {
+        free(text_data->text);
+        free(text_data);
+        free(component);
+        return NULL;
+    }
+
+    for (int i = 0; i < text_data->width * text_data->height; i++) {
+        text_data->pixel_data[i] = 0x00000000; 
+    }
+    
     if (load_text(text, 0, 0, color, font, text_data->pixel_data, text_data->width) != 0) {
         free(text_data->text);
         free(text_data);
@@ -544,6 +555,9 @@ void destroy_ui_component(UIComponent *component) {
             TextElementData *text_data = (TextElementData *)component->data;
             if (text_data->text) {
                 free(text_data->text);
+            }
+            if (text_data->pixel_data) {
+                free(text_data->pixel_data);
             }
         } else if (component->type == TYPE_ELEMENT) {
             SpriteElementData *sprite_data = (SpriteElementData *)component->data;
