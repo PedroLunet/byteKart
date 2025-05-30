@@ -47,6 +47,50 @@ typedef enum {
 #define ENTER_KEY 0x1C
 #define ENTER_BREAKCODE 0x9C
 
+// Backspace key
+#define BACKSPACE_KEY 0x0E
+#define BACKSPACE_BREAKCODE 0x8E
+
+// Scancode definitions for letters (make codes)
+#define A_KEY 0x1E
+#define B_KEY 0x30
+#define C_KEY 0x2E
+#define D_KEY 0x20
+#define E_KEY 0x12
+#define F_KEY 0x21
+#define G_KEY 0x22
+#define H_KEY 0x23
+#define I_KEY 0x17
+#define J_KEY 0x24
+#define K_KEY 0x25
+#define L_KEY 0x26
+#define M_KEY 0x32
+#define N_KEY 0x31
+#define O_KEY 0x18
+#define P_KEY_LETTER 0x19  
+#define Q_KEY 0x10
+#define R_KEY 0x13
+#define S_KEY 0x1F
+#define T_KEY 0x14
+#define U_KEY 0x16
+#define V_KEY 0x2F
+#define W_KEY 0x11
+#define X_KEY 0x2D
+#define Y_KEY 0x15
+#define Z_KEY 0x2C
+
+// Scancode definitions for numbers
+#define NUM_0_KEY 0x0B
+#define NUM_1_KEY 0x02
+#define NUM_2_KEY 0x03
+#define NUM_3_KEY 0x04
+#define NUM_4_KEY 0x05
+#define NUM_5_KEY 0x06
+#define NUM_6_KEY 0x07
+#define NUM_7_KEY 0x08
+#define NUM_8_KEY 0x09
+#define NUM_9_KEY 0x0A
+
 #define BACKGROUND_COLOR 0x000000
 #define TRANSPARENT 0xFFFFFE
 

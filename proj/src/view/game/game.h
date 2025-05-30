@@ -20,6 +20,7 @@
 #include "cronometer.h"
 #include "../menus/pause_menu.h"
 #include "view/menus/finish_race_menu.h"
+#include "view/menus/leaderboard_menu.h"
 
 typedef enum {
   GAME_SUBSTATE_LOADING,
@@ -28,6 +29,7 @@ typedef enum {
   GAME_SUBSTATE_PAUSED,
   GAME_SUBSTATE_PLAYER_FINISHED,
   GAME_SUBSTATE_RACE_FINISH_DELAY,
+  GAME_SUBSTATE_NAME_INPUT,
   GAME_SUBSTATE_FINISHED_RACE,
   GAME_SUBSTATE_BACK_TO_MENU,
   GAME_STATE_EXITING,
@@ -78,6 +80,11 @@ typedef struct Game {
     int previous_player_score;
     float wrong_direction_timer;
     bool is_going_wrong_direction;
+
+    char player_name[MAX_NAME_LENGTH];
+    int name_length;
+    UIComponent *nameInputContainer;
+    UIComponent *nameInputText;
 
 } Game;
 
