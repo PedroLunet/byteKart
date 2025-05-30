@@ -1,18 +1,30 @@
+/**
+ * @file macros.h
+ * @brief Common macro definitions and constants used throughout the project.
+ * 
+ */
 #ifndef MACROS_H
 #define MACROS_H
 
 #include <math.h>
 
+/**
+ * @enum EventType
+ * @brief Enumeration of different system event types.
+ */
 typedef enum {
-  EVENT_NONE,
-  EVENT_TIMER,
-  EVENT_KEYBOARD,
-  EVENT_MOUSE,
-  // EVENT_SERIAL,
-  NUM_EVENTS
+  EVENT_NONE,    /**< No event */
+  EVENT_TIMER,   /**< Timer interrupt event */
+  EVENT_KEYBOARD,/**< Keyboard event */
+  EVENT_MOUSE,   /**< Mouse event */
+  // EVENT_SERIAL,/**< Serial port event (commented out) */
+  NUM_EVENTS    /**< Number of event types */
 } EventType;
 
-// Tracks
+/** @name Track file paths
+ *  File paths for track data and surfaces
+ */
+/**@{*/
 #define TRACK_TEST_FILENAME "/home/lcom/labs/proj/src/tracks/track_test.dat"
 #define TRACK_TEST_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_test.bin"
 #define TRACK_TEST_BG_COLOR 0x8EC940
@@ -38,31 +50,38 @@ typedef enum {
 // Obstacles & Power-ups
 #define MAX_OBSTACLES 15
 #define MAX_POWERUP_BOXES 24
+/**@}*/
 
-// Fonts
+/** @name Font-related constants */
+/**@{*/
 #define MAX_FONT_GLYPHS 382
+/**@}*/
 
-// Boundaries for the road
+/** @name Road boundaries */
+/**@{*/
 #define RIGHT_BOUNDARY 480
 #define LEFT_BOUNDARY 130
+/**@}*/
 
+/** @name Keyboard scancodes for keys */
+/**@{*/
 // ESC key
 #define ESC_MAKECODE 0x01
 #define ESC_BREAKCODE 0x81
 
-// makecodes for arrow keys
+// Arrow keys makecodes
 #define UP_ARROW 0x48
-#define DOWN_ARROW 0X50
-#define LEFT_ARROW 0X4B
-#define RIGHT_ARROW 0X4D
+#define DOWN_ARROW 0x50
+#define LEFT_ARROW 0x4B
+#define RIGHT_ARROW 0x4D
 #define SPACEBAR 0x39
 #define P_KEY 0x19
 
-// breakcodes for arrow keys
+// Arrow keys breakcodes
 #define UP_ARROW_BREAK 0xC8
-#define DOWN_ARROW_BREAK 0XD0
-#define LEFT_ARROW_BREAK 0XCB
-#define RIGHT_ARROW_BREAK 0XCD
+#define DOWN_ARROW_BREAK 0xD0
+#define LEFT_ARROW_BREAK 0xCB
+#define RIGHT_ARROW_BREAK 0xCD
 #define SPACEBAR_BREAK 0xB9
 #define P_KEY_BREAK 0xD9
 
@@ -74,7 +93,7 @@ typedef enum {
 #define BACKSPACE_KEY 0x0E
 #define BACKSPACE_BREAKCODE 0x8E
 
-// Scancode definitions for letters (make codes)
+// Letter keys (makecodes)
 #define A_KEY 0x1E
 #define B_KEY 0x30
 #define C_KEY 0x2E
@@ -102,7 +121,7 @@ typedef enum {
 #define Y_KEY 0x15
 #define Z_KEY 0x2C
 
-// Scancode definitions for numbers
+// Number keys (makecodes)
 #define NUM_0_KEY 0x0B
 #define NUM_1_KEY 0x02
 #define NUM_2_KEY 0x03
@@ -113,11 +132,16 @@ typedef enum {
 #define NUM_7_KEY 0x08
 #define NUM_8_KEY 0x09
 #define NUM_9_KEY 0x0A
+/**@}*/
 
+/** @name Color constants */
+/**@{*/
 #define BACKGROUND_COLOR 0x000000
 #define TRANSPARENT 0xFFFFFE
+/**@}*/
 
-// Game
+/** @name Game parameters */
+/**@{*/
 #define MAX_LAPS 1
 #define MAX_AI_CARS 1
 
@@ -143,14 +167,15 @@ typedef enum {
 #define AI_ACCELERATION 600.0f
 #define AI_DECELERATION 120.0f
 
-#define AI_EASY_LOOKAHEAD 336.0f // 0.8s
-#define AI_MEDIUM_LOOKAHEAD 450.0f // 1.0s
-#define AI_HARD_LOOKAHEAD 540.0f // 1.2s
+#define AI_EASY_LOOKAHEAD 336.0f // 0.8 seconds
+#define AI_MEDIUM_LOOKAHEAD 450.0f // 1.0 seconds
+#define AI_HARD_LOOKAHEAD 540.0f // 1.2 seconds
 
 #define AI_MAX_STEERING_RATE_RAD_PER_SEC (M_PI / 2.0f)
 
 #define AI_EASY_PATH_ADHERENCE 0.6f
 #define AI_MEDIUM_PATH_ADHERENCE 0.8f
 #define AI_HARD_PATH_ADHERENCE 1.0f
+/**@}*/
 
 #endif
