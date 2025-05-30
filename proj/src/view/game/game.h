@@ -16,11 +16,14 @@
 #include "view/utils/ui.h"
 #include "model/player.h"
 #include "model/ai_car.h"
+#include "model/physics_utils.h"
+#include "model/items.h"
 #include "sprites/sprite.h"
 #include "macros.h"
 #include "xpm/xpm_files.h"
 #include "road.h"
 #include "car.h"
+#include "minimap.h"
 #include "view/utils/loadingUI.h"
 #include "model/race_result.h"
 #include "cronometer.h"
@@ -58,6 +61,7 @@ typedef struct Game {
     Player player;                      /**< The player character. */
     AICar* ai_cars[MAX_AI_CARS];        /**< Array of AI-controlled cars. */
     int num_active_ai_cars;            /**< Number of AI cars currently in race. */
+    Minimap minimap;
 
     int current_lap;                   /**< Player’s current lap number. */
     int total_laps;                    /**< Total number of laps in the race. */
@@ -65,6 +69,8 @@ typedef struct Game {
     bool race_started;                /**< Indicates if the race has begun. */
     bool player_has_finished;         /**< Indicates if the player has crossed the finish line. */
     float player_finish_time;         /**< Time at which the player finished the race. */
+
+    GameItems game_items;
 
     bool player_skid_input_active;     /**< Whether skid input is currently active. */
     int player_skid_input_sign;        /**< Direction of skid input (-1 = left, 1 = right). */
@@ -110,7 +116,7 @@ typedef struct Game {
  * @param road_surface_file File path for road surface image.
  * @return Pointer to the created Game instance.
  */
-Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file);
+Game *game_state_create_playing(int difficulty, int car_choice, char *road_data_file, char *road_surface_file, float track_offset_x, float track_offset_y, uint32_t road_bg_color, xpm_map_t road_map_xpm);
 
 /**
  * @brief Cleans up and frees all resources used by the game.

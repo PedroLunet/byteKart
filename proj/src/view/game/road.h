@@ -20,6 +20,17 @@
 
 struct Player_s; /**< Declaration of the Player struct. */
 
+typedef struct {
+    int centerline_segment_index;
+    int num_boxes_in_line;
+} RawPowerUpLineData;
+
+typedef struct {
+    int centerline_segment_index;
+    float offset_from_center;
+    int type;
+} RawObstacleData;
+
 /**
  * @struct Road
  * @brief Represents the game’s road or track, including geometry and visual data.
@@ -39,6 +50,16 @@ typedef struct Road_s {
 
     Point start_point;
     Point end_point;
+
+    Sprite *finish_line_sprite;
+    Point finish_line_position;
+    Vector finish_line_direction;
+
+    RawPowerUpLineData* raw_powerup_data;
+    int num_powerup_lines_from_file;
+
+    RawObstacleData* raw_obstacle_data;
+    int num_obstacles_from_file;
 } Road;
 
 /**
@@ -47,7 +68,6 @@ typedef struct Road_s {
  * @param road Pointer to the Road structure.
  * @return 0 on success, non-zero on failure.
  */
-int road_calculate_edge_points(Road *road);
 
 /**
  * @brief Loads road data from a file and initializes the road.
@@ -60,7 +80,7 @@ int road_calculate_edge_points(Road *road);
  * @param loading_ui Pointer to the loading UI used for visual feedback.
  * @return 0 on success, non-zero on failure.
  */
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, LoadingUI *loading_ui);
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, float track_offset_x, float track_offset_y, xpm_map_t var_finish_xpm, LoadingUI *loading_ui);
 
 /**
  * @brief Releases memory associated with a Road structure.

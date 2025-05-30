@@ -112,6 +112,10 @@ static void ai_car_apply_movement(AICar *ai, float delta_time) {
 
     ai->world_position.x += ai->forward_direction.x * ai->current_speed * delta_time;
     ai->world_position.y += ai->forward_direction.y * ai->current_speed * delta_time;
+
+    ai->current_velocity.x = ai->current_speed * ai->forward_direction.x;
+	ai->current_velocity.y = ai->current_speed * ai->forward_direction.y;
+	vector_init(&ai->current_velocity, ai->current_velocity.x, ai->current_velocity.y);
 }
 
 static void ai_car_check_lap_completion(AICar *ai, Road *road) {
@@ -189,6 +193,8 @@ AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDiffic
     vector_normalize(&ai->forward_direction);
 
     ai->current_speed = 0.0f;
+    vector_init(&ai->current_velocity, 0.0f, 0.0f);
+
     ai->difficulty = difficulty;
     ai->current_behavior_state = AI_STATE_RACING;
     ai->current_speed_modifier = 1.0f;

@@ -3,50 +3,22 @@
 
 extern vbe_mode_info_t vbe_mode_info;
 
-int road_calculate_edge_points(Road *road) {
-    if (!road || !road->center_points || road->num_center_points < 2) {
-        return 1;
-    }
+typedef struct {
+    int r_x, r_y;
+    int c_x, c_y;
+    int l_x, l_y;
+} IntTrackPointFile;
 
-    road->left_edge_points = malloc(road->num_center_points * sizeof(Point));
-    road->right_edge_points = malloc(road->num_center_points * sizeof(Point));
+typedef struct {
+    int segment_start_index;
+    int num_boxes;
+} IntPowerupLineFile;
 
-    if (!road->left_edge_points || !road->right_edge_points) {
-        free(road->left_edge_points);
-        free(road->right_edge_points);
-        road->left_edge_points = NULL;
-        road->right_edge_points = NULL;
-        return 1;
-    }
-
-    float half_width = road->road_width / 2.0f;
-
-    for (int i = 0; i < road->num_center_points; ++i) {
-        Vector segment_dir;
-        if (i < road->num_center_points - 1) {
-            segment_dir.x = road->center_points[i+1].x - road->center_points[i].x;
-            segment_dir.y = road->center_points[i+1].y - road->center_points[i].y;
-        } else if (road->num_center_points > 1) {
-            segment_dir.x = road->center_points[i].x - road->center_points[i-1].x;
-            segment_dir.y = road->center_points[i].y - road->center_points[i-1].y;
-        } else {
-            segment_dir.x = 1.0f; segment_dir.y = 0.0f;
-        }
-
-        vector_normalize(&segment_dir);
-
-        Vector normal_left;
-        normal_left.x = -segment_dir.y;
-        normal_left.y = segment_dir.x;
-
-        road->left_edge_points[i].x = road->center_points[i].x + normal_left.x * half_width;
-        road->left_edge_points[i].y = road->center_points[i].y + normal_left.y * half_width;
-
-        road->right_edge_points[i].x = road->center_points[i].x - normal_left.x * half_width;
-        road->right_edge_points[i].y = road->center_points[i].y - normal_left.y * half_width;
-    }
-    return 0;
-}
+typedef struct {
+    int segment_start_index;
+    float offset_from_center;
+    int type;
+} IntFloatIntObstacleFile;
 
 void road_destroy(Road *road) {
     if (!road) return;
@@ -64,9 +36,24 @@ void road_destroy(Road *road) {
         sprite_destroy(road->prerendered_track_image);
         road->prerendered_track_image = NULL;
     }
+
+    if (road->finish_line_sprite) {
+        sprite_destroy(road->finish_line_sprite);
+        road->finish_line_sprite = NULL;
+    }
+
+    if (road->raw_powerup_data) {
+        free(road->raw_powerup_data);
+        road->raw_powerup_data = NULL;
+    }
+
+    if (road->raw_obstacle_data) {
+        free(road->raw_obstacle_data);
+        road->raw_obstacle_data = NULL;
+    }
 }
 
-int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, LoadingUI *loading_ui) {
+int road_load(Road *road, const char *filename, int road_width_param, uint32_t default_bg_color, const char *prerendered_track_bin_file, float track_offset_x, float track_offset_y, xpm_map_t var_finish_xpm, LoadingUI *loading_ui) {
     if (!road || !filename) {
         return 1;
     }
@@ -80,60 +67,115 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
         return 2;
     }
 
-    // Read number of points
-    if (fread(&road->num_center_points, sizeof(int), 1, file) != 1) {
-        printf("Error reading number of points from track file.\n");
-        fclose(file);
-        return 3;
-    }
-    if (road->num_center_points < 2) {
-        printf("Track file must contain at least 2 points.\n");
-        fclose(file);
-        return 4;
-    }
+    // Read Counts
+    int num_track_points_from_file = 0;
+    int num_powerups_from_file = 0;
+    int num_obstacles_from_file = 0;
 
-    // Allocate memory for centerline points
+    if (fread(&num_track_points_from_file, sizeof(int), 1, file) != 1) {
+        fprintf(stderr, "road_load: Error reading num_track_points from '%s'.\n", filename);
+        fclose(file); return 3;
+    }
+    if (fread(&num_powerups_from_file, sizeof(int), 1, file) != 1) {
+        fprintf(stderr, "road_load: Error reading num_powerups_from_file from '%s'.\n", filename);
+        fclose(file); return 3;
+    }
+    if (fread(&num_obstacles_from_file, sizeof(int), 1, file) != 1) {
+        fprintf(stderr, "road_load: Error reading num_obstacles_from_file from '%s'.\n", filename);
+        fclose(file); return 3;
+    }
+    printf("Road DAT Header: TrackPoints=%d, PowerUpLines=%d, Obstacles=%d\n", num_track_points_from_file, num_powerups_from_file, num_obstacles_from_file);
+    road->num_center_points = num_track_points_from_file;
+
+    // Load Track Points
     road->center_points = malloc(road->num_center_points * sizeof(Point));
-    if (!road->center_points) {
-        printf("Memory allocation failed for center_points.\n");
-        fclose(file);
-        return 5;
+    road->left_edge_points = malloc(road->num_center_points * sizeof(Point));
+    road->right_edge_points = malloc(road->num_center_points * sizeof(Point));
+	if (!road->center_points || !road->left_edge_points || !road->right_edge_points) {
+        printf("road_load: Malloc failed for track point arrays");
+        road_destroy(road); fclose(file); return 4;
     }
 
-    // Read all centerline points
-    typedef struct { int x; int y; } IntPointFile;
-    IntPointFile temp_point_from_file;
-
+    IntTrackPointFile temp_track_point;
     for (int i = 0; i < road->num_center_points; ++i) {
-        if (fread(&temp_point_from_file, sizeof(IntPointFile), 1, file) != 1) {
-            printf("road_load: Error reading point %d data from track file.\n", i);
-            free(road->center_points);
-            road->center_points = NULL;
-            road->num_center_points = 0;
-            fclose(file);
-            return 6;
+        if (fread(&temp_track_point, sizeof(IntTrackPointFile), 1, file) != 1) {
+            printf("road_load: Error reading track point set %d from '%s'.\n", i, filename);
+            road_destroy(road); fclose(file); return 6;
         }
-        road->center_points[i].x = (float)temp_point_from_file.x;
-        road->center_points[i].y = (float)temp_point_from_file.y;
+        road->right_edge_points[i].x = (float)temp_track_point.r_x;
+        road->right_edge_points[i].y = (float)temp_track_point.r_y;
+        road->center_points[i].x = (float)temp_track_point.c_x;
+        road->center_points[i].y = (float)temp_track_point.c_y;
+        road->left_edge_points[i].x = (float)temp_track_point.l_x;
+        road->left_edge_points[i].y = (float)temp_track_point.l_y;
     }
-    fclose(file);
+    printf("Road: Left, Center, Right track points loaded successfully.\n");
 
+    // Load Power-up Lines
+    road->num_powerup_lines_from_file = num_powerups_from_file;
+    if (road->num_powerup_lines_from_file > 0) {
+        road->raw_powerup_data = malloc(road->num_powerup_lines_from_file * sizeof(RawPowerUpLineData));
+        if (!road->raw_powerup_data) {
+            printf("road_load: Malloc failed for raw_powerup_data");
+            road_destroy(road); fclose(file); return 5;
+        }
+        IntPowerupLineFile temp_pu_line;
+        for (int i = 0; i < road->num_powerup_lines_from_file; ++i) {
+            if (fread(&temp_pu_line, sizeof(IntPowerupLineFile), 1, file) != 1) {
+                printf("road_load: Error reading powerup line %d from '%s'.\n", i, filename);
+                road_destroy(road); fclose(file); return 6;
+            }
+            road->raw_powerup_data[i].centerline_segment_index = temp_pu_line.segment_start_index;
+            road->raw_powerup_data[i].num_boxes_in_line = temp_pu_line.num_boxes;
+        }
+        printf("Road: Raw power-up data loaded (%d lines).\n", road->num_powerup_lines_from_file);
+    } else {
+        road->raw_powerup_data = NULL;
+    }
+
+    // Load Obstacle Data
+    road->num_obstacles_from_file = num_obstacles_from_file;
+    if (road->num_obstacles_from_file > 0) {
+        road->raw_obstacle_data = malloc(road->num_obstacles_from_file * sizeof(RawObstacleData));
+        if (!road->raw_obstacle_data) {
+            printf("road_load: Malloc failed for raw_obstacle_data");
+            road_destroy(road); fclose(file); return 5;
+        }
+        IntFloatIntObstacleFile temp_obs;
+        for (int i = 0; i < road->num_obstacles_from_file; ++i) {
+            if (fread(&temp_obs, sizeof(IntFloatIntObstacleFile), 1, file) != 1) {
+                printf("road_load: Error reading obstacle %d from '%s'.\n", i, filename);
+                road_destroy(road); fclose(file); return 6;
+            }
+            road->raw_obstacle_data[i].centerline_segment_index = temp_obs.segment_start_index;
+            road->raw_obstacle_data[i].offset_from_center = temp_obs.offset_from_center;
+            road->raw_obstacle_data[i].type = temp_obs.type;
+        }
+        printf("Road: Raw obstacle data loaded (%d obstacles).\n", road->num_obstacles_from_file);
+    } else {
+        road->raw_obstacle_data = NULL;
+    }
+
+    fclose(file);
+    printf("Road: Finished loading main data from '%s'.\n", filename);
+
+    // Load pre-rendered track surface
     printf("Road: Attempting to load pre-rendered track surface from: %s\n", prerendered_track_bin_file);
     FILE *surface_file = fopen(prerendered_track_bin_file, "rb");
     if (!surface_file) {
         printf("road_load: Failed to open track surface file '%s'.\n", prerendered_track_bin_file);
         road->prerendered_track_image = NULL;
     } else {
-        int width = 0, height = 0, file_bpp = 0;
-        if (fread(&width, sizeof(int), 1, surface_file) != 1 ||
-            fread(&height, sizeof(int), 1, surface_file) != 1 ||
-            fread(&file_bpp, sizeof(int), 1, surface_file) != 1) {
+        uint32_t width = 0, height = 0;
+        const int BYTES_PER_PIXEL_EXPECTED = 4;
+        if (fread(&width, sizeof(uint32_t), 1, surface_file) != 1 ||
+            fread(&height, sizeof(uint32_t), 1, surface_file) != 1) {
             printf("road_load: Error reading header from track surface file '%s'.\n", prerendered_track_bin_file);
             road->prerendered_track_image = NULL;
         } else {
-            printf("Road: Track surface header: %dx%d, %d bytes/pixel\n", width, height, file_bpp);
-            if (width <= 0 || height <= 0 || (file_bpp != 3 && file_bpp != 4)) {
-                printf("road_load: Invalid dimensions or bpp in track surface file.\n");
+            printf("Road: Track surface header: %dx%d\n", width, height);
+            if (width <= 0 || height <= 0) {
+                printf("Road: Track surface header: Width=%u, Height=%u. Assuming %d bytes/pixel (RGBA).\n", width, height, BYTES_PER_PIXEL_EXPECTED);
                 road->prerendered_track_image = NULL;
             } else {
                 road->prerendered_track_image = (Sprite*)malloc(sizeof(Sprite));
@@ -143,11 +185,8 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
                     memset(road->prerendered_track_image, 0, sizeof(Sprite));
                     road->prerendered_track_image->width = width;
                     road->prerendered_track_image->height = height;
-                    if (file_bpp != 4) {
-                         printf("Warning: Track surface binary bpp (%d) doesn't match expected 4 bytes for uint32_t map. Pixel data might be misinterpreted.\n", file_bpp);
-                    }
 
-                    size_t map_data_size = (size_t)width * height * file_bpp;
+                    size_t map_data_size = (size_t)width * height * BYTES_PER_PIXEL_EXPECTED;
                     road->prerendered_track_image->map = (uint32_t*)malloc(map_data_size);
 
                     if (!road->prerendered_track_image->map) {
@@ -186,23 +225,36 @@ int road_load(Road *road, const char *filename, int road_width_param, uint32_t d
     }
     road->prerendered_track_image->x = 0;
     road->prerendered_track_image->y = 0;
-    road->world_origin_of_track_image.x = 0.0f;
-    road->world_origin_of_track_image.y = 0.0f;
+    road->world_origin_of_track_image.y = track_offset_y;
+    road->world_origin_of_track_image.x = track_offset_x;
 
     // Set road properties
     road->road_width = road_width_param;
     road->background_color = default_bg_color;
 
-    // Calculate edge points
-    if (road_calculate_edge_points(road) != 0) {
-        printf("Failed to calculate road edge points.\n");
-        free(road->center_points);
-        road->center_points = NULL;
-        return 7;
-    }
-
     road->start_point = road->center_points[0];
     road->end_point = road->center_points[road->num_center_points - 1];
+
+    if (var_finish_xpm) {
+        road->finish_line_sprite = sprite_create_xpm(var_finish_xpm, 0,0,0,0);
+        if (!road->finish_line_sprite) {
+            fprintf(stderr, "Warning: Failed to load finish line sprite.\n");
+        } else {
+            printf("Road: Successfully loaded finish line sprite.\n");
+            if (road->num_center_points >= 2) {
+                road->finish_line_position = road->end_point;
+                Vector last_segment_dir;
+                last_segment_dir.x = road->center_points[road->num_center_points-1].x - road->center_points[road->num_center_points-2].x;
+                last_segment_dir.y = road->center_points[road->num_center_points-1].y - road->center_points[road->num_center_points-2].y;
+                vector_normalize(&last_segment_dir);
+                road->finish_line_direction.x = -last_segment_dir.y;
+                road->finish_line_direction.y = last_segment_dir.x;
+                vector_init(&road->finish_line_direction, road->finish_line_direction.x, road->finish_line_direction.y);
+            }
+        }
+    } else {
+        road->finish_line_sprite = NULL;
+    }
 
     return 0;
 }

@@ -25,8 +25,31 @@ typedef enum {
  *  File paths for track data and surfaces
  */
 /**@{*/
+#define TRACK_TEST_FILENAME "/home/lcom/labs/proj/src/tracks/track_test.dat"
+#define TRACK_TEST_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_test.bin"
+#define TRACK_TEST_BG_COLOR 0x8EC940
+
 #define TRACK_1_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.dat"
-#define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_surface.bin"
+#define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.bin"
+#define TRACK_1_BG_COLOR 0xf3cd3d
+#define TRACK_1_OFFSET_X 542.0f - (85.0f * 2)
+#define TRACK_1_OFFSET_Y 1564.0f - (76.0f * 2)
+
+#define TRACK_2_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.dat"
+#define TRACK_2_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.bin"
+#define TRACK_2_BG_COLOR 0x4243ca
+#define TRACK_2_OFFSET_X 618.0f - (85.0f * 2)
+#define TRACK_2_OFFSET_Y -381.0f - (76.0f * 2)
+
+#define TRACK_3_FILENAME "/home/lcom/labs/proj/src/tracks/track_3.dat"
+#define TRACK_3_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_3.bin"
+#define TRACK_3_BG_COLOR 0x8EC940
+#define TRACK_3_OFFSET_X 85.0f - (85.0f * 2)
+#define TRACK_3_OFFSET_Y 955.0f - (76.0f * 2)
+
+// Obstacles & Power-ups
+#define MAX_OBSTACLES 15
+#define MAX_POWERUP_BOXES 24
 /**@}*/
 
 /** @name Font-related constants */
@@ -119,8 +142,8 @@ typedef enum {
 
 /** @name Game parameters */
 /**@{*/
-#define MAX_LAPS 3
-#define MAX_AI_CARS 3
+#define MAX_LAPS 1
+#define MAX_AI_CARS 1
 
 #define FINISH_LINE_SEGMENT_IDX 400
 #define LAP_APPROACH_ZONE_PERCENTAGE 0.85f
@@ -129,20 +152,20 @@ typedef enum {
 #define PLAYER_TURN_INCREMENT_DEG 1.0f
 #define PLAYER_TURN_INCREMENT_RAD (PLAYER_TURN_INCREMENT_DEG * (M_PI / 180.0f))
 
-#define PLAYER_BASE_SPEED 450.0f
+#define PLAYER_BASE_SPEED 1200.0f
 
-#define PLAYER_ACCELERATION 100.0f
-#define PLAYER_DECELERATION 80.0f
-#define PLAYER_SKID_DECELERATION 150.0f
+#define PLAYER_ACCELERATION 600.0f
+#define PLAYER_DECELERATION 120.0f
+#define PLAYER_SKID_DECELERATION 170.0f
 
 #define PLAYER_SKID_ANGLE (M_PI / 12.0f)
 
-#define AI_EASY_BASE_SPEED 420.0f
-#define AI_MEDIUM_BASE_SPEED 450.0f
-#define AI_HARD_BASE_SPEED 480.0f
+#define AI_EASY_BASE_SPEED 1000.0f
+#define AI_MEDIUM_BASE_SPEED 1100.0f
+#define AI_HARD_BASE_SPEED 1200.0f
 
-#define AI_ACCELERATION 100.0f
-#define AI_DECELERATION 80.0f
+#define AI_ACCELERATION 600.0f
+#define AI_DECELERATION 120.0f
 
 #define AI_EASY_LOOKAHEAD 336.0f // 0.8 seconds
 #define AI_MEDIUM_LOOKAHEAD 450.0f // 1.0 seconds

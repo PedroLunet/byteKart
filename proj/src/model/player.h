@@ -49,6 +49,8 @@ typedef struct Player_s {
     float hitbox_half_width;
   	float hitbox_half_height;
 
+	float recovery_timer_s;
+
     bool autopilot_enabled;
     Point target_track_point;
     float lookahead_distance;
