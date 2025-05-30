@@ -230,13 +230,16 @@ MainState stateMachineUpdate(MainState currentState, EventType event) {
             }
             break;
 
-        case SELECT_TRACK:
-            // Handle track selection
-            break;
-
         case GAME:
             if (game == NULL) {
-                game = game_state_create_playing(difficulty, selectedCar, TRACK_1_FILENAME, TRACK_1_SURFACE_FILENAME, TRACK_1_OFFSET_X, TRACK_1_OFFSET_Y, TRACK_1_BG_COLOR, (xpm_map_t) track_1_map_xpm);
+               if (difficulty == 0) {
+                    game = game_state_create_playing(difficulty, selectedCar, TRACK_1_FILENAME, TRACK_1_SURFACE_FILENAME, TRACK_1_OFFSET_X, TRACK_1_OFFSET_Y, TRACK_1_BG_COLOR, (xpm_map_t) track_1_map_xpm);
+               } else if (difficulty == 1) {
+                    game = game_state_create_playing(difficulty, selectedCar, TRACK_2_FILENAME, TRACK_2_SURFACE_FILENAME, TRACK_2_OFFSET_X, TRACK_2_OFFSET_Y, TRACK_2_BG_COLOR, (xpm_map_t) track_2_map_xpm);
+                } else if (difficulty == 2) {
+                    game = game_state_create_playing(difficulty, selectedCar, TRACK_3_FILENAME, TRACK_3_SURFACE_FILENAME, TRACK_3_OFFSET_X, TRACK_3_OFFSET_Y, TRACK_3_BG_COLOR, (xpm_map_t) track_3_map_xpm);
+                }
+
                 if (!game) {
                     return 1;
                 }

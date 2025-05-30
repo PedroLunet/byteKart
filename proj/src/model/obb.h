@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <math.h>
 
-// OBB (Oriented Bounding Box) Structure
 typedef struct {
     Point center;
     Vector axis[2];
@@ -19,7 +18,7 @@ typedef struct {
     bool occurred;
     float penetration_depth;
     Vector collision_normal;
- } CollisionInfo;
+} CollisionInfo;
 
 void obb_update(OBB *obb, Point world_center, Vector forward_direction, float entity_half_width, float entity_half_height);
 

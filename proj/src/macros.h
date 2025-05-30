@@ -32,20 +32,20 @@ typedef enum {
 #define TRACK_1_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.dat"
 #define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.bin"
 #define TRACK_1_BG_COLOR 0xf3cd3d
-#define TRACK_1_OFFSET_X 542.0f - (85.0f * 2)
-#define TRACK_1_OFFSET_Y 1564.0f - (76.0f * 2)
+#define TRACK_1_OFFSET_X 542.0f - (85.0f )
+#define TRACK_1_OFFSET_Y 1564.0f - (76.0f)
 
 #define TRACK_2_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.dat"
 #define TRACK_2_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.bin"
 #define TRACK_2_BG_COLOR 0x4243ca
-#define TRACK_2_OFFSET_X 618.0f - (85.0f * 2)
-#define TRACK_2_OFFSET_Y -381.0f - (76.0f * 2)
+#define TRACK_2_OFFSET_X 618.0f - (85.0f)
+#define TRACK_2_OFFSET_Y -381.0f - (76.0f)
 
 #define TRACK_3_FILENAME "/home/lcom/labs/proj/src/tracks/track_3.dat"
 #define TRACK_3_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_3.bin"
 #define TRACK_3_BG_COLOR 0x8EC940
-#define TRACK_3_OFFSET_X 85.0f - (85.0f * 2)
-#define TRACK_3_OFFSET_Y 955.0f - (76.0f * 2)
+#define TRACK_3_OFFSET_X 85.0f - (85.0f)
+#define TRACK_3_OFFSET_Y 955.0f - (76.0f)
 
 // Obstacles & Power-ups
 #define MAX_OBSTACLES 15
@@ -142,10 +142,10 @@ typedef enum {
 
 /** @name Game parameters */
 /**@{*/
-#define MAX_LAPS 1
-#define MAX_AI_CARS 1
+#define MAX_LAPS 3
+#define MAX_AI_CARS 3
 
-#define FINISH_LINE_SEGMENT_IDX 400
+#define FINISH_LINE_SEGMENT_IDX 0
 #define LAP_APPROACH_ZONE_PERCENTAGE 0.85f
 #define LAP_DEPARTURE_ZONE_PERCENTAGE 0.15f
 
@@ -160,9 +160,9 @@ typedef enum {
 
 #define PLAYER_SKID_ANGLE (M_PI / 12.0f)
 
-#define AI_EASY_BASE_SPEED 700.0f
-#define AI_MEDIUM_BASE_SPEED 800.0f
-#define AI_HARD_BASE_SPEED 900.0f
+#define AI_EASY_BASE_SPEED 800.0f
+#define AI_MEDIUM_BASE_SPEED 900.0f
+#define AI_HARD_BASE_SPEED 1000.0f
 
 #define AI_ACCELERATION 500.0f
 #define AI_DECELERATION 100.0f
@@ -176,6 +176,19 @@ typedef enum {
 #define AI_EASY_PATH_ADHERENCE 0.6f
 #define AI_MEDIUM_PATH_ADHERENCE 0.8f
 #define AI_HARD_PATH_ADHERENCE 1.0f
-/**@}*/
+
+#define AI_STUCK_SPEED_THRESHOLD 2.0f
+#define AI_STUCK_POSITION_THRESHOLD_SQ (2.0f * 2.0f)
+#define AI_STUCK_EVAL_INTERVAL 0.33f
+#define AI_STUCK_TIME_THRESHOLD 0.75f
+#define AI_UNSTICK_REVERSE_DURATION 1000.0f
+#define AI_UNSTICK_TURN_DURATION 120.0f
+#define AI_UNSTICK_FORWARD_TRY_DURATION 60.0f
+#define AI_UNSTICK_REVERSE_SPEED -10000.0f
+#define AI_UNSTICK_TURN_SPEED 300.0f
+#define AI_FEELER_LENGTH_BASE_FACTOR 1.0f
+#define AI_FEELER_LENGTH_SPEED_FACTOR 0.05f
+#define AI_FEELER_SIDE_ANGLE_RAD (M_PI / 6.0f)
+#define AI_AVOIDANCE_STEER_STRENGTH 1000.0f
 
 #endif

@@ -1,5 +1,6 @@
 #include <lcom/lcf.h>
 #include "items.h"
+#include "model/ai_car.h"
 
 int items_init(GameItems *items, const Road* road) {
     if (!items) return 1;

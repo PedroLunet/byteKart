@@ -89,9 +89,37 @@ void renderer_draw_road(const Road *road, const Player *player_view) {
             (int)roundf(local_pivot_in_track_image_y), // 6000
             cos_track_rotation,
             sin_track_rotation,
+            true
+        );
+    }
+
+    if (road->finish_line_sprite) {
+        Point start = road->center_points[0];
+        Point next = road->center_points[5];
+
+        float dx = next.x - start.x;
+        float dy = next.y - start.y;
+        float length = sqrtf(dx * dx + dy * dy);
+
+        float rel_x = dx / length * player_view->forward_direction.x + dy / length * player_view->forward_direction.y;
+        float rel_y = -dx / length * player_view->forward_direction.y + dy / length * player_view->forward_direction.x;
+
+        Point_i finish_screen;
+        renderer_transform_world_to_screen(player_view, start, &finish_screen);
+
+        int sprite_pivot_x = road->finish_line_sprite->width / 2;
+        int sprite_pivot_y = road->finish_line_sprite->height / 2;
+
+        sprite_draw_rotated_around_local_pivot(
+            (Sprite*)road->finish_line_sprite,
+            finish_screen.x,
+            finish_screen.y,
+            sprite_pivot_x,
+            sprite_pivot_y,
+            rel_x,
+            -rel_y,
             false
         );
-
     }
 }
 

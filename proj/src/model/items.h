@@ -5,15 +5,17 @@
 #include "sprites/sprite.h"
 #include "model/obb.h"
 #include "model/physics_utils.h"
-#include "model/ai_car.h"
-#include "model/player.h"
 #include "xpm/xpm_files.h"
 #include "view/utils/renderer.h"
+#include "model/player.h"
 #include "macros.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
+struct Road_s;
+struct AICar_s;
 
 typedef enum {
   	OBSTACLE_TYPE_OIL_SLICK,
@@ -51,7 +53,7 @@ typedef struct {
     float hitbox_half_height;
 } PowerUpBox;
 
-typedef struct {
+typedef struct GameItems_s {
     Obstacle obstacles[MAX_OBSTACLES];
     int num_obstacles;
 

@@ -1,122 +1,8 @@
 #include <lcom/lcf.h>
 #include "ai_car.h"
+#include "model/items.h"
 
 extern int timer_counter;
-
-static void ai_car_update_effects(AICar *ai, float delta_time) {
-    if (ai->speed_modifier_duration_s > 0) {
-        ai->speed_modifier_duration_s -= delta_time;
-        if (ai->speed_modifier_duration_s <= 0) {
-            ai->current_speed_modifier = 1.0f;
-            ai->speed_modifier_duration_s = 0.0f;
-        }
-    }
-}
-
-static void ai_car_perceive_track(AICar *ai, Road *road) {
-
-    float remaining_lookahead = ai->lookahead_distance;
-    Point current_p_on_line = ai->closest_point_on_track;
-    int p1_idx = ai->current_road_segment_idx;
-
-    ai->target_track_point = current_p_on_line;
-
-    int iterations = 0;
-    int max_iterations = road->num_center_points * 2;
-    if (max_iterations == 0 && road->num_center_points == 1) max_iterations = 1;
-
-    while (remaining_lookahead > 0.001f && iterations < max_iterations) {
-        iterations++;
-
-        Point p1_on_segment = (iterations == 1) ? current_p_on_line : road->center_points[p1_idx];
-
-        int p2_idx = (p1_idx + 1) % road->num_center_points;
-        Point p2_on_segment = road->center_points[p2_idx];
-
-        Vector segment_vec;
-        segment_vec.x = p2_on_segment.x - p1_on_segment.x;
-        segment_vec.y = p2_on_segment.y - p1_on_segment.y;
-        vector_init(&segment_vec, segment_vec.x, segment_vec.y);
-
-        if (segment_vec.magnitude < 0.0001f) {
-            if (p1_idx == p2_idx) {
-                break;
-            }
-            p1_idx = p2_idx;
-            current_p_on_line = road->center_points[p1_idx];
-            ai->target_track_point = current_p_on_line;
-            continue;
-        }
-
-        if (remaining_lookahead <= segment_vec.magnitude) {
-            float ratio = remaining_lookahead / segment_vec.magnitude;
-            ai->target_track_point.x = p1_on_segment.x + segment_vec.x * ratio;
-            ai->target_track_point.y = p1_on_segment.y + segment_vec.y * ratio;
-            return; // Target found
-        } else {
-            remaining_lookahead -= segment_vec.magnitude;
-            ai->target_track_point = p2_on_segment;
-            p1_idx = p2_idx;
-        }
-    }
-}
-
-static void ai_car_decide_steering(AICar *ai) {
-    Vector vec_to_target;
-    vec_to_target.x = ai->target_track_point.x - ai->world_position.x;
-    vec_to_target.y = ai->target_track_point.y - ai->world_position.y;
-    vector_init(&vec_to_target, vec_to_target.x, vec_to_target.y);
-
-    if (vec_to_target.magnitude < 0.01f) {
-        ai->current_steering_input = 0.0f;
-        return;
-    }
-    vector_normalize(&vec_to_target);
-
-    Vector F = ai->forward_direction;
-    Vector T_norm = vec_to_target;
-
-    float steering_value = F.x * T_norm.y - F.y * T_norm.x;
-
-    ai->current_steering_input = steering_value * ai->path_adherence_factor * 1.5f;
-
-    if (ai->current_steering_input > 1.0f) ai->current_steering_input = 1.0f;
-    if (ai->current_steering_input < -1.0f) ai->current_steering_input = -1.0f;
-}
-
-static void ai_car_apply_movement(AICar *ai, float delta_time) {
-    float target_speed = ai->base_speed * ai->current_speed_modifier;
-    if (ai->current_speed < target_speed) {
-        ai->current_speed += ai->acceleration_value * delta_time;
-        if (ai->current_speed > target_speed) {
-            ai->current_speed = target_speed;
-        }
-    } else if (ai->current_speed > target_speed) {
-        ai->current_speed -= ai->deceleration_value * delta_time;
-        if (ai->current_speed < target_speed) {
-            ai->current_speed = target_speed;
-        }
-    }
-    if (ai->current_speed < 0) ai->current_speed = 0;
-
-    float turn_amount_rad = ai->current_steering_input * ai->max_steering_angle_rad * delta_time;
-
-    float old_dx = ai->forward_direction.x;
-    float old_dy = ai->forward_direction.y;
-    float cos_turn = cos(turn_amount_rad);
-    float sin_turn = sin(turn_amount_rad);
-
-    ai->forward_direction.x = old_dx * cos_turn - old_dy * sin_turn;
-    ai->forward_direction.y = old_dx * sin_turn + old_dy * cos_turn;
-    vector_normalize(&ai->forward_direction);
-
-    ai->world_position.x += ai->forward_direction.x * ai->current_speed * delta_time;
-    ai->world_position.y += ai->forward_direction.y * ai->current_speed * delta_time;
-
-    ai->current_velocity.x = ai->current_speed * ai->forward_direction.x;
-	ai->current_velocity.y = ai->current_speed * ai->forward_direction.y;
-	vector_init(&ai->current_velocity, ai->current_velocity.x, ai->current_velocity.y);
-}
 
 static void ai_car_check_lap_completion(AICar *ai, Road *road) {
     if (!ai || !road || road->num_center_points < 2) return;
@@ -187,18 +73,20 @@ AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDiffic
 
     ai->id = id;
     ai->world_position = start_pos;
+    ai->last_stuck_check_position = start_pos;
+    ai->stuck_eval_timer_s = AI_STUCK_EVAL_INTERVAL;
 
-    // Ensure initial direction is normalized
+
     vector_init(&ai->forward_direction, initial_direction.x, initial_direction.y);
     vector_normalize(&ai->forward_direction);
-
-    ai->current_speed = 0.0f;
     vector_init(&ai->current_velocity, 0.0f, 0.0f);
 
     ai->difficulty = difficulty;
     ai->current_behavior_state = AI_STATE_RACING;
     ai->current_speed_modifier = 1.0f;
     ai->speed_modifier_duration_s = 0.0f;
+    ai->state_timer_s = 0.0f;
+    ai->time_continuously_stuck_s = 0.0f;
 
     // Set parameters based on difficulty
     switch (difficulty) {
@@ -206,32 +94,33 @@ AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDiffic
             ai->base_speed = AI_EASY_BASE_SPEED;
             ai->lookahead_distance = AI_EASY_LOOKAHEAD;
             ai->path_adherence_factor = AI_EASY_PATH_ADHERENCE;
+            ai->unstick_aggressiveness = 0.5f;
             break;
         case AI_DIFFICULTY_MEDIUM:
             ai->base_speed = AI_MEDIUM_BASE_SPEED;
             ai->lookahead_distance = AI_MEDIUM_LOOKAHEAD;
             ai->path_adherence_factor = AI_MEDIUM_PATH_ADHERENCE;
+            ai->unstick_aggressiveness = 1.0f;
             break;
         case AI_DIFFICULTY_HARD:
             ai->base_speed = AI_HARD_BASE_SPEED;
             ai->lookahead_distance = AI_HARD_LOOKAHEAD;
             ai->path_adherence_factor = AI_HARD_PATH_ADHERENCE;
+            ai->unstick_aggressiveness = 1.5f;
             break;
         default: // Default to medium
             ai->base_speed = AI_MEDIUM_BASE_SPEED;
             ai->lookahead_distance = AI_MEDIUM_LOOKAHEAD;
             ai->path_adherence_factor = AI_MEDIUM_PATH_ADHERENCE;
+            ai->unstick_aggressiveness = 1.0f;
             break;
     }
     ai->acceleration_value = AI_ACCELERATION;
     ai->deceleration_value = AI_DECELERATION;
     ai->max_steering_angle_rad = AI_MAX_STEERING_RATE_RAD_PER_SEC;
 
-    // Initialize track-related info
-    bool found_on_track = road_get_tangent_at_world_pos_fullscan(road, &ai->world_position,
-                                                                &ai->track_tangent_at_pos,
-                                                                &ai->current_road_segment_idx,
-                                                                &ai->closest_point_on_track);
+    bool found_on_track = road_get_tangent_at_world_pos_fullscan(road, &ai->world_position, &ai->track_tangent_at_pos, &ai->current_road_segment_idx, &ai->closest_point_on_track);
+
     if (!found_on_track) {
         ai->current_road_segment_idx = 0;
         ai->closest_point_on_track = road->center_points[0];
@@ -257,6 +146,8 @@ AICar* ai_car_create(int id, Point start_pos, Vector initial_direction, AIDiffic
     ai->has_finished = false;
     ai->finish_time = 0.0f;
 
+    ai->is_colliding_with_static_this_frame = false;
+
     ai->hitbox_half_width = car_sprite->width / 2.0f;
   	ai->hitbox_half_height = car_sprite->height / 2.0f;
 
@@ -272,29 +163,74 @@ void ai_car_destroy(AICar *ai) {
     free(ai);
 }
 
-void ai_car_update(AICar *this, Road *road, Player *player, AICar *other_ai_cars[], int num_other_ai_cars, float delta_time) {
-    if (!this || !road || delta_time <= 0) return;
+void ai_car_update(AICar *ai, Road *road, Player *player, AICar *other_ai_cars[], int num_other_ai_cars, const GameItems *game_items, float delta_time) {
+    if (!ai || !road || delta_time <= 0.0f) return;
 
-    ai_car_update_effects(this, delta_time);
+    int N = road->num_center_points;
+    int curr_idx = ai->current_road_segment_idx;
+    int next_idx = (curr_idx + 1) % N;
 
-    road_update_entity_on_track(road, &this->world_position, &this->current_road_segment_idx, &this->track_tangent_at_pos, &this->closest_point_on_track);
-    ai_car_perceive_track(this, road);
+    Point curr = road->center_points[curr_idx];
+    Point next = road->center_points[next_idx];
+    Point left = road->left_edge_points[curr_idx];
+    Point right = road->right_edge_points[curr_idx];
 
-    ai_car_decide_steering(this);
+    // Vetor tangente (direção da pista)
+    float tx = next.x - curr.x;
+    float ty = next.y - curr.y;
+    float tlen = sqrtf(tx*tx + ty*ty);
+    if (tlen < 1e-3f) return;
+    tx /= tlen; ty /= tlen;
 
-    // 5. (Future) React to player or other AI cars (collision avoidance, overtaking logic)
-    // This is where 'player', 'other_ai_cars', 'num_other_ai_cars' would be used.
-    // For now, we ignore them for simplicity.
+    float ahead_dist = 40.0f;
 
-    ai_car_apply_movement(this, delta_time);
+    float target_x, target_y;
 
-    obb_update(&this->obb,  this->world_position,  this->forward_direction,  this->hitbox_half_width,  this->hitbox_half_height);
+    float lx = left.x, ly = left.y, rx = right.x, ry = right.y;
+    float dx = rx - lx, dy = ry - ly;
 
-    ai_car_check_lap_completion(this, road);
+    float seg_len2 = dx*dx + dy*dy;
+    float t_atual = ((ai->world_position.x - lx) * dx + (ai->world_position.y - ly) * dy) / seg_len2;
 
-    this->last_meaningful_road_segment_idx = this->current_road_segment_idx;
+    float t_alvo = 0.5f + ((rand() % 100) / 100.0f - 0.5f) * 0.7f;
+
+    if (t_atual < 0.15f) t_alvo = 0.3f;
+    else if (t_atual > 0.85f) t_alvo = 0.7f;
+
+    if (tlen > 1e-3f) { tx /= tlen; ty /= tlen; }
+
+    target_x = lx + t_alvo * dx + tx * ahead_dist;
+    target_y = ly + t_alvo * dy + ty * ahead_dist;
+
+    Vector to_target = { target_x - ai->world_position.x, target_y - ai->world_position.y, 0.0f };
+    vector_init(&to_target, to_target.x, to_target.y);
+    vector_normalize(&to_target);
+
+    float steer = ai->forward_direction.x * to_target.y - ai->forward_direction.y * to_target.x;
+    ai->current_steering_input = steer;
+    if (ai->current_steering_input > 1.0f) ai->current_steering_input = 1.0f;
+    if (ai->current_steering_input < -1.0f) ai->current_steering_input = -1.0f;
+
+    float turn_amount_rad = ai->current_steering_input * ai->max_steering_angle_rad * delta_time;
+    if (fabsf(turn_amount_rad) > 0.0001f) {
+        float old_dx = ai->forward_direction.x, old_dy = ai->forward_direction.y;
+        float cos_turn = cosf(turn_amount_rad), sin_turn = sinf(turn_amount_rad);
+        ai->forward_direction.x = old_dx * cos_turn - old_dy * sin_turn;
+        ai->forward_direction.y = old_dx * sin_turn + old_dy * cos_turn;
+        vector_normalize(&ai->forward_direction);
+    }
+
+    ai->current_speed = ai->base_speed;
+
+    ai->world_position.x += ai->forward_direction.x * ai->current_speed * delta_time;
+    ai->world_position.y += ai->forward_direction.y * ai->current_speed * delta_time;
+
+    obb_update(&ai->obb, ai->world_position, ai->forward_direction, ai->hitbox_half_width, ai->hitbox_half_height);
+    road_update_entity_on_track(road, &ai->world_position, &ai->current_road_segment_idx, &ai->track_tangent_at_pos, &ai->closest_point_on_track);
+
+    ai_car_check_lap_completion(ai, road);
+    ai->last_meaningful_road_segment_idx = ai->current_road_segment_idx;
 }
-
 
 void ai_car_apply_speed_effect(AICar *ai, float modifier, float duration_s) {
     if (!ai) return;
@@ -302,11 +238,23 @@ void ai_car_apply_speed_effect(AICar *ai, float modifier, float duration_s) {
     ai->speed_modifier_duration_s = duration_s;
 }
 
-void ai_car_handle_hard_collision(AICar *ai, float new_speed) {
+void ai_car_handle_hard_collision(AICar *ai, float new_speed, bool hit_static_obstacle) {
     if (!ai) return;
+
     ai->current_speed = new_speed;
     ai->current_speed_modifier = 1.0f;
     ai->speed_modifier_duration_s = 0.0f;
+
+    if (hit_static_obstacle) {
+        ai->is_colliding_with_static_this_frame = true;
+        if (fabsf(new_speed) < AI_STUCK_SPEED_THRESHOLD) {
+            ai->time_continuously_stuck_s = AI_STUCK_TIME_THRESHOLD * 0.8f;
+        }
+    }
+
+    ai->current_velocity.x = ai->current_speed * ai->forward_direction.x;
+    ai->current_velocity.y = ai->current_speed * ai->forward_direction.y;
+    vector_init(&ai->current_velocity, ai->current_velocity.x, ai->current_velocity.y);
 }
 
 void ai_car_set_finish_time(AICar *ai, float race_time) {

@@ -22,6 +22,7 @@
 #include "tracks/track_1_map_final.xpm"
 #include "tracks/track_2_map_final.xpm"
 #include "tracks/track_3_map_final.xpm"
+#include "game/finish_line.xpm"
 
 #endif
 
