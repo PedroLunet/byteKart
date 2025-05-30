@@ -1291,6 +1291,11 @@ static void create_name_input_ui(Game *this) {
         add_child_to_container_component(this->nameInputContainer, instructionText);
     }
 
+    UIComponent *escText = create_text_component("Press ESC to skip", gameFont, 0x888888);
+    if (escText) {
+        add_child_to_container_component(this->nameInputContainer, escText);
+    }
+
     UIComponent *inputContainer = create_container_component(0, 0, 400, 60);
     set_container_layout(inputContainer, LAYOUT_ROW, ALIGN_CENTER, JUSTIFY_CENTER);
     set_container_background_color(inputContainer, 0x2C2C2C);
@@ -1355,6 +1360,8 @@ static void update_name_input_display(Game *this) {
                     data->pixel_data = text_buffer;
                     data->width = text_width;
                     data->height = text_height;
+                    
+                    perform_container_layout(this->nameInputContainer);
                 } else {
                     free(text_buffer);
                 }
