@@ -58,8 +58,8 @@ void minimap_destroy(Minimap *minimap) {
 static void world_to_minimap_coords(const Minimap *minimap, Point world_pos, Point_i *minimap_pixel_pos) {
     if (!minimap || !minimap_pixel_pos) return;
 
-    float relative_world_x = world_pos.x - ;
-    float relative_world_y = world_pos.y;
+    float relative_world_x = world_pos.x - minimap->full_track_world_origin.x;
+    float relative_world_y = world_pos.y - minimap->full_track_world_origin.y;
 
     minimap_pixel_pos->x = (int)(relative_world_x * minimap->world_to_minimap_scale_x);
     minimap_pixel_pos->y = (int)(minimap->display_height + (relative_world_y * minimap->world_to_minimap_scale_y));

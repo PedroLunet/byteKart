@@ -841,11 +841,6 @@ static void playing_update_internal(GameState *base) {
                 		Vector ai_surface_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
                         vector_init(&ai_surface_normal, ai_surface_normal.x, ai_surface_normal.y);
                 		physics_apply_bounce(&this->ai_cars[i]->current_velocity, &this->ai_cars[i]->current_speed, &this->ai_cars[i]->forward_direction, &ai_surface_normal, restitution);
-            		if (obb_check_collision_obb_vs_obb(&this->player.obb, &this->ai_cars[i]->obb)) {
-                		printf("Collision: Player vs AI Car %d\n", this->ai_cars[i]->id);
-                		// TODO: Handle Player vs. AI collision response
-                		// player_handle_hard_collision(&game->player, game->player.current_speed * 0.5f);
-               			// ai_car_handle_hard_collision(game->ai_cars[i], game->ai_cars[i]->current_speed * 0.5f);
             		}
         		}
     		}
@@ -915,11 +910,14 @@ static void playing_update_internal(GameState *base) {
 
             	Point p0_right = this->road_data.right_edge_points[seg_to_check];
             	Point p1_right = this->road_data.right_edge_points[next_seg_to_check];
-            	if (obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_right, p1_right)) {
+            	CollisionInfo right_edge_collision_info;
+            	obb_check_collision_obb_vs_line_segment(&this->player.obb, p0_right, p1_right, &right_edge_collision_info);
+                if (right_edge_collision_info.occurred) {
                 	// printf("Collision: Player vs Right Track Edge (segment %d)\n", seg_to_check);
                 	// TODO: Handle Player vs. Right Edge collision response
             	}
         	}
+            }
 
             // Print race positions every 3 seconds (180 frames at 60 FPS)
             if (timer_counter % 180 == 0) {

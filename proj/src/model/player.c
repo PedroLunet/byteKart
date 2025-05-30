@@ -254,12 +254,6 @@ void player_update(Player *player, Road *road, bool skid_input, float delta_time
         player_apply_autopilot_movement(player, delta_time);
     }
 
-    if (player->autopilot_enabled) {
-        player_perceive_track_autopilot(player, road);
-        player_decide_steering_autopilot(player);
-        player_apply_autopilot_movement(player, delta_time);
-    }
-
     player_update_speed_and_velocity_mk(player, (is_in_recovery ? false : skid_input), delta_time, is_in_recovery);
 
     player_apply_world_movement(player, delta_time);
