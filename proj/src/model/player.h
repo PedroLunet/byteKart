@@ -49,6 +49,13 @@ typedef struct Player_s {
     float hitbox_half_width;
   	float hitbox_half_height;
 
+    bool autopilot_enabled;
+    Point target_track_point;
+    float lookahead_distance;
+    float current_steering_input;
+    float max_steering_angle_rad;
+    float path_adherence_factor;
+
 } Player;
 
 int player_create(Player *player, Point initial_car_center_world, float initial_direction_rad, Road *road, xpm_map_t car_sprite_xpm);
@@ -57,5 +64,7 @@ void player_update(Player *player, Road *road, bool skid_input, float delta_time
 void player_handle_turn_input(Player *player, int turn_direction_sign);
 void player_apply_speed_effect(Player *player, float modifier, float duration_s);
 void player_handle_hard_collision(Player *player, float new_speed);
+void player_enable_autopilot(Player *player);
+void player_disable_autopilot(Player *player);
 
 #endif // PLAYER_H
