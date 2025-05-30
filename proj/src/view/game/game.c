@@ -432,12 +432,12 @@ static void playing_process_event_internal(GameState *base, EventType event) {
                 printf("Restarting the game with same settings\n");
                 this->replay_requested = true;
             } else {
+                this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
+                finish_race_menu_destroy(this->finishRaceMenu);
+                this->finishRaceMenu = NULL;
                 printf("Returning to main menu from finish race menu\n");
                 this->replay_requested = false;
             }
-            this->current_running_state = GAME_SUBSTATE_BACK_TO_MENU;
-            finish_race_menu_destroy(this->finishRaceMenu);
-            this->finishRaceMenu = NULL;
         }
         return;
     }
