@@ -1,9 +1,10 @@
 #include <lcom/lcf.h>
 #include "items.h"
 
-int items_init(GameItems *items, const Road* road ) {
+int items_init(GameItems *items, const Road* road) {
     if (!items) return 1;
 
+    printf("Items: Initializing game items...\n");
     srand(time(NULL));
 
     Sprite *oil_spill_sprite = sprite_create_xpm((xpm_map_t) oil_spill_xpm, 0,0,0,0);
@@ -14,17 +15,64 @@ int items_init(GameItems *items, const Road* road ) {
         return 1;
     }
 
+    printf("Items: Successfully loaded item sprites.\n");
     // --- Initialize Obstacles  ---
-    items->num_obstacles = 0;
-    if (items->num_obstacles < road->num_obstacles) {
+	items->num_obstacles = road->num_obstacles_from_file;
+	for (int i = 0; i < items->num_obstacles; ++i) {
+    	RawObstacleData *raw = &road->raw_obstacle_data[i];
+    	int seg_idx = raw->centerline_segment_index;
+    	if (seg_idx < 0 || seg_idx >= road->num_center_points - 1) continue;
 
-    }
+    	Point a = road->center_points[seg_idx];
+    	Point b = road->center_points[seg_idx + 1];
+    	float dx = b.x - a.x;
+    	float dy = b.y - a.y;
+    	float len = sqrtf(dx*dx + dy*dy);
+    	float nx = -dy / len;
+    	float ny = dx / len;
 
+    	float cx = a.x + 0.5f * dx;
+    	float cy = a.y + 0.5f * dy;
+
+    	items->obstacles[i].world_position.x = cx + raw->offset_from_center * nx;
+    	items->obstacles[i].world_position.y = cy + raw->offset_from_center * ny;
+    	items->obstacles[i].is_active = true;
+    	items->obstacles[i].type = raw->type;
+      	items->obstacles[i].sprite = (raw->type == OBSTACLE_TYPE_OIL_SLICK) ? oil_spill_sprite : barrier_sprite;
+    	items->obstacles[i].hitbox_half_width = 0.5f * items->obstacles[i].sprite->width;
+        items->obstacles[i].hitbox_half_height = 0.5f * items->obstacles[i].sprite->height;
+
+        Vector forward_dir = { dx / len, dy / len, 0.0f };
+        vector_init(&forward_dir, forward_dir.x, forward_dir.y);
+		obb_update(&items->obstacles[i].obb, items->obstacles[i].world_position, forward_dir, items->obstacles[i].hitbox_half_width, items->obstacles[i].hitbox_half_height);
+	}
+
+     printf("Items: Initialized %d obstacles.\n", items->num_obstacles);
     // --- Initialize Power-up Boxes ---
     items->num_powerup_boxes = 0;
-    if (items->num_powerup_boxes < road->num_powerup_boxes) {
+	for (int i = 0; i < road->num_powerup_lines_from_file; ++i) {
+    	RawPowerUpLineData *raw = &road->raw_powerup_data[i];
+    	int seg_idx = raw->centerline_segment_index;
+    	if (seg_idx < 0 || seg_idx >= road->num_center_points - 1) continue;
 
-    }
+    	for (int j = 0; j < raw->num_boxes_in_line; ++j) {
+    		float t = (j + 1.0f) / (raw->num_boxes_in_line + 1.0f);
+
+    		Point left = road->left_edge_points[seg_idx];
+    		Point right = road->right_edge_points[seg_idx];
+
+   		 	items->powerup_boxes[items->num_powerup_boxes].world_position.x = left.x + t * (right.x - left.x);
+    		items->powerup_boxes[items->num_powerup_boxes].world_position.y = left.y + t * (right.y - left.y);
+    		items->powerup_boxes[items->num_powerup_boxes].is_active = true;
+    		items->powerup_boxes[items->num_powerup_boxes].sprite_active = powerup_box_sprite;
+        	items->powerup_boxes[items->num_powerup_boxes].respawn_timer_s = 10.0f;
+            items->powerup_boxes[items->num_powerup_boxes].hitbox_half_width = 0.5f * items->powerup_boxes[items->num_powerup_boxes].sprite_active->width;
+            items->powerup_boxes[items->num_powerup_boxes].hitbox_half_height = 0.5f * items->powerup_boxes[items->num_powerup_boxes].sprite_active->height;
+    		obb_update(&items->powerup_boxes[items->num_powerup_boxes].obb, items->powerup_boxes[items->num_powerup_boxes].world_position, (Vector){1.0f, 0.0f, 0.0f}, items->powerup_boxes[items->num_powerup_boxes].hitbox_half_width, items->powerup_boxes[items->num_powerup_boxes].hitbox_half_height);
+
+        	items->num_powerup_boxes++;
+      	}
+	}
 
     printf("Items: Initialized %d obstacles and %d power-up boxes.\n", items->num_obstacles, items->num_powerup_boxes);
     return 0;
@@ -32,22 +80,18 @@ int items_init(GameItems *items, const Road* road ) {
 
 void items_destroy(GameItems *items) {
     if (!items) return;
-    // Destroy sprites loaded by items_init
-}
-
-static void init_obstacle_obb(Obstacle *obstacle) {
-    if (!obstacle) return;
-    Vector forward_dir = {1.0f, 0.0f, 1.0f};
-    if (obstacle->sprite) {
-        // Apply sprite's rotation to forward direction if needed
+    for (int i = 0; i < items->num_obstacles; ++i) {
+        if (items->obstacles[i].sprite) {
+            sprite_destroy(items->obstacles[i].sprite);
+            items->obstacles[i].sprite = NULL;
+        }
     }
-    obb_update(&obstacle->obb, obstacle->world_position, forward_dir, obstacle->hitbox_half_width, obstacle->hitbox_half_height);
-}
-
-static void init_powerup_box_obb(PowerUpBox *box) {
-    if (!box) return;
-    Vector forward_dir = {1.0f, 0.0f, 1.0f};
-    obb_update(&box->obb, box->world_position, forward_dir, box->hitbox_half_width, box->hitbox_half_height);
+    for (int i = 0; i < items->num_powerup_boxes; ++i) {
+        if (items->powerup_boxes[i].sprite_active) {
+            sprite_destroy(items->powerup_boxes[i].sprite_active);
+            items->powerup_boxes[i].sprite_active = NULL;
+        }
+    }
 }
 
 void items_update(GameItems *items, Player *player, AICar *ai_cars[], int num_ai_cars, const Road *road, float delta_time) {
@@ -76,9 +120,10 @@ void items_update(GameItems *items, Player *player, AICar *ai_cars[], int num_ai
             if (obs->is_active) {
                 obb_check_collision_obb_vs_obb(&player->obb, &obs->obb, &collision_info);
                 if (collision_info.occurred) {
-                    printf("Player collided with Obstacle %d!\n", i);
+                    // printf("Player collided with Obstacle %d!\n", i);
 
-                    Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y};
+                    Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                    vector_init(&push_normal, push_normal.x, push_normal.y);
                     physics_resolve_overlap(&player->world_position_car_center, &push_normal, collision_info.penetration_depth);
                     obb_update(&player->obb, player->world_position_car_center, player->forward_direction, player->hitbox_half_width, player->hitbox_half_height);
                     physics_apply_bounce(&player->current_velocity, &player->current_speed, &player->forward_direction, &collision_info.collision_normal, restitution_obstacle);
@@ -104,7 +149,7 @@ void items_update(GameItems *items, Player *player, AICar *ai_cars[], int num_ai
                     // TODO: Store and handle 'received_powerup' for the player
                     printf("Player received power-up type: %d\n", received_powerup);
                     if (received_powerup == POWERUP_TYPE_SPEED_BOOST) {
-                        player_apply_speed_effect(player, 1.5f, 3.0f); // 50% boost for 3s
+                        player_apply_speed_effect(player, 1.5f, 3.0f);
                     }
                 }
             }
@@ -122,9 +167,10 @@ void items_update(GameItems *items, Player *player, AICar *ai_cars[], int num_ai
             if (obs->is_active) {
                 obb_check_collision_obb_vs_obb(&ai->obb, &obs->obb, &collision_info);
                 if (collision_info.occurred) {
-                    printf("AI Car %d collided with Obstacle %d!\n", ai->id, j);
+                    // printf("AI Car %d collided with Obstacle %d!\n", ai->id, j);
 
-                    Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y};
+                    Vector push_normal = {-collision_info.collision_normal.x, -collision_info.collision_normal.y, 0.0f};
+                    vector_init(&push_normal, push_normal.x, push_normal.y);
                     physics_resolve_overlap(&ai->world_position, &push_normal, collision_info.penetration_depth);
                     obb_update(&ai->obb, ai->world_position, ai->forward_direction, ai->hitbox_half_width, ai->hitbox_half_height);
                     physics_apply_bounce(&ai->current_velocity, &ai->current_speed, &ai->forward_direction, &collision_info.collision_normal, restitution_obstacle);
@@ -165,14 +211,14 @@ void items_draw(const GameItems *items, const Player *player_view) {
         if (obs->is_active && obs->sprite) {
             renderer_transform_world_to_screen(player_view, obs->world_position, &screen_pos);
 
-            float cos_obs_angle = 1.0f;
-            float sin_obs_angle = 0.0f;
+            float perp_x = obs->obb.axis[1].x * player_view->forward_direction.x + obs->obb.axis[1].y * player_view->forward_direction.y;
+    		float perp_y = -obs->obb.axis[1].x * player_view->forward_direction.y + obs->obb.axis[1].y * player_view->forward_direction.x;
 
             sprite_draw_rotated_around_local_pivot(
                 (Sprite*)obs->sprite,
                 screen_pos.x, screen_pos.y,
                 obs->sprite->width / 2, obs->sprite->height / 2,
-                cos_obs_angle, sin_obs_angle,
+                perp_x, -perp_y,
                 true
             );
         }

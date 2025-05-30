@@ -19,11 +19,25 @@ typedef enum {
 
 #define TRACK_1_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.dat"
 #define TRACK_1_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_1.bin"
-#define TRACK_1_BG_COLOR 0xd7e432
+#define TRACK_1_BG_COLOR 0xf3cd3d
+#define TRACK_1_OFFSET_X 542.0f - (85.0f * 2)
+#define TRACK_1_OFFSET_Y 1564.0f - (76.0f * 2)
 
 #define TRACK_2_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.dat"
 #define TRACK_2_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_2.bin"
-#define TRACK_2_BG_COLOR 0x5540c9
+#define TRACK_2_BG_COLOR 0x4243ca
+#define TRACK_2_OFFSET_X 618.0f - (85.0f * 2)
+#define TRACK_2_OFFSET_Y -381.0f - (76.0f * 2)
+
+#define TRACK_3_FILENAME "/home/lcom/labs/proj/src/tracks/track_3.dat"
+#define TRACK_3_SURFACE_FILENAME "/home/lcom/labs/proj/src/tracks/track_3.bin"
+#define TRACK_3_BG_COLOR 0x8EC940
+#define TRACK_3_OFFSET_X 85.0f - (85.0f * 2)
+#define TRACK_3_OFFSET_Y 955.0f - (76.0f * 2)
+
+// Obstacles & Power-ups
+#define MAX_OBSTACLES 15
+#define MAX_POWERUP_BOXES 24
 
 // Fonts
 #define MAX_FONT_GLYPHS 382
@@ -61,7 +75,7 @@ typedef enum {
 
 // Game
 #define MAX_LAPS 3
-#define MAX_AI_CARS 3
+#define MAX_AI_CARS 1
 
 #define FINISH_LINE_SEGMENT_IDX 400
 #define LAP_APPROACH_ZONE_PERCENTAGE 0.85f
