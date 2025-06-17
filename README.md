@@ -2,6 +2,8 @@
 
 A racing game developed in C for the LCOM (Computer Laboratory) course at FEUP, built on the MINIX operating system. This project demonstrates low-level programming concepts including device drivers, interrupt handling, and graphics programming.
 
+## 🎓 Grade: 19.7/20
+
 ## 🕹️ Demo
   [`video demo`](https://uporto.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=06810408-5b1c-434a-b0f9-b2ef01760a52)
 
